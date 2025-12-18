@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // Screens
 import 'screens/Onboarding.dart';
@@ -21,6 +22,11 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF0db14c),
           primary: const Color(0xFF0db14c),
+        ),
+        // Using the dynamic method to set Comic Relief as the default global font
+        textTheme: GoogleFonts.getTextTheme(
+          'Comic Relief',
+          Theme.of(context).textTheme,
         ),
         useMaterial3: true,
       ),

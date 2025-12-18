@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class Onboarding extends StatelessWidget {
   const Onboarding({super.key});
@@ -25,11 +26,13 @@ class Onboarding extends StatelessWidget {
 
             Text(
               'Keihatsu',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                color: brandColor2,
+              style: GoogleFonts.mysteryQuest(
+                textStyle: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                  color: brandColor2,
+                ),
               ),
             ),
 
