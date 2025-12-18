@@ -4,11 +4,14 @@ class Onboarding extends StatelessWidget {
   const Onboarding({super.key});
 
   static const Color brandColor = Color(0xFF601FA6);
+  static const Color brandColor2 = Color(0xFFF97316);
+  static const Color bgColor = Color(0xFFFFEDD5);
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: bgColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -26,7 +29,7 @@ class Onboarding extends StatelessWidget {
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
-                color: brandColor,
+                color: brandColor2,
               ),
             ),
 
