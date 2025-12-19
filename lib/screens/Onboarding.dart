@@ -4,8 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 class Onboarding extends StatelessWidget {
   const Onboarding({super.key});
 
-  static const Color brandColor = Color(0xFF601FA6);
-  static const Color brandColor2 = Color(0xFFF97316);
+  static const Color brandColor = Color(0xFFF97316);
   static const Color bgColor = Color(0xFFFFEDD5);
 
 
@@ -19,10 +18,8 @@ class Onboarding extends StatelessWidget {
           children: [
             Image.asset(
               'images/logo.png',
-              height: 180,
+              height: 300,
             ),
-
-            const SizedBox(height: 20),
 
             Text(
               'Keihatsu',
@@ -31,7 +28,7 @@ class Onboarding extends StatelessWidget {
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
-                  color: brandColor2,
+                  color: brandColor,
                 ),
               ),
             ),
@@ -49,11 +46,18 @@ class Onboarding extends StatelessWidget {
                 ),
               ),
               onPressed: () {
-                Navigator.pushReplacementNamed(context, '/home');
+                Navigator.pushReplacementNamed(context, '/register');
               },
-              child: const Text(
+              child: Text(
                 "Continue",
-                style: TextStyle(fontSize: 18),
+                style: GoogleFonts.barriecito(
+                  textStyle: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    color: brandColor,
+                  ),
+                ),
               ),
             ),
           ],
