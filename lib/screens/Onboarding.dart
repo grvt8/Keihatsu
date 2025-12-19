@@ -1,12 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:async';
 
-class Onboarding extends StatelessWidget {
+class Onboarding extends StatefulWidget {
   const Onboarding({super.key});
 
+  @override
+  State<Onboarding> createState() => _OnboardingState();
+}
+
+class _OnboardingState extends State<Onboarding> {
   static const Color brandColor = Color(0xFFF97316);
   static const Color bgColor = Color(0xFFFFEDD5);
 
+  @override
+  void initState() {
+    super.initState();
+    // Redirect after 5 seconds
+    Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/onboardingFlow');
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +36,6 @@ class Onboarding extends StatelessWidget {
               'images/logo.png',
               height: 300,
             ),
-
             Text(
               'Keihatsu',
               style: GoogleFonts.mysteryQuest(
@@ -29,34 +44,6 @@ class Onboarding extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
                   color: brandColor,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 40),
-
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 40, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/register');
-              },
-              child: Text(
-                "Continue",
-                style: GoogleFonts.barriecito(
-                  textStyle: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                    color: brandColor,
-                  ),
                 ),
               ),
             ),

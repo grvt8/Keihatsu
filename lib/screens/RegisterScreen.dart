@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class Register extends StatelessWidget {
-  const Register({super.key});
+class RegisterScreen extends StatelessWidget {
+  const RegisterScreen ({super.key});
 
   // Using colors as defined in the project
   static const Color brandColor = Color(0xFFF97316); // Orange
@@ -37,7 +37,11 @@ class Register extends StatelessWidget {
                   style: TextStyle(color: Colors.grey, fontSize: 14),
                 ),
                 const SizedBox(height: 30),
-
+                
+                _buildTextField(
+                  hintText: "Full Name",
+                  icon: Icons.person_outline,
+                ),
                 const SizedBox(height: 16),
                 _buildTextField(
                   hintText: "Email address",
@@ -48,6 +52,11 @@ class Register extends StatelessWidget {
                   hintText: "Password",
                   icon: Icons.lock_outline,
                   isPassword: true,
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  hintText: "Phone Number",
+                  icon: Icons.phone_outlined,
                 ),
                 const SizedBox(height: 20),
                 
@@ -149,8 +158,8 @@ class Register extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset(
-                          'images/google.png',
+                        Image.network(
+                          'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_\"G\"_Logo.svg/1024px-Google_\"G\"_Logo.svg.png',
                           height: 20,
                         ),
                         const SizedBox(width: 12),
@@ -170,7 +179,7 @@ class Register extends StatelessWidget {
                 const SizedBox(height: 25),
                 
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => Navigator.pushReplacementNamed(context, '/login'),
                   child: RichText(
                     text: const TextSpan(
                       style: TextStyle(color: Colors.black54, fontSize: 14),
