@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // Screens
 import 'screens/Onboarding.dart';
 import 'screens/HomePage.dart';
+import 'screens/RegisterScreen.dart';
+import 'screens/LoginScreen.dart';
+import 'screens/OnboardingFlow.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,16 +21,24 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Keihatsu',
       theme: ThemeData(
-        primaryColor: const Color(0xFF0db14c),
+        primaryColor: const Color(0xFFF97316),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0db14c),
-          primary: const Color(0xFF0db14c),
+          seedColor: const Color(0xFFF97316),
+          primary: const Color(0xFFF97316),
+        ),
+        // Using the dynamic method to set Comic Relief as the default global font
+        textTheme: GoogleFonts.getTextTheme(
+          'Comic Relief',
+          Theme.of(context).textTheme,
         ),
         useMaterial3: true,
       ),
       initialRoute: '/onboarding',
       routes: {
         '/onboarding': (context) => const Onboarding(),
+        '/onboardingFlow': (context) => const OnboardingFlow(),
+        '/register': (context) => const RegisterScreen(),
+        '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomePage(),
       },
     );

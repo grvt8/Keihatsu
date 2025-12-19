@@ -1,12 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:async';
 
-class Onboarding extends StatelessWidget {
+class Onboarding extends StatefulWidget {
   const Onboarding({super.key});
 
-  static const Color brandColor = Color(0xFF601FA6);
-  static const Color brandColor2 = Color(0xFFF97316);
+  @override
+  State<Onboarding> createState() => _OnboardingState();
+}
+
+class _OnboardingState extends State<Onboarding> {
+  static const Color brandColor = Color(0xFFF97316);
   static const Color bgColor = Color(0xFFFFEDD5);
 
+  @override
+  void initState() {
+    super.initState();
+    // Redirect after 5 seconds
+    Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/onboardingFlow');
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,39 +34,17 @@ class Onboarding extends StatelessWidget {
           children: [
             Image.asset(
               'images/logo.png',
-              height: 180,
+              height: 300,
             ),
-
-            const SizedBox(height: 20),
-
             Text(
               'Keihatsu',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                color: brandColor2,
-              ),
-            ),
-
-            const SizedBox(height: 40),
-
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 40, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+              style: GoogleFonts.mysteryQuest(
+                textStyle: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                  color: brandColor,
                 ),
-              ),
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/home');
-              },
-              child: const Text(
-                "Continue",
-                style: TextStyle(fontSize: 18),
               ),
             ),
           ],
