@@ -1,0 +1,18 @@
+const List<Map<String, String>> mangaData = [
+  {"title": "Player", "count": "239", "image": "images/player.jpg", "bgImage": "images/player2.png", "chapter": "Ch. 245", "time": "1:23 AM", "date": "12/5/25"},
+  {"title": "Ordeal", "count": "27", "image": "images/ordeal.png", "bgImage": "images/ordeal2.png", "chapter": "Ch. 100", "time": "12:41 AM", "date": "12/4/25"},
+  {"title": "The Last...", "count": "15", "image": "images/adventurer.png", "bgImage": "images/adventurer2.png", "chapter": "Ch. 50", "time": "11:05 PM", "date": "12/4/25"},
+  {"title": "Dungeon Raid...", "count": "6", "image": "images/dungeonraid.png", "bgImage": "images/dungeonraid2.png", "chapter": "Ch. 95", "time": "5:30 PM", "date": "12/2/25"},
+  {"title": "The World...", "count": "110", "image": "images/twatf.png", "bgImage": "images/twatf2.png", "chapter": "Ch. 120", "time": "4:15 PM", "date": "12/2/25"},
+  {"title": "Return of...", "count": "118", "image": "images/sssranker.png", "bgImage": "images/sssranker2.png", "chapter": "Ch. 173", "time": "10:56 PM", "date": "12/4/25"},
+  {"title": "Bad Born...", "count": "82", "image": "images/badbornblood.jpg", "bgImage": "images/badbornblood.jpg", "chapter": "Ch. 80", "time": "1:20 AM", "date": "12/3/25"},
+  {"title": "Latna Saga...", "count": "115", "image": "images/latnasaga.png", "bgImage": "images/latnasaga2.png", "chapter": "Ch. 110", "time": "9:30 PM", "date": "12/3/25"},
+  {"title": "Legend of...", "count": "38", "image": "images/northernblade.png", "bgImage": "images/northernblade2.png", "chapter": "Ch. 150", "time": "8:15 PM", "date": "12/3/25"},
+  {"title": "Priest of Corruption", "count": "13", "image": "images/poc.png", "bgImage": "images/poc2.png", "chapter": "Ch. 150", "time": "8:15 PM", "date": "12/3/25"},
+  {"title": "Black Sun", "count": "44", "image": "images/blacksun.png", "bgImage": "images/blacksun.png", "chapter": "Ch. 40", "time": "7:00 PM", "date": "12/3/25"},
+  {"title": "Superhuman Battlefield...", "count": "111", "image": "images/superhumanbattlefield.png", "bgImage": "images/superhumanbattlefield2.png", "chapter": "Ch. 105", "time": "6:45 PM", "date": "12/2/25"},
+  {"title": "Pick Me Up...", "count": "6", "image": "images/pickmeup2.png", "bgImage": "images/pickmeup.png", "chapter": "Ch. 95", "time": "5:30 PM", "date": "12/2/25"},
+  {"title": "Swordsmaster's...", "count": "110", "image": "images/swordsmaster.png", "bgImage": "images/swordsmaster2.png", "chapter": "Ch. 120", "time": "4:15 PM", "date": "12/2/25"},
+  {"title": "The Regressed...", "count": "143", "image": "images/mercenary.png", "bgImage": "images/mercenary2.png", "chapter": "Ch. 130", "time": "3:00 PM", "date": "12/2/25"},
+  {"title": "Max Level Newbie", "count": "143", "image": "images/maxlvlnewbie.png", "bgImage": "images/maxlvlnewbie2.png", "chapter": "Ch. 130", "time": "3:00 PM", "date": "12/2/25"},
+];

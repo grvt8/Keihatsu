@@ -4,9 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 
 class MangaDetailsScreen extends StatelessWidget {
-  final Map<String, String> manga;
-
-  const MangaDetailsScreen({super.key, required this.manga});
 
   static const Color brandColor = Color(0xFFF97316); // Orange
   static const Color bgColor = Color(0xFFFFEDD5); // Cream

@@ -16,21 +16,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
   static const Color bgColor = Color(0xFFFFEDD5); // Cream
   int _currentIndex = 0;
 
-  final List<Map<String, String>> mangaData = [
-    {"title": "Player", "count": "239", "image": "images/player.jpg", "bgImage": "images/player.jpg"},
-    {"title": "Ordeal", "count": "27", "image": "images/ordeal.png", "bgImage": "images/ordeal2.png"},
-    {"title": "The Last...", "count": "15", "image": "images/adventurer.png", "bgImage": "images/adventurer.png"},
-    {"title": "Return of...", "count": "118", "image": "images/sssranker.png", "bgImage": "images/sssranker.png"},
-    {"title": "Bad Born...", "count": "82", "image": "images/badbornblood.jpg", "bgImage": "images/badbornblood.jpg"},
-    {"title": "Latna Saga...", "count": "115", "image": "images/latnasaga.png", "bgImage": "images/latnasaga.png"},
-    {"title": "Legend of...", "count": "38", "image": "images/northernblade.png", "bgImage": "images/northernblade.png"},
-    {"title": "Black Sun", "count": "44", "image": "images/blacksun.png", "bgImage": "images/blacksun.png"},
-    {"title": "Superhuman Battlefield...", "count": "111", "image": "images/superhumanbattlefield.png", "bgImage": "images/superhumanbattlefield2.png"},
-    {"title": "Pick Me Up...", "count": "6", "image": "images/pickmeup2.png", "bgImage": "images/pickmeup.png"},
-    {"title": "Swordsmaster's...", "count": "110", "image": "images/swordsmaster.png", "bgImage": "images/swordsmaster2.png"},
-    {"title": "The Regressed...", "count": "143", "image": "images/mercenary.png", "bgImage": "images/mercenary.png"},
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
