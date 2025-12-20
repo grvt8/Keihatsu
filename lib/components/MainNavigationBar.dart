@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class MainNavigationBar extends StatelessWidget {
   final int currentIndex;
@@ -22,25 +23,25 @@ class MainNavigationBar extends StatelessWidget {
       selectedItemColor: brandColor,
       unselectedItemColor: Colors.grey,
       selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-      items: const [
+      items: [
         BottomNavigationBarItem(
-          icon: Icon(Icons.library_books),
+          icon: Icon(PhosphorIcons.books()),
           label: 'Library',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.new_releases_outlined),
+          icon: Icon(PhosphorIcons.arrowsClockwise()),
           label: 'Updates',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.history),
+          icon: Icon(PhosphorIcons.clockCounterClockwise()),
           label: 'History',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.explore_outlined),
-          label: 'Browse',
+          icon: Icon(PhosphorIcons.puzzlePiece()),
+          label: 'Extensions',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.more_horiz),
+          icon: Icon(PhosphorIcons.dotsThreeOutline()),
           label: 'More',
         ),
       ],

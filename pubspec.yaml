@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   google_fonts: ^6.3.2
   shared_preferences: ^2.5.3
+  phosphor_flutter: ^2.1.0
 
 dev_dependencies:
   flutter_test:
@@ -81,8 +82,15 @@ flutter:
     - images/dungeonraid.png
     - images/mercenary.png
     - images/maxlvlnewbie.png
-    - images/swordmaster.png
+    - images/swordsmaster.png
     - images/badbornblood.jpg
+    - images/ordeal2.png
+    - images/sololvl.png
+    - images/sololvl2.png
+    - images/pickmeup2.png
+    - images/superhumanbattlefield2.png
+    - images/swordsmaster2.png
+    - images/mercenary2.png
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../components/MainNavigationBar.dart';
 import 'MangaDetailsScreen.dart';
 
@@ -14,21 +16,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
   static const Color bgColor = Color(0xFFFFEDD5); // Cream
   int _currentIndex = 0;
 
-  final List<Map<String, String>> mangaData = [
-    {"title": "Player", "count": "239", "image": "images/player.jpg"},
-    {"title": "Ordeal", "count": "27", "image": "images/ordeal.png"},
-    {"title": "The Last...", "count": "15", "image": "images/adventurer.png"},
-    {"title": "Return of...", "count": "118", "image": "images/sssranker.png"},
-    {"title": "Bad Born...", "count": "82", "image": "images/badbornblood.jpg"},
-    {"title": "Latna Saga...", "count": "115", "image": "images/latnasaga.png"},
-    {"title": "Legend of...", "count": "38", "image": "images/northernblade.png"},
-    {"title": "Black Sun", "count": "44", "image": "images/blacksun.png"},
-    {"title": "Superhuman Battlefield...", "count": "111", "image": "images/superhumanbattlefield.png"},
-    {"title": "Pick Me Up...", "count": "6", "image": "images/pickmeup.png"},
-    {"title": "Swordsmaster's...", "count": "110", "image": "images/swordsmaster.png"},
-    {"title": "The Regressed...", "count": "143", "image": "images/mercenary.png"},
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,14 +23,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
       appBar: AppBar(
         backgroundColor: bgColor,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Default',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+          style: GoogleFonts.mysteryQuest(
+            textStyle: const TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.search, color: Colors.black87)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.filter_list, color: Colors.black87)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert, color: Colors.black87)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: Colors.black87)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel(), color: Colors.black87)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell(), size: 40, color: Colors.black87)),
         ],
       ),
       body: GridView.builder(
