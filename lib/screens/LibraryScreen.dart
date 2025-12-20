@@ -15,18 +15,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
   int _currentIndex = 0;
 
   final List<Map<String, String>> mangaData = [
-    {"title": "Player", "count": "239", "image": "images/mascot.jpeg"},
-    {"title": "Ordeal", "count": "27", "image": "images/orb.jpeg"},
-    {"title": "The Last...", "count": "15", "image": "images/mascot.jpeg"},
-    {"title": "Return of...", "count": "118", "image": "images/orb.jpeg"},
-    {"title": "Bad Born...", "count": "82", "image": "images/mascot.jpeg"},
-    {"title": "Infinite...", "count": "115", "image": "images/orb.jpeg"},
-    {"title": "Solo...", "count": "38", "image": "images/mascot.jpeg"},
-    {"title": "Myst...", "count": "44", "image": "images/orb.jpeg"},
-    {"title": "The Disaster...", "count": "111", "image": "images/mascot.jpeg"},
-    {"title": "Survival...", "count": "6", "image": "images/orb.jpeg"},
-    {"title": "Pure Love...", "count": "110", "image": "images/mascot.jpeg"},
-    {"title": "Revenge...", "count": "143", "image": "images/orb.jpeg"},
+    {"title": "Player", "count": "239", "image": "images/player.jpg"},
+    {"title": "Ordeal", "count": "27", "image": "images/ordeal.png"},
+    {"title": "The Last...", "count": "15", "image": "images/adventurer.png"},
+    {"title": "Return of...", "count": "118", "image": "images/sssranker.png"},
+    {"title": "Bad Born...", "count": "82", "image": "images/badbornblood.jpg"},
+    {"title": "Latna Saga...", "count": "115", "image": "images/latnasaga.png"},
+    {"title": "Legend of...", "count": "38", "image": "images/northernblade.png"},
+    {"title": "Black Sun", "count": "44", "image": "images/blacksun.png"},
+    {"title": "Superhuman Battlefield...", "count": "111", "image": "images/superhumanbattlefield.png"},
+    {"title": "Pick Me Up...", "count": "6", "image": "images/pickmeup.png"},
+    {"title": "Swordsmaster's...", "count": "110", "image": "images/swordsmaster.png"},
+    {"title": "The Regressed...", "count": "143", "image": "images/mercenary.png"},
   ];
 
   @override
