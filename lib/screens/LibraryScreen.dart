@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../components/MainNavigationBar.dart';
 import 'MangaDetailsScreen.dart';
 
@@ -36,14 +38,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
       appBar: AppBar(
         backgroundColor: bgColor,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Default',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+          style: GoogleFonts.mysteryQuest(
+            textStyle: const TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.search, color: Colors.black87)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.filter_list, color: Colors.black87)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert, color: Colors.black87)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: Colors.black87)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel(), color: Colors.black87)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell(), size: 40, color: Colors.black87)),
         ],
       ),
       body: GridView.builder(

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 
 class MangaDetailsScreen extends StatelessWidget {
   final Map<String, String> manga;
@@ -24,7 +27,7 @@ class MangaDetailsScreen extends StatelessWidget {
               children: [
                 Positioned.fill(
                   child: Image.asset(
-                    manga["bgImage"]!,
+                    manga["image"]!,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -54,13 +57,13 @@ class MangaDetailsScreen extends StatelessWidget {
                 elevation: 0,
                 pinned: true,
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  icon: Icon(PhosphorIcons.arrowLeft(), color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
                 actions: [
-                  IconButton(onPressed: () {}, icon: const Icon(Icons.download_outlined, color: Colors.white)),
-                  IconButton(onPressed: () {}, icon: const Icon(Icons.filter_list, color: Colors.white)),
-                  IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert, color: Colors.white)),
+                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.downloadSimple(), color: Colors.white)),
+                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel(), color: Colors.white)),
+                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.dotsThreeVertical(), color: Colors.white)),
                 ],
               ),
               SliverToBoxAdapter(
@@ -87,7 +90,7 @@ class MangaDetailsScreen extends StatelessWidget {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: Image.asset(
-                                manga["image"]!,
+                                manga["bgImage"]!,
                                 height: 180,
                                 width: 120,
                                 fit: BoxFit.cover,
@@ -101,25 +104,27 @@ class MangaDetailsScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   manga["title"]!,
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white, // Changed to white for better contrast against background
-                                    shadows: [
-                                      Shadow(
-                                        blurRadius: 10.0,
-                                        color: Colors.black,
-                                        offset: Offset(2.0, 2.0),
-                                      ),
-                                    ],
+                                  style: GoogleFonts.mysteryQuest(
+                                    textStyle: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white, // Changed to white for better contrast against background
+                                      shadows: [
+                                        Shadow(
+                                          blurRadius: 10.0,
+                                          color: Colors.black,
+                                          offset: Offset(2.0, 2.0),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                _buildInfoRow(Icons.person_outline, "Jong-Seok Park"),
+                                _buildInfoRow(PhosphorIcons.user(), "Jong-Seok Park"),
                                 const SizedBox(height: 4),
-                                _buildInfoRow(Icons.edit_outlined, "Hyeon-Jun Oh"),
+                                _buildInfoRow(PhosphorIcons.pencilLine(), "Hyeon-Jun Oh"),
                                 const SizedBox(height: 4),
-                                _buildInfoRow(Icons.access_time, "Ongoing • Vortex Scans"),
+                                _buildInfoRow(PhosphorIcons.clock(), "Ongoing • Vortex Scans"),
                               ],
                             ),
                           ),
@@ -130,10 +135,10 @@ class MangaDetailsScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildActionButton(Icons.favorite, "In library", brandColor),
-                          _buildActionButton(Icons.hourglass_empty, "5 days", Colors.black54),
-                          _buildActionButton(Icons.sync, "Tracking", Colors.black54),
-                          _buildActionButton(Icons.public, "WebView", Colors.black54),
+                          _buildActionButton(PhosphorIcons.heart(PhosphorIconsStyle.fill), "In library", brandColor),
+                          _buildActionButton(PhosphorIcons.hourglassHigh(), "5 days", Colors.black54),
+                          _buildActionButton(PhosphorIcons.arrowsClockwise(), "Tracking", Colors.black54),
+                          _buildActionButton(PhosphorIcons.globe(), "WebView", Colors.black54),
                         ],
                       ),
                       const SizedBox(height: 25),
@@ -141,7 +146,7 @@ class MangaDetailsScreen extends StatelessWidget {
                         "Through posting a \"Best Comment\", I somehow became the main character of a webtoon!",
                         style: TextStyle(color: Colors.black87, height: 1.4),
                       ),
-                      const Center(child: Icon(Icons.keyboard_arrow_down, color: Colors.black54)),
+                      Center(child: Icon(PhosphorIcons.caretDown(), color: Colors.black54)),
                       const SizedBox(height: 15),
                       Row(
                         children: [
@@ -168,7 +173,6 @@ class MangaDetailsScreen extends StatelessWidget {
                   childCount: 10,
                 ),
               ),
-              // Bottom padding for the FAB
               const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
             ],
           ),
@@ -177,13 +181,13 @@ class MangaDetailsScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: brandColor,
         onPressed: () {},
-        icon: const Icon(Icons.play_arrow, color: Colors.white),
+        icon: Icon(PhosphorIcons.play(), color: Colors.white),
         label: const Text("Resume", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text) {
+  Widget _buildInfoRow(PhosphorIconData icon, String text) {
     return Row(
       children: [
         Icon(icon, size: 16, color: Colors.white70),
@@ -203,7 +207,7 @@ class MangaDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(IconData icon, String label, Color color) {
+  Widget _buildActionButton(PhosphorIconData icon, String label, Color color) {
     return Column(
       children: [
         Icon(icon, color: color),
@@ -227,11 +231,11 @@ class MangaDetailsScreen extends StatelessWidget {
   Widget _buildChapterTile(int chapterNumber) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-      leading: const Icon(Icons.circle, size: 10, color: brandColor),
+      leading: Icon(PhosphorIcons.circle(PhosphorIconsStyle.fill), size: 10, color: brandColor),
       title: Text("Chapter $chapterNumber", style: const TextStyle(fontWeight: FontWeight.w500)),
       subtitle: const Text("7/21/25", style: TextStyle(fontSize: 12, color: Colors.black54)),
       trailing: IconButton(
-        icon: const Icon(Icons.download_for_offline_outlined, color: Colors.black38),
+        icon: Icon(PhosphorIcons.downloadSimple(), color: Colors.black38),
         onPressed: () {},
       ),
     );
