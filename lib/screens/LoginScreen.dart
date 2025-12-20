@@ -120,8 +120,8 @@ class LoginScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.network(
-                          'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_\"G\"_Logo.svg/1024px-Google_\"G\"_Logo.svg.png',
+                        Image.asset(
+                          'images/google.png',
                           height: 20,
                         ),
                         const SizedBox(width: 12),

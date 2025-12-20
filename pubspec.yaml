@@ -69,6 +69,20 @@ flutter:
     - images/onboarding1.jpg
     - images/onboarding2.jpg
     - images/onboarding3.jpg
+    - images/player.jpg
+    - images/ordeal.png
+    - images/sssranker.png
+    - images/pickmeup.png
+    - images/superhumanbattlefield.png
+    - images/northernblade.png
+    - images/adventurer.png
+    - images/blacksun.png
+    - images/latnasaga.png
+    - images/dungeonraid.png
+    - images/mercenary.png
+    - images/maxlvlnewbie.png
+    - images/swordmaster.png
+    - images/badbornblood.jpg
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
