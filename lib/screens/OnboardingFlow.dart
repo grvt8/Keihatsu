@@ -29,12 +29,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       "image": "images/onboarding3.jpg",
       "title": "Easy Appointments & Adoption",
       "subtitle": "Book vet visits instantly and simplify pet adoptions with ease.",
-    },
-    {
-      "image": "images/onboarding4.png",
-      "title": "Shop & Learn",
-      "subtitle": "Explore supplies, care tips, and expert advice in one convenient app.",
-    },
+    }
   ];
 
   @override
@@ -43,10 +38,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     super.dispose();
   }
 
+
+  static const Color brandColor = Color(0xFFF97316); // Orange
+  static const Color bgColor = Color(0xFFFFEDD5); // Cream
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -109,7 +108,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                             padding: const EdgeInsets.symmetric(horizontal: 24.0),
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
+                                backgroundColor: brandColor,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15),
                                 ),
@@ -197,7 +196,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       height: 10,
       width: isActive ? 20 : 10,
       decoration: BoxDecoration(
-        color: isActive ? Colors.green : Colors.grey[300],
+        color: isActive ? brandColor : Colors.black,
         borderRadius: BorderRadius.circular(12),
       ),
     );

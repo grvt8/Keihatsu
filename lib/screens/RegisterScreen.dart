@@ -39,11 +39,6 @@ class RegisterScreen extends StatelessWidget {
                 const SizedBox(height: 30),
                 
                 _buildTextField(
-                  hintText: "Full Name",
-                  icon: Icons.person_outline,
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
                   hintText: "Email address",
                   icon: Icons.email_outlined,
                 ),
@@ -52,11 +47,6 @@ class RegisterScreen extends StatelessWidget {
                   hintText: "Password",
                   icon: Icons.lock_outline,
                   isPassword: true,
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  hintText: "Phone Number",
-                  icon: Icons.phone_outlined,
                 ),
                 const SizedBox(height: 20),
                 
@@ -105,7 +95,9 @@ class RegisterScreen extends StatelessWidget {
                       ),
                       elevation: 2,
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/library');
+                    },
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -154,7 +146,9 @@ class RegisterScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/library');
+                    },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

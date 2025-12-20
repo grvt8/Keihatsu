@@ -7,6 +7,7 @@ import 'screens/HomePage.dart';
 import 'screens/RegisterScreen.dart';
 import 'screens/LoginScreen.dart';
 import 'screens/OnboardingFlow.dart';
+import 'screens/LibraryScreen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,7 +29,7 @@ class MyApp extends StatelessWidget {
         ),
         // Using the dynamic method to set Comic Relief as the default global font
         textTheme: GoogleFonts.getTextTheme(
-          'Comic Relief',
+          'Delius',
           Theme.of(context).textTheme,
         ),
         useMaterial3: true,
@@ -39,6 +40,7 @@ class MyApp extends StatelessWidget {
         '/onboardingFlow': (context) => const OnboardingFlow(),
         '/register': (context) => const RegisterScreen(),
         '/login': (context) => const LoginScreen(),
+        '/library': (context) => const LibraryScreen(),
         '/home': (context) => const HomePage(),
       },
     );
