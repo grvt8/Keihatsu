@@ -8,6 +8,8 @@ import 'screens/RegisterScreen.dart';
 import 'screens/LoginScreen.dart';
 import 'screens/OnboardingFlow.dart';
 import 'screens/LibraryScreen.dart';
+import 'screens/HistoryScreen.dart';
+import 'screens/ProfileScreen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -41,6 +43,8 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
         '/login': (context) => const LoginScreen(),
         '/library': (context) => const LibraryScreen(),
+        '/history': (context) => const HistoryScreen(),
+        '/profile': (context) => const ProfileScreen(),
         '/home': (context) => const HomePage(),
       },
     );

@@ -4,6 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 
 class MangaDetailsScreen extends StatelessWidget {
+  final Map<String, String> manga;
+
+  const MangaDetailsScreen({super.key, required this.manga});
 
   static const Color brandColor = Color(0xFFF97316); // Orange
   static const Color bgColor = Color(0xFFFFEDD5); // Cream
@@ -24,7 +27,7 @@ class MangaDetailsScreen extends StatelessWidget {
               children: [
                 Positioned.fill(
                   child: Image.asset(
-                    manga["image"]!,
+                    manga["bgImage"]!,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -35,7 +38,7 @@ class MangaDetailsScreen extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.black.withOpacity(0.6),
+                          Colors.black.withOpacity(0.3),
                           bgColor,
                         ],
                         stops: const [0.0, 1.0],
@@ -87,7 +90,7 @@ class MangaDetailsScreen extends StatelessWidget {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: Image.asset(
-                                manga["bgImage"]!,
+                                manga["image"]!,
                                 height: 180,
                                 width: 120,
                                 fit: BoxFit.cover,
