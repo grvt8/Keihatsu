@@ -37,12 +37,6 @@ class RegisterScreen extends StatelessWidget {
                   style: TextStyle(color: Colors.grey, fontSize: 14),
                 ),
                 const SizedBox(height: 30),
-                
-                _buildTextField(
-                  hintText: "Full Name",
-                  icon: Icons.person_outline,
-                ),
-                const SizedBox(height: 16),
                 _buildTextField(
                   hintText: "Email address",
                   icon: Icons.email_outlined,
@@ -52,11 +46,6 @@ class RegisterScreen extends StatelessWidget {
                   hintText: "Password",
                   icon: Icons.lock_outline,
                   isPassword: true,
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  hintText: "Phone Number",
-                  icon: Icons.phone_outlined,
                 ),
                 const SizedBox(height: 20),
                 
@@ -158,8 +147,8 @@ class RegisterScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.network(
-                          'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_\"G\"_Logo.svg/1024px-Google_\"G\"_Logo.svg.png',
+                        Image.asset(
+                          'images/google.png',
                           height: 20,
                         ),
                         const SizedBox(width: 12),
