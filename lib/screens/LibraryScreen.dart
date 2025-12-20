@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../components/MainNavigationBar.dart';
+import 'MangaDetailsScreen.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -55,69 +56,79 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ),
         itemCount: mangaData.length,
         itemBuilder: (context, index) {
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Stack(
-              children: [
-                // Manga Cover
-                Positioned.fill(
-                  child: Image.asset(
-                    mangaData[index]["image"]!,
-                    fit: BoxFit.cover,
-                  ),
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MangaDetailsScreen(manga: mangaData[index]),
                 ),
-                // Gradient Overlay for text readability
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.8),
-                        ],
+              );
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Stack(
+                children: [
+                  // Manga Cover
+                  Positioned.fill(
+                    child: Image.asset(
+                      mangaData[index]["image"]!,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  // Gradient Overlay
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.8),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                // Update Badge
-                Positioned(
-                  top: 5,
-                  left: 5,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: brandColor,
-                      borderRadius: BorderRadius.circular(4),
+                  // Update Badge
+                  Positioned(
+                    top: 5,
+                    left: 5,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: brandColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        mangaData[index]["count"]!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
+                  ),
+                  // Title
+                  Positioned(
+                    bottom: 8,
+                    left: 8,
+                    right: 8,
                     child: Text(
-                      mangaData[index]["count"]!,
+                      mangaData[index]["title"]!,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
-                // Title
-                Positioned(
-                  bottom: 8,
-                  left: 8,
-                  right: 8,
-                  child: Text(
-                    mangaData[index]["title"]!,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
