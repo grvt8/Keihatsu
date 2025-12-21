@@ -15,7 +15,7 @@ class MangaDetailsScreen extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.bgColor;
-    final Color cardColor = Colors.white;
+    final Color cardColor = Colors.white38;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -139,7 +139,7 @@ class MangaDetailsScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildActionButton(PhosphorIcons.heart(PhosphorIconsStyle.fill), "In library", brandColor),
+                          _buildActionButton(PhosphorIcons.bookBookmark(PhosphorIconsStyle.fill), "In library", brandColor),
                           _buildActionButton(PhosphorIcons.hourglassHigh(), "5 days", Colors.black54),
                           _buildActionButton(PhosphorIcons.arrowsClockwise(), "Tracking", Colors.black54),
                           _buildActionButton(PhosphorIcons.globe(), "WebView", Colors.black54),
@@ -204,9 +204,9 @@ class MangaDetailsScreen extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "246 Chapters Updated",
+                                      "246 Chapters . Updated",
                                       style: GoogleFonts.delius(
-                                        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
                                       ),
                                     ),
                                     const Text("Latest update 1mth ago", style: TextStyle(color: Colors.grey, fontSize: 12)),
@@ -242,9 +242,9 @@ class MangaDetailsScreen extends StatelessWidget {
                               children: [
                                 Row(
                                   children: [
-                                    const Text("Chapters", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                                    const Text("246", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
                                     const SizedBox(width: 5),
-                                    Text("246", style: TextStyle(color: Colors.grey.shade400, fontSize: 14)),
+                                    Text("Chapters", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
                                   ],
                                 ),
                                 Row(
@@ -285,7 +285,7 @@ class MangaDetailsScreen extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text("You may also like", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                                const Text("You may also like", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
                                 Row(
                                   children: [
                                     const Text("More", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
@@ -387,7 +387,7 @@ class MangaDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   // Checkmark Icon
-                  _buildBottomIconButton(PhosphorIcons.check(), Colors.white),
+                  _buildBottomIconButton(PhosphorIcons.bookBookmark(), Colors.white),
                 ],
               ),
             ),
@@ -457,7 +457,7 @@ class MangaDetailsScreen extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       leading: Icon(PhosphorIcons.circle(PhosphorIconsStyle.fill), size: 10, color: brandColor),
-      title: Text("Chapter $chapterNumber", style: const TextStyle(fontWeight: FontWeight.w500)),
+      title: Text("Chapter $chapterNumber", style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black87)),
       subtitle: const Text("7/21/25", style: TextStyle(fontSize: 12, color: Colors.black54)),
       trailing: IconButton(
         icon: Icon(PhosphorIcons.downloadSimple(), color: Colors.black38),
