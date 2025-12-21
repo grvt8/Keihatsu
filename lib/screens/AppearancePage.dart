@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../theme_provider.dart';
 
@@ -29,9 +28,9 @@ class AppearancePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               "Theme",
-              style: TextStyle(color: Color(0xFFF97316), fontWeight: FontWeight.bold),
+              style: TextStyle(color: themeProvider.brandColor, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             
@@ -53,31 +52,43 @@ class AppearancePage extends StatelessWidget {
             const SizedBox(height: 30),
             
             // Theme Presets
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildThemePreset(
-                  context, 
-                  "Green Apple", 
-                  const Color(0xFF0DB14C), 
-                  const Color(0xFFE8F5E9),
-                  themeProvider.brandColor == const Color(0xFF0DB14C)
-                ),
-                _buildThemePreset(
-                  context, 
-                  "Lavender", 
-                  const Color(0xFF9061F9), 
-                  const Color(0xFFF3E8FF),
-                  themeProvider.brandColor == const Color(0xFF9061F9)
-                ),
-                _buildThemePreset(
-                  context, 
-                  "Midnight Dusk", 
-                  const Color(0xFFE02424), 
-                  const Color(0xFFFDE8E8),
-                  themeProvider.brandColor == const Color(0xFFE02424)
-                ),
-              ],
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildThemePreset(
+                    context, 
+                    "Default", 
+                    const Color(0xFFF97316), 
+                    const Color(0xFFFFEDD5),
+                    themeProvider.brandColor == const Color(0xFFF97316)
+                  ),
+                  const SizedBox(width: 15),
+                  _buildThemePreset(
+                    context, 
+                    "Green Apple", 
+                    const Color(0xFF0DB14C), 
+                    const Color(0xFFE8F5E9),
+                    themeProvider.brandColor == const Color(0xFF0DB14C)
+                  ),
+                  const SizedBox(width: 15),
+                  _buildThemePreset(
+                    context, 
+                    "Lavender", 
+                    const Color(0xFF9061F9), 
+                    const Color(0xFFF3E8FF),
+                    themeProvider.brandColor == const Color(0xFF9061F9)
+                  ),
+                  const SizedBox(width: 15),
+                  _buildThemePreset(
+                    context, 
+                    "Midnight Dusk", 
+                    const Color(0xFFE02424), 
+                    const Color(0xFFFDE8E8),
+                    themeProvider.brandColor == const Color(0xFFE02424)
+                  ),
+                ],
+              ),
             ),
             
             const SizedBox(height: 30),
@@ -99,9 +110,9 @@ class AppearancePage extends StatelessWidget {
             ),
             
             const SizedBox(height: 30),
-            const Text(
+            Text(
               "Display",
-              style: TextStyle(color: Color(0xFFF97316), fontWeight: FontWeight.bold),
+              style: TextStyle(color: themeProvider.brandColor, fontWeight: FontWeight.bold),
             ),
             _buildDisplayOption("App language"),
             _buildDisplayOption("Tablet UI", subtitle: "Auto"),
@@ -120,7 +131,7 @@ class AppearancePage extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isActive ? const Color(0xFF993300) : Colors.transparent,
+            color: isActive ? themeProvider.brandColor.withOpacity(0.8) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(

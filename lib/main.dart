@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'theme_provider.dart';
 
 // Screens
 import 'screens/Onboarding.dart';
@@ -10,9 +12,15 @@ import 'screens/OnboardingFlow.dart';
 import 'screens/LibraryScreen.dart';
 import 'screens/HistoryScreen.dart';
 import 'screens/ProfileScreen.dart';
+import 'screens/AppearancePage.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -20,19 +28,33 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Keihatsu',
+      themeMode: themeProvider.themeMode,
       theme: ThemeData(
-        primaryColor: const Color(0xFFF97316),
+        brightness: Brightness.light,
+        primaryColor: themeProvider.brandColor,
+        scaffoldBackgroundColor: themeProvider.bgColor,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFF97316),
-          primary: const Color(0xFFF97316),
+          seedColor: themeProvider.brandColor,
+          primary: themeProvider.brandColor,
         ),
-        // Using the dynamic method to set Comic Relief as the default global font
         textTheme: GoogleFonts.getTextTheme(
           'Delius',
           Theme.of(context).textTheme,
+        ),
+        useMaterial3: true,
+      ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        primaryColor: themeProvider.brandColor,
+        scaffoldBackgroundColor: themeProvider.pureBlackDarkMode ? Colors.black : null,
+        textTheme: GoogleFonts.getTextTheme(
+          'Delius',
+          ThemeData.dark().textTheme,
         ),
         useMaterial3: true,
       ),
@@ -45,6 +67,7 @@ class MyApp extends StatelessWidget {
         '/library': (context) => const LibraryScreen(),
         '/history': (context) => const HistoryScreen(),
         '/profile': (context) => const ProfileScreen(),
+        '/appearance': (context) => const AppearancePage(),
         '/home': (context) => const HomePage(),
       },
     );

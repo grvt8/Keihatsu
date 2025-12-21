@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:provider/provider.dart';
 import '../components/MainNavigationBar.dart';
+import '../theme_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -11,13 +13,15 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static const Color brandColor = Color(0xFFF97316);
-  static const Color bgColor = Color(0xFFFFEDD5);
-  static const Color bgColor2 = Color(0xFFFFF8F0);
   int _currentIndex = 4; // Profile is index 4
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final brandColor = themeProvider.brandColor;
+    final bgColor = themeProvider.bgColor;
+    const Color bgColor2 = Color(0xFFFFF8F0);
+
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
@@ -46,7 +50,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         Text(
                           "Kaizel",
-                          style: GoogleFonts.mysteryQuest (
+                          style: GoogleFonts.mysteryQuest(
                             textStyle: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -70,11 +74,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: _buildPill("Edit Profile", PhosphorIcons.pencilSimple(PhosphorIconsStyle.bold), Colors.blue),
+                      child: _buildPill("Edit Profile", PhosphorIcons.pencilSimple(PhosphorIconsStyle.bold), Colors.blue, bgColor2),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: _buildPill("Share Profile", PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold), Colors.green),
+                      child: _buildPill("Share Profile", PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold), Colors.green, bgColor2),
                     ),
                   ],
                 ),
@@ -82,21 +86,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 30),
               
               // Sections
-              _buildListTile("Profile Details", PhosphorIcons.addressBook(PhosphorIconsStyle.bold), Colors.purple),
+              _buildListTile("Profile Details", PhosphorIcons.addressBook(PhosphorIconsStyle.bold), Colors.purple, bgColor2, () {}),
               
               const SizedBox(height: 10),
-              _buildListTile("Download Queue", PhosphorIcons.cloudArrowDown(PhosphorIconsStyle.bold), Colors.orange),
+              _buildListTile("Download Queue", PhosphorIcons.cloudArrowDown(PhosphorIconsStyle.bold), Colors.orange, bgColor2, () {}),
               
               const SizedBox(height: 30),
-              _buildSectionHeader("Settings"),
-              _buildListTile("Notifications", PhosphorIcons.bell(PhosphorIconsStyle.bold), Colors.red),
-              _buildListTile("Privacy & Security", PhosphorIcons.shieldCheck(PhosphorIconsStyle.bold), Colors.teal),
-              _buildListTile("Appearance", PhosphorIcons.palette(PhosphorIconsStyle.bold), Colors.pink),
+              _buildSectionHeader("Settings", brandColor, bgColor),
+              _buildListTile("Notifications", PhosphorIcons.bell(PhosphorIconsStyle.bold), Colors.red, bgColor2, () {}),
+              _buildListTile("Privacy & Security", PhosphorIcons.shieldCheck(PhosphorIconsStyle.bold), Colors.teal, bgColor2, () {}),
+              _buildListTile("Appearance", PhosphorIcons.palette(PhosphorIconsStyle.bold), Colors.pink, bgColor2, () {
+                Navigator.pushNamed(context, '/appearance');
+              }),
 
               const SizedBox(height: 30),
-              _buildListTile("About", PhosphorIcons.info(PhosphorIconsStyle.bold), Colors.indigo),
-              _buildListTile("Help & Support", PhosphorIcons.question(PhosphorIconsStyle.bold), Colors.amber),
-              _buildListTile("Donate", PhosphorIcons.tipJar(PhosphorIconsStyle.bold), Colors.deepOrange),
+              _buildListTile("About", PhosphorIcons.info(PhosphorIconsStyle.bold), Colors.indigo, bgColor2, () {}),
+              _buildListTile("Help & Support", PhosphorIcons.question(PhosphorIconsStyle.bold), Colors.amber, bgColor2, () {}),
+              _buildListTile("Donate", PhosphorIcons.tipJar(PhosphorIconsStyle.bold), Colors.deepOrange, bgColor2, () {}),
               
               const SizedBox(height: 30),
               Padding(
@@ -128,7 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildPill(String label, PhosphorIconData icon, Color color) {
+  Widget _buildPill(String label, PhosphorIconData icon, Color color, Color bgColor2) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
@@ -142,14 +148,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(width: 8),
           Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 14),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, Color brandColor, Color bgColor) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -165,7 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: Colors.black87,
             ),
           ),
-          const Text(
+          Text(
             "View All",
             style: TextStyle(
               fontSize: 14,
@@ -178,7 +184,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildListTile(String title, PhosphorIconData icon, Color color) {
+  Widget _buildListTile(String title, PhosphorIconData icon, Color color, Color bgColor2, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       child: Container(
@@ -196,9 +202,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
           leading: Icon(icon, color: color),
-          title: Text(title, style: const TextStyle(fontSize: 15)),
+          title: Text(title, style: const TextStyle(fontSize: 15, color: Colors.black87)),
           trailing: Icon(PhosphorIcons.caretRight(), size: 16, color: Colors.black38),
-          onTap: () {},
+          onTap: onTap,
         ),
       ),
     );
