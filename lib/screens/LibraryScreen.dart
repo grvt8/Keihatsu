@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:provider/provider.dart';
 import '../components/MainNavigationBar.dart';
+import '../data/manga_data.dart';
+import '../theme_provider.dart';
 import 'MangaDetailsScreen.dart';
 
 class LibraryScreen extends StatefulWidget {
@@ -12,19 +15,21 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
-  static const Color brandColor = Color(0xFFF97316); // Orange
-  static const Color bgColor = Color(0xFFFFEDD5); // Cream
   int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final brandColor = themeProvider.brandColor;
+    final bgColor = themeProvider.bgColor;
+
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: bgColor,
         elevation: 0,
         title: Text(
-          'Default',
+          'Library',
           style: GoogleFonts.mysteryQuest(
             textStyle: const TextStyle(
               color: Colors.black87,
@@ -35,7 +40,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         actions: [
           IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: Colors.black87)),
           IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel(), color: Colors.black87)),
-          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell(), size: 40, color: Colors.black87)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell(), color: Colors.black87)),
         ],
       ),
       body: GridView.builder(
@@ -132,6 +137,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
           setState(() {
             _currentIndex = index;
           });
+          if (index == 2) Navigator.pushReplacementNamed(context, '/history');
+          if (index == 4) Navigator.pushReplacementNamed(context, '/profile');
         },
       ),
     );

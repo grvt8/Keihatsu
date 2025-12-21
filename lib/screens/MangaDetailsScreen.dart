@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:provider/provider.dart';
+import '../theme_provider.dart';
 
 class MangaDetailsScreen extends StatelessWidget {
+  final Map<String, String> manga;
 
-  static const Color brandColor = Color(0xFFF97316); // Orange
-  static const Color bgColor = Color(0xFFFFEDD5); // Cream
+  const MangaDetailsScreen({super.key, required this.manga});
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final brandColor = themeProvider.brandColor;
+    final bgColor = themeProvider.bgColor;
+
     return Scaffold(
       backgroundColor: bgColor,
       body: Stack(
@@ -24,7 +29,7 @@ class MangaDetailsScreen extends StatelessWidget {
               children: [
                 Positioned.fill(
                   child: Image.asset(
-                    manga["image"]!,
+                    manga["bgImage"] ?? manga["image"]!,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -35,7 +40,7 @@ class MangaDetailsScreen extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.black.withOpacity(0.6),
+                          Colors.black.withOpacity(0.3),
                           bgColor,
                         ],
                         stops: const [0.0, 1.0],
@@ -87,7 +92,7 @@ class MangaDetailsScreen extends StatelessWidget {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: Image.asset(
-                                manga["bgImage"]!,
+                                manga["image"]!,
                                 height: 180,
                                 width: 120,
                                 fit: BoxFit.cover,
@@ -105,7 +110,7 @@ class MangaDetailsScreen extends StatelessWidget {
                                     textStyle: const TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white, // Changed to white for better contrast against background
+                                      color: Colors.white,
                                       shadows: [
                                         Shadow(
                                           blurRadius: 10.0,
@@ -165,7 +170,7 @@ class MangaDetailsScreen extends StatelessWidget {
               SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    return _buildChapterTile(245 - index);
+                    return _buildChapterTile(context, 245 - index, brandColor);
                   },
                   childCount: 10,
                 ),
@@ -225,7 +230,7 @@ class MangaDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildChapterTile(int chapterNumber) {
+  Widget _buildChapterTile(BuildContext context, int chapterNumber, Color brandColor) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
       leading: Icon(PhosphorIcons.circle(PhosphorIconsStyle.fill), size: 10, color: brandColor),

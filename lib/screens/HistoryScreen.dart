@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:provider/provider.dart';
 import '../data/manga_data.dart';
 import '../components/MainNavigationBar.dart';
+import '../theme_provider.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -11,20 +14,27 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  static const Color brandColor = Color(0xFFF97316);
-  static const Color bgColor = Color(0xFFFFEDD5);
   int _currentIndex = 2; // History is index 2
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final brandColor = themeProvider.brandColor;
+    final bgColor = themeProvider.bgColor;
+
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: bgColor,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'History',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+          style: GoogleFonts.mysteryQuest(
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              )
+          ),
         ),
         actions: [
           IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: Colors.black87)),
@@ -69,7 +79,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         children: [
                           Text(
                             manga["title"]!,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            style: GoogleFonts.mysteryQuest(
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.black
+                              )
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -93,6 +109,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         brandColor: brandColor,
         onTap: (index) {
           if (index == 0) Navigator.pushReplacementNamed(context, '/library');
+          if (index == 4) Navigator.pushReplacementNamed(context, '/profile');
           setState(() {
             _currentIndex = index;
           });

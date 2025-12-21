@@ -41,8 +41,8 @@ class MainNavigationBar extends StatelessWidget {
           label: 'Extensions',
         ),
         BottomNavigationBarItem(
-          icon: Icon(PhosphorIcons.dotsThreeOutline()),
-          label: 'More',
+          icon: Icon(PhosphorIcons.user()),
+          label: 'Profile',
         ),
       ],
     );
