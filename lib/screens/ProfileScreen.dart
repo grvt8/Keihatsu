@@ -20,104 +20,210 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.bgColor;
-    const Color bgColor2 = Color(0xFFFFF8F0);
+    final Color cardColor = Colors.white.withOpacity(0.7);
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              // Profile Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Banner Image
+                Container(
+                  height: 140,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('images/profileBg.jpeg'), // Using an existing asset as banner
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                // Top Icons
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Stack(
+                          children: [
+                            Icon(PhosphorIcons.bell(), color: Colors.white, size: 28),
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: brandColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                ),
+                                child: const Text("4", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 20),
+                        Icon(PhosphorIcons.gear(), color: Colors.white, size: 28),
+                      ],
+                    ),
+                  ),
+                ),
+                // Profile Picture (overlapping)
+                Positioned(
+                  bottom: -50,
+                  left: 20,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
                       child: Image.asset(
-                        'images/pic.png',
+                        'images/user1.jpeg',
                         width: 100,
                         height: 100,
                         fit: BoxFit.cover,
                       ),
                     ),
-                    const SizedBox(width: 20),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Kaizel",
-                          style: GoogleFonts.mysteryQuest(
-                            textStyle: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        const Text(
-                          "@404khai",
-                          style: TextStyle(color: Colors.black54),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Pills
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _buildPill("Edit Profile", PhosphorIcons.pencilSimple(PhosphorIconsStyle.bold), Colors.blue, bgColor2),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _buildPill("Share Profile", PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold), Colors.green, bgColor2),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 30),
-              
-              // Sections
-              _buildListTile("Profile Details", PhosphorIcons.addressBook(PhosphorIconsStyle.bold), Colors.purple, bgColor2, () {}),
-              
-              const SizedBox(height: 10),
-              _buildListTile("Download Queue", PhosphorIcons.cloudArrowDown(PhosphorIconsStyle.bold), Colors.orange, bgColor2, () {}),
-              
-              const SizedBox(height: 30),
-              _buildSectionHeader("Settings", brandColor, bgColor),
-              _buildListTile("Notifications", PhosphorIcons.bell(PhosphorIconsStyle.bold), Colors.red, bgColor2, () {}),
-              _buildListTile("Privacy & Security", PhosphorIcons.shieldCheck(PhosphorIconsStyle.bold), Colors.teal, bgColor2, () {}),
-              _buildListTile("Appearance", PhosphorIcons.palette(PhosphorIconsStyle.bold), Colors.pink, bgColor2, () {
-                Navigator.pushNamed(context, '/appearance');
-              }),
-
-              const SizedBox(height: 30),
-              _buildListTile("About", PhosphorIcons.info(PhosphorIconsStyle.bold), Colors.indigo, bgColor2, () {}),
-              _buildListTile("Help & Support", PhosphorIcons.question(PhosphorIconsStyle.bold), Colors.amber, bgColor2, () {}),
-              _buildListTile("Donate", PhosphorIcons.tipJar(PhosphorIconsStyle.bold), Colors.deepOrange, bgColor2, () {}),
-              
-              const SizedBox(height: 30),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    "Log Out",
-                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                   ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 60),
+            // User Info & Share Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            "Kaizel",
+                            style: GoogleFonts.mysteryQuest(
+                              textStyle: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Icon(PhosphorIcons.pencilLine(), size: 20, color: Colors.black54),
+                        ],
+                      ),
+                      const Text(
+                        "Water is good, Lloyd is water",
+                        style: TextStyle(color: Colors.black54, fontSize: 16),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Icon(PhosphorIcons.calendarBlank(), size: 18, color: Colors.black38),
+                          const SizedBox(width: 5),
+                          const Text("Member since 2025", style: TextStyle(color: Colors.black38)),
+                          const SizedBox(width: 20),
+                          Icon(PhosphorIcons.mapPin(), size: 18, color: Colors.black38),
+                          const SizedBox(width: 5),
+                          const Text("Switzerland", style: TextStyle(color: Colors.black38)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: brandColor.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Icon(PhosphorIcons.shareNetwork(), color: brandColor),
+                  ),
+                ],
               ),
-              const SizedBox(height: 100), // Space for bottom nav
-            ],
-          ),
+            ),
+            const SizedBox(height: 30),
+            // Stats Row
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildStatItem("143", "in Library"),
+                    _buildDivider(),
+                    _buildStatItem("5h", "reading"),
+                    _buildDivider(),
+                    _buildStatItem("7", "read"),
+                    _buildDivider(),
+                    _buildStatItem("3", "comments"),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Menu Groups
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  _buildSingleTile("Download Queue", PhosphorIcons.cloudArrowDown(), cardColor),
+                  const SizedBox(height: 20),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildGroupTile("Settings", PhosphorIcons.gear(), true, () {
+                          Navigator.pushNamed(context, '/appearance');
+                        }),
+                        _buildGroupTile("Inbox", PhosphorIcons.envelopeSimple(), false, () {}),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildSwitchTile("Night Mode", PhosphorIcons.sun(), themeProvider.themeMode == ThemeMode.dark, (val) {
+                          themeProvider.setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
+                        }),
+                        _buildGroupTile("Help & Support", PhosphorIcons.question(), true, () {}),
+                        _buildGroupTile("Donate", PhosphorIcons.tipJar(), false, () {}),
+                        _buildGroupTile("About", PhosphorIcons.info(), false, () {})
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 30),
+            TextButton(
+              onPressed: () {},
+              child: const Text("Log Out", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 100),
+          ],
         ),
       ),
       bottomNavigationBar: MainNavigationBar(
@@ -134,79 +240,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildPill(String label, PhosphorIconData icon, Color color, Color bgColor2) {
+  Widget _buildStatItem(String value, String label) {
+    return Column(
+      children: [
+        Text(value, style: TextStyle(fontSize: 24, fontFamily: GoogleFonts.denkOne, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(color: Colors.black45, fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(height: 40, width: 1, color: Colors.black12);
+  }
+
+  Widget _buildSingleTile(String title, PhosphorIconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
-        color: bgColor2,
-        borderRadius: BorderRadius.circular(30),
+        color: color,
+        borderRadius: BorderRadius.circular(25),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 14),
-          ),
+          Icon(icon, size: 28),
+          const SizedBox(width: 15),
+          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, Color brandColor, Color bgColor) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      color: bgColor,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          Text(
-            "View All",
-            style: TextStyle(
-              fontSize: 14,
-              color: brandColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildListTile(String title, PhosphorIconData icon, Color color, Color bgColor2, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-      child: Container(
-        decoration: BoxDecoration(
-          color: bgColor2,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          leading: Icon(icon, color: color),
-          title: Text(title, style: const TextStyle(fontSize: 15, color: Colors.black87)),
-          trailing: Icon(PhosphorIcons.caretRight(), size: 16, color: Colors.black38),
+  Widget _buildGroupTile(String title, PhosphorIconData icon, bool showDivider, VoidCallback onTap) {
+    return Column(
+      children: [
+        ListTile(
           onTap: onTap,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+          leading: Icon(icon, size: 28),
+          title: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
         ),
-      ),
+        if (showDivider) const Divider(height: 1, indent: 60, endIndent: 20, color: Colors.black12),
+      ],
+    );
+  }
+
+  Widget _buildSwitchTile(String title, PhosphorIconData icon, bool value, Function(bool) onChanged) {
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+          leading: Icon(icon, size: 28),
+          title: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+          trailing: Switch(
+            value: value,
+            activeColor: Provider.of<ThemeProvider>(context, listen: false).brandColor,
+            onChanged: onChanged,
+          ),
+        ),
+        const Divider(height: 1, indent: 60, endIndent: 20, color: Colors.black12),
+      ],
     );
   }
 }

@@ -65,7 +65,9 @@ flutter:
   assets:
     - images/logo.png
     - images/logo2.png
-    - images/pic.png
+    - images/user2.png
+    - images/user1.jpeg
+    - images/profileBg.jpeg
     - images/mascot.jpeg
     - images/orb.jpeg
     - images/google.png
@@ -104,6 +106,8 @@ flutter:
     - images/twatf2.png
     - images/poc.png
     - images/poc2.png
+    - images/orv.jpeg
+    - images/orv2.jpeg
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
