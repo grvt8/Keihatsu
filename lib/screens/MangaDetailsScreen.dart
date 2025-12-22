@@ -14,8 +14,10 @@ class MangaDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final brandColor = themeProvider.brandColor;
-    final bgColor = themeProvider.bgColor;
-    final Color cardColor = Colors.white38;
+    final bgColor = themeProvider.effectiveBgColor;
+    final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
+    final Color cardColor = isDarkMode ? Colors.white10 : Colors.white38;
+    final Color textColor = isDarkMode ? Colors.white : Colors.black87;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -140,9 +142,9 @@ class MangaDetailsScreen extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           _buildActionButton(PhosphorIcons.bookBookmark(PhosphorIconsStyle.fill), "In library", brandColor),
-                          _buildActionButton(PhosphorIcons.hourglassHigh(), "5 days", Colors.black54),
-                          _buildActionButton(PhosphorIcons.arrowsClockwise(), "Tracking", Colors.black54),
-                          _buildActionButton(PhosphorIcons.globe(), "WebView", Colors.black54),
+                          _buildActionButton(PhosphorIcons.hourglassHigh(), "5 days", isDarkMode ? Colors.white70 : Colors.black54),
+                          _buildActionButton(PhosphorIcons.arrowsClockwise(), "Tracking", isDarkMode ? Colors.white70 : Colors.black54),
+                          _buildActionButton(PhosphorIcons.globe(), "WebView", isDarkMode ? Colors.white70 : Colors.black54),
                         ],
                       ),
                       const SizedBox(height: 25),
@@ -169,22 +171,22 @@ class MangaDetailsScreen extends StatelessWidget {
                               scrollDirection: Axis.horizontal,
                               child: Row(
                                 children: [
-                                  _buildTag("# ACTION", brandColor),
+                                  _buildTag("# ACTION", brandColor, textColor),
                                   const SizedBox(width: 10),
-                                  _buildTag("# ADVENTURE", brandColor),
+                                  _buildTag("# ADVENTURE", brandColor, textColor),
                                   const SizedBox(width: 10),
-                                  _buildTag("# ROMANCE", brandColor),
+                                  _buildTag("# ROMANCE", brandColor, textColor),
                                   const SizedBox(width: 10),
-                                  _buildTag("# COMEDY", brandColor),
+                                  _buildTag("# COMEDY", brandColor, textColor),
                                 ],
                               ),
                             ),
                             const SizedBox(height: 15),
                             // Description
                             RichText(
-                              text: const TextSpan(
-                                style: TextStyle(color: Colors.black87, height: 1.4),
-                                children: [
+                              text: TextSpan(
+                                style: TextStyle(color: textColor.withOpacity(0.9), height: 1.4),
+                                children: const [
                                   TextSpan(text: "Through posting a \"Best Comment\", I somehow became the main character of a webtoon! Growing up in poverty, Sunny never expected anything good from life... "),
                                   TextSpan(
                                     text: "More",
@@ -194,7 +196,7 @@ class MangaDetailsScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 15),
-                            const Divider(color: Colors.black12),
+                            Divider(color: textColor.withOpacity(0.1)),
                             const SizedBox(height: 10),
                             // Chapters Updated Row
                             Row(
@@ -206,7 +208,7 @@ class MangaDetailsScreen extends StatelessWidget {
                                     Text(
                                       "246 Chapters . Updated",
                                       style: GoogleFonts.delius(
-                                        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+                                        textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor),
                                       ),
                                     ),
                                     const Text("Latest update 1mth ago", style: TextStyle(color: Colors.grey, fontSize: 12)),
@@ -242,9 +244,9 @@ class MangaDetailsScreen extends StatelessWidget {
                               children: [
                                 Row(
                                   children: [
-                                    const Text("246", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+                                    Text("246", style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold)),
                                     const SizedBox(width: 5),
-                                    Text("Chapters", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
+                                    Text("Chapters", style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 18)),
                                   ],
                                 ),
                                 Row(
@@ -256,9 +258,9 @@ class MangaDetailsScreen extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 10),
-                            _buildChapterTile(context, 246, brandColor),
-                            _buildChapterTile(context, 245, brandColor),
-                            _buildChapterTile(context, 244, brandColor),
+                            _buildChapterTile(context, 246, brandColor, textColor),
+                            _buildChapterTile(context, 245, brandColor, textColor),
+                            _buildChapterTile(context, 244, brandColor, textColor),
                           ],
                         ),
                       ),
@@ -285,7 +287,7 @@ class MangaDetailsScreen extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text("You may also like", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                Text("You may also like", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textColor)),
                                 Row(
                                   children: [
                                     const Text("More", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
@@ -319,7 +321,7 @@ class MangaDetailsScreen extends StatelessWidget {
                                           const SizedBox(height: 8),
                                           Text(
                                             recommendation["title"]!,
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black87),
+                                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: textColor),
                                             maxLines: 2,
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -338,7 +340,7 @@ class MangaDetailsScreen extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: 100), // Bottom padding for floating bar
+                      const SizedBox(height: 100),
                     ],
                   ),
                 ),
@@ -366,10 +368,8 @@ class MangaDetailsScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  // Download Icon
                   _buildBottomIconButton(PhosphorIcons.downloadSimple(), Colors.white),
                   const SizedBox(width: 10),
-                  // Read Now Button
                   Expanded(
                     child: Container(
                       height: 50,
@@ -386,8 +386,7 @@ class MangaDetailsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  // Checkmark Icon
-                  _buildBottomIconButton(PhosphorIcons.bookBookmark(), Colors.white),
+                  _buildBottomIconButton(PhosphorIcons.check(), Colors.white),
                 ],
               ),
             ),
@@ -439,28 +438,28 @@ class MangaDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTag(String label, Color brandColor) {
+  Widget _buildTag(String label, Color brandColor, Color textColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black12),
+        border: Border.all(color: textColor.withOpacity(0.1)),
       ),
       child: Text(
         label,
-        style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 12),
+        style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 12),
       ),
     );
   }
 
-  Widget _buildChapterTile(BuildContext context, int chapterNumber, Color brandColor) {
+  Widget _buildChapterTile(BuildContext context, int chapterNumber, Color brandColor, Color textColor) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       leading: Icon(PhosphorIcons.circle(PhosphorIconsStyle.fill), size: 10, color: brandColor),
-      title: Text("Chapter $chapterNumber", style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black87)),
-      subtitle: const Text("7/21/25", style: TextStyle(fontSize: 12, color: Colors.black54)),
+      title: Text("Chapter $chapterNumber", style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
+      subtitle: Text("7/21/25", style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.6))),
       trailing: IconButton(
-        icon: Icon(PhosphorIcons.downloadSimple(), color: Colors.black38),
+        icon: Icon(PhosphorIcons.downloadSimple(), color: textColor.withOpacity(0.4)),
         onPressed: () {},
       ),
     );
