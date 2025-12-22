@@ -20,7 +20,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final brandColor = themeProvider.brandColor;
-    final bgColor = themeProvider.bgColor;
+    final bgColor = themeProvider.effectiveBgColor;
+    final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
+    final Color textColor = isDarkMode ? Colors.white : Colors.black87;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -30,15 +32,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
         title: Text(
           'History',
           style: GoogleFonts.mysteryQuest(
-              textStyle: const TextStyle(
+              textStyle: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: textColor,
               )
           ),
         ),
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: Colors.black87)),
-          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.trash(), color: Colors.black87)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: textColor)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.trash(), color: textColor)),
         ],
       ),
       body: ListView.builder(
@@ -56,7 +58,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Text(
                     manga["date"]!,
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+                    style: TextStyle(fontWeight: FontWeight.bold, color: textColor.withOpacity(0.6)),
                   ),
                 ),
               Padding(
@@ -80,23 +82,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           Text(
                             manga["title"]!,
                             style: GoogleFonts.mysteryQuest(
-                              textStyle: const TextStyle(
+                              textStyle: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
-                                color: Colors.black
+                                color: textColor,
                               )
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             "${manga["chapter"]} - ${manga["time"]}",
-                            style: const TextStyle(color: Colors.black54, fontSize: 13),
+                            style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 13),
                           ),
                         ],
                       ),
                     ),
-                    IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.heart(), size: 20)),
-                    IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.trash(), size: 20)),
+                    IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.heart(), size: 20, color: textColor)),
+                    IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.trash(), size: 20, color: textColor)),
                   ],
                 ),
               ),

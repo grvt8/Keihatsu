@@ -8,19 +8,23 @@ class AppearancePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final brandColor = themeProvider.brandColor;
+    final bgColor = themeProvider.effectiveBgColor;
+    final bool isDarkMode = themeProvider.pureBlackDarkMode;
+    final Color textColor = isDarkMode ? Colors.white : Colors.black87;
 
     return Scaffold(
-      backgroundColor: themeProvider.bgColor,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: themeProvider.bgColor,
+        backgroundColor: bgColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Appearance',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
         ),
       ),
       body: SingleChildScrollView(
@@ -30,7 +34,7 @@ class AppearancePage extends StatelessWidget {
           children: [
             Text(
               "Theme",
-              style: TextStyle(color: themeProvider.brandColor, fontWeight: FontWeight.bold),
+              style: TextStyle(color: brandColor, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             
@@ -38,13 +42,13 @@ class AppearancePage extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.black12),
+                border: Border.all(color: textColor.withOpacity(0.1)),
               ),
               child: Row(
                 children: [
-                  _buildThemeToggle(context, "System", ThemeMode.system, themeProvider.themeMode == ThemeMode.system),
-                  _buildThemeToggle(context, "Light", ThemeMode.light, themeProvider.themeMode == ThemeMode.light),
-                  _buildThemeToggle(context, "Dark", ThemeMode.dark, themeProvider.themeMode == ThemeMode.dark),
+                  _buildThemeToggle(context, "System", ThemeMode.system, themeProvider.themeMode == ThemeMode.system, brandColor),
+                  _buildThemeToggle(context, "Light", ThemeMode.light, themeProvider.themeMode == ThemeMode.light, brandColor),
+                  _buildThemeToggle(context, "Dark", ThemeMode.dark, themeProvider.themeMode == ThemeMode.dark, brandColor),
                 ],
               ),
             ),
@@ -93,7 +97,7 @@ class AppearancePage extends StatelessWidget {
                       "Cool Mint",
                       const Color(0xFFB9F916),
                       const Color(0xFFF1FBEB),
-                      themeProvider.brandColor == const Color(0xFFA9FF89)
+                      themeProvider.brandColor == const Color(0xFFB9F916)
                   ),
                   const SizedBox(width: 15),
                   _buildThemePreset(
@@ -101,15 +105,15 @@ class AppearancePage extends StatelessWidget {
                       "Tidal Wave",
                       const Color(0xFF16EAF9),
                       const Color(0xFFEBF8FB),
-                      themeProvider.brandColor == const Color(0xFF89E5FF)
+                      themeProvider.brandColor == const Color(0xFF16EAF9)
                   ),
                   const SizedBox(width: 15),
                   _buildThemePreset(
                       context,
-                      "Summer Ember ",
+                      "Summer Ember",
                       const Color(0xFFF9E216),
                       const Color(0xFFFBFBEB),
-                      themeProvider.brandColor == const Color(0xFFFFF389)
+                      themeProvider.brandColor == const Color(0xFFF9E216)
                   ),
                 ],
               ),
@@ -117,17 +121,17 @@ class AppearancePage extends StatelessWidget {
             
             const SizedBox(height: 30),
             
-            // Pure Black Toggle
+            // Dark Mode Toggle
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  "Pure black dark mode",
-                  style: TextStyle(fontSize: 16, color: Colors.black87),
+                Text(
+                  "Dark mode",
+                  style: TextStyle(fontSize: 16, color: textColor),
                 ),
                 Switch(
                   value: themeProvider.pureBlackDarkMode,
-                  activeColor: themeProvider.brandColor,
+                  activeColor: brandColor,
                   onChanged: (val) => themeProvider.setPureBlackDarkMode(val),
                 ),
               ],
@@ -136,18 +140,18 @@ class AppearancePage extends StatelessWidget {
             const SizedBox(height: 30),
             Text(
               "Display",
-              style: TextStyle(color: themeProvider.brandColor, fontWeight: FontWeight.bold),
+              style: TextStyle(color: brandColor, fontWeight: FontWeight.bold),
             ),
-            _buildDisplayOption("App language"),
-            _buildDisplayOption("Tablet UI", subtitle: "Auto"),
-            _buildDisplayOption("Date format"),
+            _buildDisplayOption("App language", textColor),
+            _buildDisplayOption("Tablet UI", textColor, subtitle: "Auto"),
+            _buildDisplayOption("Date format", textColor),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildThemeToggle(BuildContext context, String label, ThemeMode mode, bool isActive) {
+  Widget _buildThemeToggle(BuildContext context, String label, ThemeMode mode, bool isActive, Color brandColor) {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     return Expanded(
       child: GestureDetector(
@@ -155,7 +159,7 @@ class AppearancePage extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isActive ? themeProvider.brandColor.withOpacity(0.8) : Colors.transparent,
+            color: isActive ? brandColor.withOpacity(0.8) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -224,15 +228,15 @@ class AppearancePage extends StatelessWidget {
     );
   }
 
-  Widget _buildDisplayOption(String title, {String? subtitle}) {
+  Widget _buildDisplayOption(String title, Color textColor, {String? subtitle}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 16, color: Colors.black87)),
+          Text(title, style: TextStyle(fontSize: 16, color: textColor)),
           if (subtitle != null)
-            Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+            Text(subtitle, style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.6))),
         ],
       ),
     );

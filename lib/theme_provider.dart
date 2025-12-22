@@ -11,8 +11,18 @@ class ThemeProvider extends ChangeNotifier {
   Color get bgColor => _bgColor;
   bool get pureBlackDarkMode => _pureBlackDarkMode;
 
+  Color get effectiveBgColor {
+    if (_pureBlackDarkMode) {
+      return Colors.black;
+    }
+    return _bgColor;
+  }
+
   void setThemeMode(ThemeMode mode) {
     _themeMode = mode;
+    // Sync pure black with dark mode if needed, or keep them separate?
+    // User said they are the same toggle.
+    _pureBlackDarkMode = (mode == ThemeMode.dark);
     notifyListeners();
   }
 
@@ -24,6 +34,7 @@ class ThemeProvider extends ChangeNotifier {
 
   void setPureBlackDarkMode(bool value) {
     _pureBlackDarkMode = value;
+    _themeMode = value ? ThemeMode.dark : ThemeMode.light;
     notifyListeners();
   }
 }
