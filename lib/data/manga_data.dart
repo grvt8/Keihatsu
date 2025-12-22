@@ -10,10 +10,11 @@ const List<Map<String, String>> mangaData = [
   {"title": "Legend of...", "count": "38", "image": "images/northernblade.png", "bgImage": "images/northernblade2.png", "chapter": "Ch. 150", "time": "8:15 PM", "date": "12/3/25"},
   {"title": "Priest of Corruption", "count": "13", "image": "images/poc.png", "bgImage": "images/poc2.png", "chapter": "Ch. 150", "time": "8:15 PM", "date": "12/3/25"},
   {"title": "Solo Leveling Ragnarok", "count": "44", "image": "images/sololvl.png", "bgImage": "images/sololvl2.png", "chapter": "Ch. 40", "time": "7:00 PM", "date": "12/3/25"},
-  {"title": "Superhuman Battlefield...", "count": "111", "image": "images/superhumanbattlefield.png", "bgImage": "images/superhumanbattlefield2.png", "chapter": "Ch. 105", "time": "6:45 PM", "date": "12/2/25"},
+  {"title": "Superhuman Battlefield", "count": "111", "image": "images/superhumanbattlefield.png", "bgImage": "images/superhumanbattlefield2.png", "chapter": "Ch. 105", "time": "6:45 PM", "date": "12/2/25"},
   {"title": "Pick Me Up...", "count": "6", "image": "images/pickmeup2.png", "bgImage": "images/pickmeup.png", "chapter": "Ch. 95", "time": "5:30 PM", "date": "12/2/25"},
   {"title": "Swordsmaster's...", "count": "110", "image": "images/swordsmaster.png", "bgImage": "images/swordsmaster2.png", "chapter": "Ch. 120", "time": "4:15 PM", "date": "12/2/25"},
   {"title": "The Regressed...", "count": "143", "image": "images/mercenary.png", "bgImage": "images/mercenary2.png", "chapter": "Ch. 130", "time": "3:00 PM", "date": "12/2/25"},
   {"title": "Max Level Newbie", "count": "143", "image": "images/maxlvlnewbie.png", "bgImage": "images/maxlvlnewbie2.png", "chapter": "Ch. 130", "time": "3:00 PM", "date": "12/2/25"},
   {"title": "Black Sun", "count": "44", "image": "images/blacksun.png", "bgImage": "images/blacksun.png", "chapter": "Ch. 40", "time": "7:00 PM", "date": "12/3/25"},
+  {"title": "Ominiscient Reader's...", "count": "245", "image": "images/orv.jpeg", "bgImage": "images/orv2.jpeg", "chapter": "Ch. 71", "time": "11:00 AM", "date": "2/1/25"},
 ];

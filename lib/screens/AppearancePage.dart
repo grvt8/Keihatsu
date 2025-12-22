@@ -87,6 +87,30 @@ class AppearancePage extends StatelessWidget {
                     const Color(0xFFFDE8E8),
                     themeProvider.brandColor == const Color(0xFFE02424)
                   ),
+                  const SizedBox(width: 15),
+                  _buildThemePreset(
+                      context,
+                      "Cool Mint",
+                      const Color(0xFFB9F916),
+                      const Color(0xFFF1FBEB),
+                      themeProvider.brandColor == const Color(0xFFA9FF89)
+                  ),
+                  const SizedBox(width: 15),
+                  _buildThemePreset(
+                      context,
+                      "Tidal Wave",
+                      const Color(0xFF16EAF9),
+                      const Color(0xFFEBF8FB),
+                      themeProvider.brandColor == const Color(0xFF89E5FF)
+                  ),
+                  const SizedBox(width: 15),
+                  _buildThemePreset(
+                      context,
+                      "Summer Ember ",
+                      const Color(0xFFF9E216),
+                      const Color(0xFFFBFBEB),
+                      themeProvider.brandColor == const Color(0xFFFFF389)
+                  ),
                 ],
               ),
             ),
