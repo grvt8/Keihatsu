@@ -20,7 +20,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.bgColor;
-    final Color cardColor = Colors.white.withOpacity(0.7);
+    final Color cardColor = Colors.white.withOpacity(0.55);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -34,17 +34,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Container(
                   height: 140,
                   width: double.infinity,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage('images/profileBg.jpeg'), // Using an existing asset as banner
+                      image: const AssetImage('images/profileBg.jpeg'), // Using an existing asset as banner
                       fit: BoxFit.cover,
+                      colorFilter: ColorFilter.mode(
+                        Colors.black.withOpacity(0.4),
+                        BlendMode.darken,
+                      ),
                     ),
                   ),
                 ),
                 // Top Icons
                 SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -53,15 +57,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Icon(PhosphorIcons.bell(), color: Colors.white, size: 28),
                             Positioned(
                               right: 0,
-                              top: 0,
+                              top: -4,
                               child: Container(
-                                padding: const EdgeInsets.all(4),
+                                padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
                                   color: brandColor,
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 2),
                                 ),
-                                child: const Text("4", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                child: Text(
+                                    "4",
+                                    style: GoogleFonts.denkOne(
+                                        textStyle: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                            color: Colors.white
+                                        ),
+                                    ),
+                                ),
                               ),
                             ),
                           ],
@@ -129,11 +141,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          Icon(PhosphorIcons.calendarBlank(), size: 18, color: Colors.black38),
+                          Icon(PhosphorIcons.calendarDots(), size: 18, color: Colors.black38),
                           const SizedBox(width: 5),
                           const Text("Member since 2025", style: TextStyle(color: Colors.black38)),
                           const SizedBox(width: 20),
-                          Icon(PhosphorIcons.mapPin(), size: 18, color: Colors.black38),
+                          Icon(PhosphorIcons.mapPinArea(), size: 18, color: Colors.black38),
                           const SizedBox(width: 5),
                           const Text("Switzerland", style: TextStyle(color: Colors.black38)),
                         ],
@@ -146,7 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: brandColor.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    child: Icon(PhosphorIcons.shareNetwork(), color: brandColor),
+                    child: Icon(PhosphorIcons.shareNetwork(), color: Colors.black87),
                   ),
                 ],
               ),
@@ -193,7 +205,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _buildGroupTile("Settings", PhosphorIcons.gear(), true, () {
                           Navigator.pushNamed(context, '/appearance');
                         }),
-                        _buildGroupTile("Inbox", PhosphorIcons.envelopeSimple(), false, () {}),
+                        _buildGroupTile("Inbox", PhosphorIcons.mailbox(), false, () {}),
                       ],
                     ),
                   ),
@@ -243,7 +255,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildStatItem(String value, String label) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 24, fontFamily: GoogleFonts.denkOne, fontWeight: FontWeight.bold)),
+        Text(value,
+            style: GoogleFonts.denkOne(
+              textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  color: Colors.black
+              ),
+            ),
+        ),
         Text(label, style: const TextStyle(color: Colors.black45, fontSize: 12)),
       ],
     );
@@ -262,9 +282,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 28),
+          Icon(icon, size: 28, color: Colors.black87),
           const SizedBox(width: 15),
-          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+          Text(title, style: const TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -276,8 +296,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ListTile(
           onTap: onTap,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-          leading: Icon(icon, size: 28),
-          title: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+          leading: Icon(icon, size: 28, color: Colors.black87),
+          title: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.black87)),
         ),
         if (showDivider) const Divider(height: 1, indent: 60, endIndent: 20, color: Colors.black12),
       ],
@@ -289,8 +309,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-          leading: Icon(icon, size: 28),
-          title: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+          leading: Icon(icon, size: 28, color: Colors.black),
+          title: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.black)),
           trailing: Switch(
             value: value,
             activeColor: Provider.of<ThemeProvider>(context, listen: false).brandColor,
