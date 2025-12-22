@@ -21,7 +21,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final brandColor = themeProvider.brandColor;
-    final bgColor = themeProvider.bgColor;
+    final bgColor = themeProvider.effectiveBgColor;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -31,16 +31,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
         title: Text(
           'Library',
           style: GoogleFonts.mysteryQuest(
-            textStyle: const TextStyle(
-              color: Colors.black87,
+            textStyle: TextStyle(
+              color: themeProvider.themeMode == ThemeMode.dark ? Colors.white : Colors.black87,
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: Colors.black87)),
-          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel(), color: Colors.black87)),
-          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell(), color: Colors.black87)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: themeProvider.themeMode == ThemeMode.dark ? Colors.white : Colors.black87)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel(), color: themeProvider.themeMode == ThemeMode.dark ? Colors.white : Colors.black87)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell(), color: themeProvider.themeMode == ThemeMode.dark ? Colors.white : Colors.black87)),
         ],
       ),
       body: GridView.builder(

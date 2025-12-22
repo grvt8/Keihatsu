@@ -41,20 +41,24 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: themeProvider.brandColor,
           primary: themeProvider.brandColor,
+          brightness: Brightness.light,
         ),
-        textTheme: GoogleFonts.getTextTheme(
-          'Delius',
-          Theme.of(context).textTheme,
-        ),
+        textTheme: GoogleFonts.getTextTheme('Delius'),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         primaryColor: themeProvider.brandColor,
         scaffoldBackgroundColor: themeProvider.pureBlackDarkMode ? Colors.black : null,
-        textTheme: GoogleFonts.getTextTheme(
-          'Delius',
-          ThemeData.dark().textTheme,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: themeProvider.brandColor,
+          primary: themeProvider.brandColor,
+          brightness: Brightness.dark,
+          surface: themeProvider.pureBlackDarkMode ? Colors.black : null,
+        ),
+        textTheme: GoogleFonts.getTextTheme('Delius').apply(
+          bodyColor: Colors.white,
+          displayColor: Colors.white,
         ),
         useMaterial3: true,
       ),

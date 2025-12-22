@@ -122,7 +122,7 @@ class AppearancePage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  "Pure black dark mode",
+                  "Dark mode",
                   style: TextStyle(fontSize: 16, color: Colors.black87),
                 ),
                 Switch(
