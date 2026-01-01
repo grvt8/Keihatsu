@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../theme_provider.dart';
 import '../data/manga_data.dart';
+import 'MangaReaderScreen.dart';
 
 class MangaDetailsScreen extends StatefulWidget {
   final Map<String, String> manga;
@@ -43,7 +44,7 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> {
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
-    final Color cardColor = isDarkMode ? Colors.white10 : Colors.white38;
+    final Color cardColor = isDarkMode ? Colors.white10 : Colors.white.withOpacity(0.7);
     final Color textColor = isDarkMode ? Colors.white : Colors.black87;
 
     return Scaffold(
@@ -87,7 +88,7 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> {
             controller: _scrollController,
             slivers: [
               SliverAppBar(
-                backgroundColor: _showTitle ? Colors.black : Colors.transparent,
+                backgroundColor: _showTitle ? bgColor : Colors.transparent,
                 elevation: 0,
                 pinned: true,
                 leading: IconButton(
@@ -404,25 +405,35 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> {
               ),
               child: Row(
                 children: [
-                  _buildBottomIconButton(PhosphorIcons.bookBookmark(), Colors.white),
+                  _buildBottomIconButton(PhosphorIcons.downloadSimple(), Colors.white),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade400,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          "Read now",
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MangaReaderScreen(title: widget.manga["title"]!),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade400,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            "Read now",
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black),
+                          ),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  _buildBottomIconButton(PhosphorIcons.arrowsClockwise(), Colors.white),
+                  _buildBottomIconButton(PhosphorIcons.check(), Colors.white),
                 ],
               ),
             ),
@@ -491,6 +502,14 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> {
   Widget _buildChapterTile(BuildContext context, int chapterNumber, Color brandColor, Color textColor) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MangaReaderScreen(title: widget.manga["title"]!),
+          ),
+        );
+      },
       leading: Icon(PhosphorIcons.circle(PhosphorIconsStyle.fill), size: 10, color: brandColor),
       title: Text("Chapter $chapterNumber", style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
       subtitle: Text("7/21/25", style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.6))),

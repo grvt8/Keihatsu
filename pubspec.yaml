@@ -63,52 +63,11 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - images/logo.png
-    - images/logo2.png
-    - images/user2.png
-    - images/user1.jpeg
-    - images/profileBg.jpeg
-    - images/mascot.jpeg
-    - images/orb.jpeg
-    - images/google.png
-    - images/onboarding1.jpg
-    - images/onboarding2.jpg
-    - images/onboarding3.jpg
-    - images/player.jpg
-    - images/player2.png
-    - images/ordeal.png
-    - images/ordeal2.png
-    - images/sssranker.png
-    - images/sssranker2.png
-    - images/pickmeup.png
-    - images/pickmeup2.png
-    - images/superhumanbattlefield.png
-    - images/superhumanbattlefield2.png
-    - images/northernblade.png
-    - images/northernblade2.png
-    - images/adventurer.png
-    - images/adventurer2.png
-    - images/blacksun.png
-    - images/latnasaga.png
-    - images/latnasaga2.png
-    - images/dungeonraid.png
-    - images/dungeonraid2.png
-    - images/mercenary.png
-    - images/mercenary2.png
-    - images/maxlvlnewbie.png
-    - images/maxlvlnewbie2.png
-    - images/swordsmaster.png
-    - images/swordsmaster2.png
-    - images/badbornblood.jpg
-    - images/sololvl.png
-    - images/sololvl2.png
-    - images/twatf.png
-    - images/twatf2.png
-    - images/poc.png
-    - images/poc2.png
-    - images/orv.jpeg
-    - images/orv2.jpeg
-
+    - images/
+    - manwhaChps/Chapter 263_ce4c77/
+    - manwhaChps/Chapter 264_214655/
+    - manwhaChps/Chapter 265_a70526/
+    - lib/data/chapters.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
