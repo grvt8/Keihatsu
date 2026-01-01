@@ -192,6 +192,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         brandColor: brandColor,
         onTap: (index) {
           if (index == 0) Navigator.pushReplacementNamed(context, '/library');
+          if (index == 3) Navigator.pushReplacementNamed(context, '/home');
           if (index == 4) Navigator.pushReplacementNamed(context, '/profile');
           setState(() {
             _currentIndex = index;
