@@ -25,13 +25,17 @@ class MainNavigationBar extends StatelessWidget {
       selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
       items: [
         BottomNavigationBarItem(
+          icon: Icon(PhosphorIcons.house()),
+          label: 'Home',
+        ),
+        BottomNavigationBarItem(
           icon: Icon(PhosphorIcons.books()),
           label: 'Library',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(PhosphorIcons.arrowsClockwise()),
-          label: 'Updates',
-        ),
+        // BottomNavigationBarItem(
+        //   icon: Icon(PhosphorIcons.arrowsClockwise()),
+        //   label: 'Updates',
+        // ),
         BottomNavigationBarItem(
           icon: Icon(PhosphorIcons.clockCounterClockwise()),
           label: 'History',

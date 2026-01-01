@@ -280,6 +280,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         onTap: (index) {
           if (index == 0) Navigator.pushReplacementNamed(context, '/library');
           if (index == 2) Navigator.pushReplacementNamed(context, '/history');
+          if (index == 3) Navigator.pushReplacementNamed(context, '/home');
           setState(() {
             _currentIndex = index;
           });

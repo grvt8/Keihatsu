@@ -138,6 +138,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             _currentIndex = index;
           });
           if (index == 2) Navigator.pushReplacementNamed(context, '/history');
+          if (index == 3) Navigator.pushReplacementNamed(context, '/home');
           if (index == 4) Navigator.pushReplacementNamed(context, '/profile');
         },
       ),
