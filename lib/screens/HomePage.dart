@@ -15,7 +15,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final int _currentIndex = 3; // Linked to Extensions/Home tab
+  final int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -88,11 +88,6 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: MainNavigationBar(
         currentIndex: _currentIndex,
         brandColor: brandColor,
-        onTap: (index) {
-          if (index == 0) Navigator.pushReplacementNamed(context, '/library');
-          if (index == 2) Navigator.pushReplacementNamed(context, '/history');
-          if (index == 4) Navigator.pushReplacementNamed(context, '/profile');
-        },
       ),
     );
   }

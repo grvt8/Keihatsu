@@ -14,7 +14,7 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  int _currentIndex = 2; // History is index 2
+  final int _currentIndex = 2; // History is index 2
   final Set<int> _selectedIndices = {};
   bool _isSelectionMode = false;
 
@@ -40,8 +40,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _deleteSelected() {
-    // In a real app, you'd update the database or state management.
-    // For now, we'll just clear selection since mangaData is a constant.
     setState(() {
       _selectedIndices.clear();
       _isSelectionMode = false;
@@ -116,7 +114,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   if (_isSelectionMode) {
                     _toggleSelection(index);
                   } else {
-                    // Navigate to details if not in selection mode
+                    // Normal tap behavior
                   }
                 },
                 child: Container(
@@ -190,14 +188,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
       bottomNavigationBar: MainNavigationBar(
         currentIndex: _currentIndex,
         brandColor: brandColor,
-        onTap: (index) {
-          if (index == 0) Navigator.pushReplacementNamed(context, '/library');
-          if (index == 3) Navigator.pushReplacementNamed(context, '/home');
-          if (index == 4) Navigator.pushReplacementNamed(context, '/profile');
-          setState(() {
-            _currentIndex = index;
-          });
-        },
       ),
     );
   }
