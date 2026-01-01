@@ -110,6 +110,14 @@ class AppearancePage extends StatelessWidget {
                   const SizedBox(width: 15),
                   _buildThemePreset(
                       context,
+                      "Cherry Blossom",
+                      const Color(0xFFFFBEEB),
+                      const Color(0xFFFBEBF7),
+                      themeProvider.brandColor == const Color(0xFFFFBEEB)
+                  ),
+                  const SizedBox(width: 15),
+                  _buildThemePreset(
+                      context,
                       "Summer Ember",
                       const Color(0xFFF9E216),
                       const Color(0xFFFBFBEB),
