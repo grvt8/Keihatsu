@@ -15,7 +15,7 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
-  int _currentIndex = 0;
+  final int _currentIndex = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -133,14 +133,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
       bottomNavigationBar: MainNavigationBar(
         currentIndex: _currentIndex,
         brandColor: brandColor,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          if (index == 2) Navigator.pushReplacementNamed(context, '/history');
-          if (index == 3) Navigator.pushReplacementNamed(context, '/home');
-          if (index == 4) Navigator.pushReplacementNamed(context, '/profile');
-        },
       ),
     );
   }
