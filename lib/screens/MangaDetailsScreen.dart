@@ -5,10 +5,37 @@ import 'package:provider/provider.dart';
 import '../theme_provider.dart';
 import '../data/manga_data.dart';
 
-class MangaDetailsScreen extends StatelessWidget {
+class MangaDetailsScreen extends StatefulWidget {
   final Map<String, String> manga;
 
   const MangaDetailsScreen({super.key, required this.manga});
+
+  @override
+  State<MangaDetailsScreen> createState() => _MangaDetailsScreenState();
+}
+
+class _MangaDetailsScreenState extends State<MangaDetailsScreen> {
+  late ScrollController _scrollController;
+  bool _showTitle = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(() {
+      if (_scrollController.offset > 100) {
+        if (!_showTitle) setState(() => _showTitle = true);
+      } else {
+        if (_showTitle) setState(() => _showTitle = false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +60,7 @@ class MangaDetailsScreen extends StatelessWidget {
               children: [
                 Positioned.fill(
                   child: Image.asset(
-                    manga["bgImage"] ?? manga["image"]!,
+                    widget.manga["bgImage"] ?? widget.manga["image"]!,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -57,19 +84,28 @@ class MangaDetailsScreen extends StatelessWidget {
           ),
 
           CustomScrollView(
+            controller: _scrollController,
             slivers: [
               SliverAppBar(
-                backgroundColor: Colors.transparent,
+                backgroundColor: _showTitle ? Colors.black : Colors.transparent,
                 elevation: 0,
                 pinned: true,
                 leading: IconButton(
-                  icon: Icon(PhosphorIcons.arrowLeft(), color: Colors.white),
+                  icon: Icon(PhosphorIcons.arrowLeft(), color: _showTitle ? textColor : Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
+                title: _showTitle
+                    ? Text(
+                        widget.manga["title"]!,
+                        style: GoogleFonts.mysteryQuest(
+                          textStyle: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      )
+                    : null,
                 actions: [
-                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.downloadSimple(), color: Colors.white)),
-                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel(), color: Colors.white)),
-                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.dotsThreeVertical(), color: Colors.white)),
+                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.downloadSimple(), color: _showTitle ? textColor : Colors.white)),
+                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel(), color: _showTitle ? textColor : Colors.white)),
+                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.dotsThreeVertical(), color: _showTitle ? textColor : Colors.white)),
                 ],
               ),
               SliverToBoxAdapter(
@@ -96,7 +132,7 @@ class MangaDetailsScreen extends StatelessWidget {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: Image.asset(
-                                manga["image"]!,
+                                widget.manga["image"]!,
                                 height: 180,
                                 width: 120,
                                 fit: BoxFit.cover,
@@ -109,7 +145,7 @@ class MangaDetailsScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  manga["title"]!,
+                                  widget.manga["title"]!,
                                   style: GoogleFonts.mysteryQuest(
                                     textStyle: const TextStyle(
                                       fontSize: 24,
@@ -301,7 +337,7 @@ class MangaDetailsScreen extends StatelessWidget {
                               scrollDirection: Axis.horizontal,
                               child: Row(
                                 children: mangaData.map((recommendation) {
-                                  if (recommendation["title"] == manga["title"]) return const SizedBox.shrink();
+                                  if (recommendation["title"] == widget.manga["title"]) return const SizedBox.shrink();
                                   return Padding(
                                     padding: const EdgeInsets.only(right: 15),
                                     child: SizedBox(
@@ -368,7 +404,7 @@ class MangaDetailsScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  _buildBottomIconButton(PhosphorIcons.downloadSimple(), Colors.white),
+                  _buildBottomIconButton(PhosphorIcons.bookBookmark(), Colors.white),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Container(
@@ -386,7 +422,7 @@ class MangaDetailsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  _buildBottomIconButton(PhosphorIcons.check(), Colors.white),
+                  _buildBottomIconButton(PhosphorIcons.arrowsClockwise(), Colors.white),
                 ],
               ),
             ),
