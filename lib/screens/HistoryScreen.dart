@@ -15,6 +15,41 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   int _currentIndex = 2; // History is index 2
+  final Set<int> _selectedIndices = {};
+  bool _isSelectionMode = false;
+
+  void _toggleSelection(int index) {
+    setState(() {
+      if (_selectedIndices.contains(index)) {
+        _selectedIndices.remove(index);
+        if (_selectedIndices.isEmpty) {
+          _isSelectionMode = false;
+        }
+      } else {
+        _selectedIndices.add(index);
+        _isSelectionMode = true;
+      }
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedIndices.clear();
+      _isSelectionMode = false;
+    });
+  }
+
+  void _deleteSelected() {
+    // In a real app, you'd update the database or state management.
+    // For now, we'll just clear selection since mangaData is a constant.
+    setState(() {
+      _selectedIndices.clear();
+      _isSelectionMode = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Selected items deleted (Visual only for now)")),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +64,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
       appBar: AppBar(
         backgroundColor: bgColor,
         elevation: 0,
+        leading: _isSelectionMode
+            ? IconButton(
+                icon: Icon(PhosphorIcons.x(), color: textColor),
+                onPressed: _clearSelection,
+              )
+            : null,
         title: Text(
-          'History',
+          _isSelectionMode ? "${_selectedIndices.length} selected" : 'History',
           style: GoogleFonts.mysteryQuest(
               textStyle: TextStyle(
                 fontWeight: FontWeight.bold,
@@ -39,8 +80,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ),
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: textColor)),
-          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.trash(), color: textColor)),
+          if (_isSelectionMode)
+            IconButton(
+              onPressed: _deleteSelected,
+              icon: Icon(PhosphorIcons.trash(), color: textColor),
+            )
+          else ...[
+            IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: textColor)),
+            IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.trash(), color: textColor)),
+          ],
         ],
       ),
       body: ListView.builder(
@@ -48,6 +96,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         itemCount: mangaData.length,
         itemBuilder: (context, index) {
           final manga = mangaData[index];
+          final isSelected = _selectedIndices.contains(index);
           bool showDate = index == 0 || mangaData[index]["date"] != mangaData[index - 1]["date"];
 
           return Column(
@@ -61,45 +110,77 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     style: TextStyle(fontWeight: FontWeight.bold, color: textColor.withOpacity(0.6)),
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: Image.asset(
-                        manga["image"]!,
-                        width: 50,
-                        height: 70,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              InkWell(
+                onLongPress: () => _toggleSelection(index),
+                onTap: () {
+                  if (_isSelectionMode) {
+                    _toggleSelection(index);
+                  } else {
+                    // Navigate to details if not in selection mode
+                  }
+                },
+                child: Container(
+                  color: isSelected ? brandColor.withOpacity(0.1) : Colors.transparent,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Stack(
                         children: [
-                          Text(
-                            manga["title"]!,
-                            style: GoogleFonts.mysteryQuest(
-                              textStyle: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: textColor,
-                              )
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: Image.asset(
+                              manga["image"]!,
+                              width: 50,
+                              height: 70,
+                              fit: BoxFit.cover,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "${manga["chapter"]} - ${manga["time"]}",
-                            style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 13),
-                          ),
+                          if (isSelected)
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: brandColor.withOpacity(0.4),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Icon(Icons.check, color: Colors.white),
+                              ),
+                            ),
                         ],
                       ),
-                    ),
-                    IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.heart(), size: 20, color: textColor)),
-                    IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.trash(), size: 20, color: textColor)),
-                  ],
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              manga["title"]!,
+                              style: GoogleFonts.mysteryQuest(
+                                textStyle: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: textColor,
+                                )
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "${manga["chapter"]} - ${manga["time"]}",
+                              style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (!_isSelectionMode) ...[
+                        IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.heart(), size: 20, color: textColor)),
+                        IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.trash(), size: 20, color: textColor)),
+                      ] else
+                        Checkbox(
+                          value: isSelected,
+                          onChanged: (_) => _toggleSelection(index),
+                          activeColor: brandColor,
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ],
