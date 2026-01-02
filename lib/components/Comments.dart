@@ -116,7 +116,7 @@ class CommentsBottomSheet extends StatelessWidget {
                             child: CircleAvatar(
                               backgroundColor: brandColor,
                               radius: 20,
-                              child: const Icon(PhosphorIcons.paperPlaneRight(PhosphorIconsStyle.fill), color: Colors.white, size: 20),
+                              child: Icon(PhosphorIcons.paperPlaneRight(PhosphorIconsStyle.fill), color: Colors.white, size: 20),
                             ),
                           ),
                         ],
@@ -138,7 +138,7 @@ class CommentsBottomSheet extends StatelessWidget {
                 _buildCommentThread(
                   context,
                   user: "Natalie",
-                  userImage: "images/user2.png",
+                  userImage: "images/user2.jpeg",
                   time: "1 month ago",
                   text: "Bro really pulled out the strap 🤣",
                   likes: "52",
@@ -147,7 +147,7 @@ class CommentsBottomSheet extends StatelessWidget {
                     _buildCommentThread(
                       context,
                       user: "Raikage",
-                      userImage: "images/mascot.jpeg",
+                      userImage: "images/user1.jpeg",
                       time: "1 month ago",
                       text: "His hiding it",
                       likes: "8",
@@ -156,7 +156,7 @@ class CommentsBottomSheet extends StatelessWidget {
                     _buildCommentThread(
                       context,
                       user: "Kivye",
-                      userImage: "images/user1.jpeg",
+                      userImage: "images/user5.jpg",
                       time: "1 month ago",
                       text: "Yeah but why tho",
                       likes: "4",
@@ -169,7 +169,7 @@ class CommentsBottomSheet extends StatelessWidget {
                 _buildCommentThread(
                   context,
                   user: "insomnia",
-                  userImage: "images/user2.png",
+                  userImage: "images/user4.jpeg",
                   time: "2 weeks ago",
                   text: "This chapter was absolute fire! The art style keeps getting better.",
                   likes: "128",
