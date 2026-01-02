@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../theme_provider.dart';
+import '../screens/PublicProfileScreen.dart';
 
 class UserProfileSheet extends StatelessWidget {
   final String username;
@@ -135,7 +136,18 @@ class UserProfileSheet extends StatelessWidget {
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      Navigator.pop(context); // Close the bottom sheet
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PublicProfileScreen(
+                            username: username,
+                            userImage: userImage,
+                          ),
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: cardColor,
                       foregroundColor: textColor,
