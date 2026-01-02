@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../theme_provider.dart';
+import 'UserProfileSheet.dart';
 
 class CommentsBottomSheet extends StatelessWidget {
   final ScrollController scrollController;
@@ -12,6 +13,15 @@ class CommentsBottomSheet extends StatelessWidget {
     required this.scrollController,
     required this.currentChapterIndex,
   });
+
+  void _showUserProfile(BuildContext context, String username, String userImage) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => UserProfileSheet(username: username, userImage: userImage),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,139 +34,142 @@ class CommentsBottomSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
       ),
       child: Column(
         children: [
-          // Handle
+          // Drag Handle
           Container(
-            margin: const EdgeInsets.symmetric(vertical: 10),
-            width: 40,
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            width: 45,
             height: 5,
             decoration: BoxDecoration(
-              color: textColor.withOpacity(0.2),
+              color: textColor.withOpacity(0.15),
               borderRadius: BorderRadius.circular(10),
             ),
           ),
-          // Header
+          // Navigation & Meta Header
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
             child: Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildNavButton(
-                        context, PhosphorIcons.arrowLeft(), "Episode ${currentChapterIndex + 262}"),
-                    _buildNavButton(
-                        context, PhosphorIcons.arrowRight(), "Episode ${currentChapterIndex + 264}",
-                        isRight: true),
+                    _buildNavButton(context, PhosphorIcons.caretLeft(), "Episode ${currentChapterIndex + 262}"),
+                    _buildNavButton(context, PhosphorIcons.caretRight(), "Episode ${currentChapterIndex + 264}", isRight: true),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 15),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Icon(PhosphorIcons.house(), size: 20, color: textColor),
-                    const SizedBox(width: 15),
-                    Icon(PhosphorIcons.info(), size: 20, color: textColor),
-                    const SizedBox(width: 15),
-                    Icon(PhosphorIcons.shareNetwork(), size: 20, color: textColor),
+                    Icon(PhosphorIcons.house(), size: 22, color: textColor.withOpacity(0.7)),
+                    const SizedBox(width: 20),
+                    Icon(PhosphorIcons.info(), size: 22, color: textColor.withOpacity(0.7)),
+                    const SizedBox(width: 20),
+                    Icon(PhosphorIcons.shareNetwork(), size: 22, color: textColor.withOpacity(0.7)),
                   ],
                 ),
               ],
             ),
           ),
-          const Divider(),
+          const Divider(height: 30, thickness: 0.5),
           Expanded(
             child: ListView(
               controller: scrollController,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               children: [
                 Text(
                   "Comments on Episode ${currentChapterIndex + 263}",
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                 ),
-                const SizedBox(height: 20),
-                // Comment Input
+                const SizedBox(height: 25),
+                // Premium Comment Input
                 Container(
-                  padding: const EdgeInsets.all(15),
+                  padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: textColor.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(15),
+                    color: textColor.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: textColor.withOpacity(0.05)),
                   ),
                   child: Column(
                     children: [
-                      const TextField(
+                      TextField(
+                        style: TextStyle(color: textColor),
                         decoration: InputDecoration(
                           hintText: "Your comment...",
+                          hintStyle: TextStyle(color: textColor.withOpacity(0.3)),
                           border: InputBorder.none,
                         ),
                         maxLines: 2,
                       ),
+                      const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Icon(PhosphorIcons.gif(), color: textColor.withOpacity(0.5)),
-                          const SizedBox(width: 15),
-                          Icon(PhosphorIcons.paperclip(), color: textColor.withOpacity(0.5)),
-                          const SizedBox(width: 15),
-                          CircleAvatar(
-                            backgroundColor: brandColor,
-                            radius: 18,
-                            child: const Icon(Icons.arrow_upward, color: Colors.white, size: 20),
+                          Icon(PhosphorIcons.gif(), color: textColor.withOpacity(0.4), size: 22),
+                          const SizedBox(width: 18),
+                          Icon(PhosphorIcons.paperclip(), color: textColor.withOpacity(0.4), size: 22),
+                          const SizedBox(width: 18),
+                          GestureDetector(
+                            child: CircleAvatar(
+                              backgroundColor: brandColor,
+                              radius: 20,
+                              child: const Icon(PhosphorIcons.paperPlaneRight(PhosphorIconsStyle.fill), color: Colors.white, size: 20),
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-                // Filters
+                const SizedBox(height: 25),
+                // Sorting Filters
                 Row(
                   children: [
                     _buildFilterChip("Top", true, brandColor),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
                     _buildFilterChip("New", false, brandColor),
                   ],
                 ),
-                const SizedBox(height: 20),
-                // Comment List
-                _buildCommentItem(
+                const SizedBox(height: 30),
+                // Refined Threaded Comment List
+                _buildCommentThread(
                   context,
                   user: "Natalie",
-                  userImage: "images/user2.jpeg",
+                  userImage: "images/user2.png",
                   time: "1 month ago",
                   text: "Bro really pulled out the strap 🤣",
                   likes: "52",
-                  image: "images/player.jpg",
+                  image: "images/orb.jpeg",
                   replies: [
-                    _buildCommentItem(
+                    _buildCommentThread(
                       context,
                       user: "Raikage",
-                      userImage: "images/user6.jpeg",
+                      userImage: "images/mascot.jpeg",
                       time: "1 month ago",
                       text: "His hiding it",
                       likes: "8",
-                      isNested: true,
+                      isReply: true,
                     ),
-                    _buildCommentItem(
+                    _buildCommentThread(
                       context,
                       user: "Kivye",
-                      userImage: "images/user3.jpeg",
+                      userImage: "images/user1.jpeg",
                       time: "1 month ago",
                       text: "Yeah but why tho",
                       likes: "4",
-                      isNested: true,
-                      replyTo: "Raiuga",
+                      isReply: true,
+                      replyTo: "Raikage",
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                _buildCommentItem(
+                const SizedBox(height: 25),
+                _buildCommentThread(
                   context,
                   user: "insomnia",
-                  userImage: "images/user4.jpeg",
+                  userImage: "images/user2.png",
                   time: "2 weeks ago",
                   text: "This chapter was absolute fire! The art style keeps getting better.",
                   likes: "128",
@@ -169,21 +182,21 @@ class CommentsBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildNavButton(BuildContext context, PhosphorIconData icon, String label,
-      {bool isRight = false}) {
+  Widget _buildNavButton(BuildContext context, PhosphorIconData icon, String label, {bool isRight = false}) {
+    final textColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(10),
+        color: textColor.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          if (!isRight) Icon(icon, size: 16),
-          if (!isRight) const SizedBox(width: 5),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-          if (isRight) const SizedBox(width: 5),
-          if (isRight) Icon(icon, size: 16),
+          if (!isRight) Icon(icon, size: 18),
+          if (!isRight) const SizedBox(width: 8),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          if (isRight) const SizedBox(width: 8),
+          if (isRight) Icon(icon, size: 18),
         ],
       ),
     );
@@ -191,25 +204,23 @@ class CommentsBottomSheet extends StatelessWidget {
 
   Widget _buildFilterChip(String label, bool isSelected, Color brandColor) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       decoration: BoxDecoration(
         color: isSelected ? brandColor.withOpacity(0.1) : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: isSelected ? brandColor : Colors.black12),
       ),
       child: Row(
         children: [
-          if (isSelected) Icon(PhosphorIcons.trophy(), size: 16, color: brandColor),
-          if (isSelected) const SizedBox(width: 5),
-          Text(label,
-              style: TextStyle(
-                  color: isSelected ? brandColor : Colors.black54, fontWeight: FontWeight.bold)),
+          if (isSelected) Icon(PhosphorIcons.crown(PhosphorIconsStyle.fill), size: 16, color: brandColor),
+          if (isSelected) const SizedBox(width: 8),
+          Text(label, style: TextStyle(color: isSelected ? brandColor : Colors.black54, fontWeight: FontWeight.bold, fontSize: 13)),
         ],
       ),
     );
   }
 
-  Widget _buildCommentItem(
+  Widget _buildCommentThread(
     BuildContext context, {
     required String user,
     required String userImage,
@@ -217,77 +228,97 @@ class CommentsBottomSheet extends StatelessWidget {
     required String text,
     required String likes,
     String? image,
-    bool isNested = false,
+    bool isReply = false,
     String? replyTo,
     List<Widget>? replies,
   }) {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final textColor = themeProvider.themeMode == ThemeMode.dark ? Colors.white : Colors.black87;
 
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (isNested) ...[
-            const SizedBox(width: 20),
-            VerticalDivider(color: textColor.withOpacity(0.1), thickness: 2),
-            const SizedBox(width: 10),
-          ],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                        radius: 12, backgroundImage: AssetImage(userImage)),
-                    const SizedBox(width: 10),
-                    Text(user, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    const SizedBox(width: 10),
-                    Text(time, style: TextStyle(color: textColor.withOpacity(0.4), fontSize: 12)),
-                  ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (isReply) ...[
+              const SizedBox(width: 15),
+              Container(
+                width: 2,
+                margin: const EdgeInsets.only(right: 15, bottom: 10),
+                decoration: BoxDecoration(
+                  color: textColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(1),
                 ),
-                const SizedBox(height: 8),
-                if (replyTo != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
+              ),
+            ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // User Info
+                  GestureDetector(
+                    onTap: () => _showUserProfile(context, user, userImage),
                     child: Row(
                       children: [
-                        Icon(PhosphorIcons.arrowBendUpRight(), size: 14, color: textColor.withOpacity(0.4)),
-                        const SizedBox(width: 5),
-                        Text("Replying to @$replyTo",
-                            style: TextStyle(
-                                color: textColor.withOpacity(0.4),
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic)),
+                        CircleAvatar(radius: 14, backgroundImage: AssetImage(userImage)),
+                        const SizedBox(width: 12),
+                        Text(user, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        const SizedBox(width: 10),
+                        Text(time, style: TextStyle(color: textColor.withOpacity(0.4), fontSize: 12)),
                       ],
                     ),
                   ),
-                Text(text, style: const TextStyle(fontSize: 14)),
-                if (image != null)
+                  const SizedBox(height: 10),
+                  // Content Area
                   Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.asset(image, height: 150, width: 100, fit: BoxFit.cover),
+                    padding: const EdgeInsets.only(left: 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (replyTo != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Row(
+                              children: [
+                                Icon(PhosphorIcons.arrowBendUpRight(), size: 14, color: textColor.withOpacity(0.4)),
+                                const SizedBox(width: 6),
+                                Text("Replying to @$replyTo", style: TextStyle(color: textColor.withOpacity(0.4), fontSize: 12, fontStyle: FontStyle.italic)),
+                              ],
+                            ),
+                          ),
+                        Text(text, style: const TextStyle(fontSize: 15, height: 1.4)),
+                        if (image != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: Image.asset(image, height: 180, width: 120, fit: BoxFit.cover),
+                            ),
+                          ),
+                        // Actions
+                        Row(
+                          children: [
+                            IconButton(icon: Icon(PhosphorIcons.caretUp(PhosphorIconsStyle.bold), size: 20, color: textColor.withOpacity(0.6)), onPressed: () {}),
+                            Text(likes, style: TextStyle(fontSize: 13, color: textColor.withOpacity(0.6), fontWeight: FontWeight.bold)),
+                            IconButton(icon: Icon(PhosphorIcons.caretDown(PhosphorIconsStyle.bold), size: 20, color: textColor.withOpacity(0.6)), onPressed: () {}),
+                            const SizedBox(width: 10),
+                            Text("Reply", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textColor.withOpacity(0.6))),
+                            const Spacer(),
+                            Icon(PhosphorIcons.dotsThreeVertical(), size: 20, color: textColor.withOpacity(0.4)),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                Row(
-                  children: [
-                    IconButton(icon: Icon(PhosphorIcons.arrowFatUp(), size: 18), onPressed: () {}),
-                    Text(likes, style: const TextStyle(fontSize: 12)),
-                    IconButton(icon: Icon(PhosphorIcons.arrowFatDown(), size: 18), onPressed: () {}),
-                    const Text("Reply", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                    const Spacer(),
-                    Icon(PhosphorIcons.dotsThreeVertical(), size: 18),
-                  ],
-                ),
-                if (replies != null) ...replies,
-              ],
+                  // Render Sub-replies recursively
+                  if (replies != null) ...replies,
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }
