@@ -74,11 +74,16 @@ class UserProfileSheet extends StatelessWidget {
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: bgColor,
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(25),
                   ),
-                  child: CircleAvatar(
-                    radius: 45,
-                    backgroundImage: AssetImage(userImage),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.asset(
+                      userImage,
+                      width: 90,
+                      height: 90,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
@@ -91,43 +96,52 @@ class UserProfileSheet extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        username,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _buildBadge(context, PhosphorIcons.hammer(PhosphorIconsStyle.fill), "", Colors.tealAccent),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                // Bio under username
                 Text(
-                  username,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                  ),
+                  "25, Artist, Avid Bookworm",
+                  style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 14),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 15),
                 // Badges
-                Row(
-                  children: [
-                    _buildBadge(context, PhosphorIcons.sealCheck(PhosphorIconsStyle.fill), "", Colors.blue),
-                    const SizedBox(width: 8),
-                    _buildBadge(context, PhosphorIcons.sword(), "Keyboard Warrior", Colors.brown[400]!),
-                    const SizedBox(width: 8),
-                    _buildBadge(context, PhosphorIcons.discordLogo(), "$username.9611", const Color(0xFF5865F2)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Views
-                Row(
-                  children: [
-                    Icon(PhosphorIcons.eye(), size: 16, color: textColor.withOpacity(0.5)),
-                    const SizedBox(width: 5),
-                    Text("119", style: TextStyle(color: textColor.withOpacity(0.5), fontSize: 13)),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildBadge(context, PhosphorIcons.sword(), "Keyboard Warrior", Colors.brown[400]!),
+                      const SizedBox(width: 8),
+                      _buildBadge(context, PhosphorIcons.discordLogo(), "$username.9611", const Color(0xFF5865F2)),
+                      const SizedBox(width: 8),
+                      _buildBadge(context, PhosphorIcons.instagramLogo(), "$username.793", const Color(0xFFF21D6B)),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 25),
                 // Stats
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildStatItem("711", "Reputation", textColor),
+                    _buildStatItem("#127", "Highest Rank", textColor),
                     _buildStatItem("460", "Comments", textColor),
                     _buildStatItem("96", "Manga Read", textColor),
-                    _buildStatItem("#127", "Highest Rank", textColor),
+                    _buildStatItem("3k", "Hours Read", textColor),
                   ],
                 ),
                 const SizedBox(height: 30),
