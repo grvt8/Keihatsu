@@ -21,16 +21,27 @@ class PublicProfileScreen extends StatefulWidget {
 
 class _PublicProfileScreenState extends State<PublicProfileScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late ScrollController _scrollController;
+  bool _showTitle = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _scrollController = ScrollController();
+    _scrollController.addListener(() {
+      if (_scrollController.offset > 130) {
+        if (!_showTitle) setState(() => _showTitle = true);
+      } else {
+        if (_showTitle) setState(() => _showTitle = false);
+      }
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -45,177 +56,194 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> with SingleTi
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // Banner
-                Container(
-                  height: 180,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: const AssetImage('images/profileBg.jpeg'),
-                      fit: BoxFit.cover,
-                      colorFilter: ColorFilter.mode(
-                        Colors.black.withOpacity(0.3),
-                        BlendMode.darken,
-                      ),
-                    ),
-                  ),
-                ),
-                // Back Button
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                ),
-                // Profile Picture
-                Positioned(
-                  bottom: -40,
-                  left: 20,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: bgColor,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: Image.asset(
-                        widget.userImage,
-                        width: 100,
-                        height: 100,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 50),
-            // Profile Info
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.username,
-                        style: GoogleFonts.mysteryQuest(
-                          textStyle: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
+      body: NestedScrollView(
+        controller: _scrollController,
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              expandedHeight: 180,
+              pinned: true,
+              backgroundColor: bgColor,
+              elevation: 0,
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back, color: _showTitle ? textColor : Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: _showTitle
+                  ? Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundImage: AssetImage(widget.userImage),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            widget.username,
+                            style: GoogleFonts.denkOne(
+                              textStyle: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                              ),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    )
+                  : null,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    // Banner
+                    Container(
+                      height: 140,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: const AssetImage('images/profileBg.jpeg'),
+                          fit: BoxFit.cover,
+                          colorFilter: ColorFilter.mode(
+                            Colors.black.withOpacity(0.3),
+                            BlendMode.darken,
                           ),
                         ),
                       ),
-                      const Text(
-                        "25, Artist, Avid Bookworm",
-                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
+                    // Profile Picture
+                    Positioned(
+                      bottom: 10,
+                      left: 20,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: Image.asset(
+                            widget.userImage,
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 10),
-                      Row(
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  const SizedBox(height: 50),
+                  // Profile Info
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.username,
+                              style: GoogleFonts.mysteryQuest(
+                                textStyle: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
+                              ),
+                            ),
+                            const Text(
+                              "25, Artist, Avid Bookworm",
+                              style: TextStyle(color: Colors.grey, fontSize: 16),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Icon(PhosphorIcons.calendarDots(), size: 18, color: Colors.grey),
+                                const SizedBox(width: 5),
+                                const Text("Member since 2023", style: TextStyle(color: Colors.grey)),
+                                const SizedBox(width: 20),
+                                Icon(PhosphorIcons.mapPinArea(), size: 18, color: Colors.grey),
+                                const SizedBox(width: 5),
+                                const Text("Canada", style: TextStyle(color: Colors.grey)),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: brandColor.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Icon(PhosphorIcons.shareNetwork(), color: brandColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  // Stats Row
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          Icon(PhosphorIcons.calendarDots(), size: 18, color: Colors.grey),
-                          const SizedBox(width: 5),
-                          const Text("Member since 2023", style: TextStyle(color: Colors.grey)),
-                          const SizedBox(width: 20),
-                          Icon(PhosphorIcons.mapPinArea(), size: 18, color: Colors.grey),
-                          const SizedBox(width: 5),
-                          const Text("Canada", style: TextStyle(color: Colors.grey)),
+                          _buildStatItem("45h", "Of Reading", textColor),
+                          Container(height: 40, width: 1, color: textColor.withOpacity(0.1)),
+                          _buildStatItem("192", "Manhwas Read", textColor),
                         ],
                       ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: brandColor.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(15),
                     ),
-                    child: Icon(PhosphorIcons.shareNetwork(), color: brandColor),
                   ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
-            const SizedBox(height: 30),
-            // Stats Row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildStatItem("45h", "Of Reading", textColor),
-                    Container(height: 40, width: 1, color: textColor.withOpacity(0.1)),
-                    _buildStatItem("192", "Manhwas Read", textColor),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _SliverAppBarDelegate(
+                TabBar(
+                  controller: _tabController,
+                  dividerColor: Colors.transparent,
+                  indicator: BoxDecoration(
+                    color: brandColor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: textColor.withOpacity(0.6),
+                  labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                  padding: const EdgeInsets.all(10),
+                  tabs: const [
+                    Tab(text: "Library"),
+                    Tab(text: "Activity"),
                   ],
                 ),
+                bgColor,
               ),
             ),
-            const SizedBox(height: 20),
-            // Tabs Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                child: Column(
-                  children: [
-                    // Tab Bar
-                    Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: TabBar(
-                        controller: _tabController,
-                        dividerColor: Colors.transparent,
-                        indicator: BoxDecoration(
-                          color: brandColor,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        labelColor: Colors.white,
-                        unselectedLabelColor: textColor.withOpacity(0.6),
-                        labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                        tabs: const [
-                          Tab(text: "Library"),
-                          Tab(text: "Activity"),
-                        ],
-                      ),
-                    ),
-                    // Tab View Content
-                    SizedBox(
-                      height: 400, // Fixed height for demo, better to use NestedScrollView in real app
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _buildLibraryTab(context, textColor, brandColor),
-                          _buildActivityTab(context, textColor, brandColor, cardColor),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 50),
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildLibraryTab(context, textColor, brandColor),
+            _buildActivityTab(context, textColor, brandColor, cardColor),
           ],
         ),
       ),
@@ -234,8 +262,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> with SingleTi
   Widget _buildLibraryTab(BuildContext context, Color textColor, Color brandColor) {
     return ListView.builder(
       padding: const EdgeInsets.all(15),
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: 2,
+      itemCount: mangaData.length,
       itemBuilder: (context, index) {
         final manga = mangaData[index];
         return Padding(
@@ -281,8 +308,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> with SingleTi
   Widget _buildActivityTab(BuildContext context, Color textColor, Color brandColor, Color cardColor) {
     return ListView.builder(
       padding: const EdgeInsets.all(15),
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: 2,
+      itemCount: 10,
       itemBuilder: (context, index) {
         return Padding(
           padding: const EdgeInsets.only(bottom: 20),
@@ -325,14 +351,14 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> with SingleTi
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(5),
-                        child: Image.asset(mangaData[index]["image"]!, width: 40, height: 40, fit: BoxFit.cover),
+                        child: Image.asset(mangaData[index % mangaData.length]["image"]!, width: 40, height: 40, fit: BoxFit.cover),
                       ),
                       const SizedBox(width: 10),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text("Ch 101", style: TextStyle(color: Colors.grey, fontSize: 11)),
-                          Text(mangaData[index]["title"]!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text(mangaData[index % mangaData.length]["title"]!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                           const Text("Brent Bristol", style: TextStyle(color: Colors.grey, fontSize: 11)),
                         ],
                       ),
@@ -345,5 +371,30 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> with SingleTi
         );
       },
     );
+  }
+}
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  _SliverAppBarDelegate(this._tabBar, this.bgColor);
+
+  final TabBar _tabBar;
+  final Color bgColor;
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height + 20;
+  @override
+  double get maxExtent => _tabBar.preferredSize.height + 20;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: bgColor,
+      child: _tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return false;
   }
 }
