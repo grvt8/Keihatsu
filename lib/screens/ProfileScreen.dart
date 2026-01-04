@@ -164,6 +164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                                 const SizedBox(width: 10),
                                 Icon(PhosphorIcons.pencilLine(), size: 20, color: textColor.withOpacity(0.6)),
+                                // Icon(PhosphorIcons.hammer(PhosphorIconsStyle.fill), color: Colors.tealAccent, size: 24),
                               ],
                             ),
                             Text(
@@ -215,6 +216,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           _buildStatItem("7", "read", textColor),
                           _buildDivider(textColor),
                           _buildStatItem("3", "comments", textColor),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Badge Images Box (Mirrored from PublicProfileScreen)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildImageBadge('images/badge1.png', "Night Owl", textColor),
+                          _buildImageBadge('images/badge2.png', "Touch Grass", textColor),
+                          _buildImageBadge('images/badge3.png', "Offline Samurai", textColor),
+                          _buildImageBadge('images/badge4.png', "Keyboard Warrior", textColor),
                         ],
                       ),
                     ),
@@ -315,6 +338,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(width: 16),
         Icon(PhosphorIcons.gear(), color: iconColor, size: 28),
       ],
+    );
+  }
+
+  Widget _buildImageBadge(String imagePath, String name, Color textColor) {
+    return SizedBox(
+      width: 70,
+      child: Column(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: textColor.withOpacity(0.1)),
+            ),
+            child: ClipOval(
+              child: Image.asset(imagePath, fit: BoxFit.cover, errorBuilder: (c, e, s) => Icon(PhosphorIcons.medal(), color: textColor.withOpacity(0.2))),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: textColor.withOpacity(0.7)),
+          ),
+        ],
+      ),
     );
   }
 

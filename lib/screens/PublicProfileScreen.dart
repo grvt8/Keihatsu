@@ -244,7 +244,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> with SingleTi
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildImageBadge('images/badge1.png', "Night Owl", textColor),
-                              _buildImageBadge('images/badge2.png', "Unemployed Final Boss", textColor),
+                              _buildImageBadge('images/badge2.png', "Touch Grass", textColor),
                               _buildImageBadge('images/badge3.png', "Offline Samurai", textColor),
                               _buildImageBadge('images/badge4.png', "Keyboard Warrior", textColor),
                             ],
@@ -271,8 +271,8 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> with SingleTi
                       labelStyle: const TextStyle(fontWeight: FontWeight.bold),
                       padding: const EdgeInsets.all(10),
                       tabs: const [
-                        Tab(text: "Library"),
-                        Tab(text: "Activity"),
+                        Tab(text: "Library (21)"),
+                        Tab(text: "Activity (174)"),
                       ],
                     ),
                     bgColor,
