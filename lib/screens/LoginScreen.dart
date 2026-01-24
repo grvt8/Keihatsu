@@ -7,11 +7,13 @@ class LoginScreen extends StatelessWidget {
   // Using colors as defined in the project
   static const Color brandColor = Color(0xFFF97316); // Orange
   static const Color bgColor = Color(0xFFFFEDD5); // Cream
+  static const Color bgColor2 = Color(0xFFFFFFFF);
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: bgColor2,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -20,7 +22,7 @@ class LoginScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
-                  'images/logo.png',
+                  'images/keihatsu.png',
                   height: 150,
                 ),
                 const SizedBox(height: 10),

@@ -12,6 +12,7 @@ class Onboarding extends StatefulWidget {
 class _OnboardingState extends State<Onboarding> {
   static const Color brandColor = Color(0xFFF97316);
   static const Color bgColor = Color(0xFFFFEDD5);
+  static const Color bgColor2 = Color(0x00000000);
 
   @override
   void initState() {
@@ -27,13 +28,13 @@ class _OnboardingState extends State<Onboarding> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: bgColor2,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'images/logo.png',
+              'images/keihatsu.png',
               height: 300,
             ),
             Text(
