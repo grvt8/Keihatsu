@@ -21,95 +21,32 @@ class LoginScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'images/keihatsu.png',
-                  height: 150,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(50),
+                  child: Image.asset(
+                    'images/keihatsu.png',
+                    height: 150,
+                    width: 150,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   "Welcome Back!",
-                  style: GoogleFonts.barriecito(
+                  style: GoogleFonts.hennyPenny(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: brandColor,
                   ),
                 ),
                 const Text(
-                  "Log in to continue",
+                  "Log in to sync your library and continue your journey",
+                  textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.grey, fontSize: 14),
                 ),
-                const SizedBox(height: 30),
-
-                const SizedBox(height: 16),
-                _buildTextField(
-                  context,
-                  hintText: "Email address",
-                  icon: Icons.email_outlined,
-                  brandColor: brandColor,
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  context,
-                  hintText: "Password",
-                  icon: Icons.lock_outline,
-                  isPassword: true,
-                  brandColor: brandColor,
-                ),
-                const SizedBox(height: 20),
-
-                // Login Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: brandColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 2,
-                    ),
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/library');
-                    },
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Log In",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Icon(Icons.arrow_forward, color: Colors.white),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                // Divider
-                Row(
-                  children: [
-                    Expanded(child: Divider(color: Colors.grey.withOpacity(0.3))),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Text(
-                        "Or continue with",
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                      ),
-                    ),
-                    Expanded(child: Divider(color: Colors.grey.withOpacity(0.3))),
-                  ],
-                ),
-
-                const SizedBox(height: 30),
-
-                // Google Sign Up
+                const SizedBox(height: 50),
+                
+                // Google Sign In
                 SizedBox(
                   width: double.infinity,
                   height: 55,
@@ -143,9 +80,26 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                
+                const SizedBox(height: 15),
 
-                const SizedBox(height: 25),
-
+                // Skip for now
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/library');
+                  },
+                  child: const Text(
+                    "Skip for now",
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 30),
+                
                 GestureDetector(
                   onTap: () => Navigator.pushReplacementNamed(context, '/register'),
                   child: RichText(
@@ -168,43 +122,6 @@ class LoginScreen extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(
-    BuildContext context, {
-    required String hintText,
-    required IconData icon,
-    required Color brandColor,
-    bool isPassword = false,
-  }) {
-    return TextFormField(
-      obscureText: isPassword,
-      decoration: InputDecoration(
-        hintText: hintText,
-        prefixIcon: Icon(icon, color: Colors.grey.shade400),
-        suffixIcon: isPassword
-            ? Icon(
-          Icons.visibility_off,
-          color: Colors.grey.shade400,
-        )
-            : null,
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide(color: brandColor, width: 1),
         ),
       ),
     );

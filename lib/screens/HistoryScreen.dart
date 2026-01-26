@@ -70,7 +70,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             : null,
         title: Text(
           _isSelectionMode ? "${_selectedIndices.length} selected" : 'History',
-          style: GoogleFonts.mysteryQuest(
+          style: GoogleFonts.hennyPenny(
               textStyle: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: textColor,
@@ -152,7 +152,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           children: [
                             Text(
                               manga["title"]!,
-                              style: GoogleFonts.mysteryQuest(
+                              style: GoogleFonts.hennyPenny(
                                 textStyle: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,

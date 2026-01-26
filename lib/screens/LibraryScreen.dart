@@ -33,7 +33,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         elevation: 0,
         title: Text(
           'Library',
-          style: GoogleFonts.mysteryQuest(
+          style: GoogleFonts.hennyPenny(
             textStyle: TextStyle(
               color: textColor,
               fontWeight: FontWeight.bold,

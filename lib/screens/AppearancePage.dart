@@ -70,7 +70,7 @@ class AppearancePage extends StatelessWidget {
                   const SizedBox(width: 15),
                   _buildThemePreset(
                     context, 
-                    "Original Orange", 
+                    "Carrot Orange",
                     const Color(0xFFF97316), 
                     const Color(0xFFFFEDD5),
                     themeProvider.brandColor == const Color(0xFFF97316)

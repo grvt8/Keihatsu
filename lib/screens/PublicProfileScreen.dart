@@ -166,7 +166,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> with SingleTi
                                   children: [
                                     Text(
                                       widget.username,
-                                      style: GoogleFonts.mysteryQuest(
+                                      style: GoogleFonts.hennyPenny(
                                         textStyle: TextStyle(
                                           fontSize: 32,
                                           fontWeight: FontWeight.bold,
