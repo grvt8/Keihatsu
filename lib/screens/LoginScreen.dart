@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../theme_provider.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen ({super.key});
 
-  // Using colors as defined in the project
-  static const Color brandColor = Color(0xFFF97316); // Orange
-  static const Color bgColor = Color(0xFFFFEDD5); // Cream
-  static const Color bgColor2 = Color(0xFFFFFFFF);
-
-
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final brandColor = themeProvider.brandColor;
+    final bgColor = themeProvider.bgColor;
+
     return Scaffold(
-      backgroundColor: bgColor2,
+      backgroundColor: bgColor,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -42,14 +42,18 @@ class LoginScreen extends StatelessWidget {
 
                 const SizedBox(height: 16),
                 _buildTextField(
+                  context,
                   hintText: "Email address",
                   icon: Icons.email_outlined,
+                  brandColor: brandColor,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
+                  context,
                   hintText: "Password",
                   icon: Icons.lock_outline,
                   isPassword: true,
+                  brandColor: brandColor,
                 ),
                 const SizedBox(height: 20),
 
@@ -111,7 +115,7 @@ class LoginScreen extends StatelessWidget {
                   height: 55,
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: brandColor),
+                      side: BorderSide(color: brandColor),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -127,7 +131,7 @@ class LoginScreen extends StatelessWidget {
                           height: 20,
                         ),
                         const SizedBox(width: 12),
-                        const Text(
+                        Text(
                           "Sign in with Google",
                           style: TextStyle(
                             color: brandColor,
@@ -145,10 +149,10 @@ class LoginScreen extends StatelessWidget {
                 GestureDetector(
                   onTap: () => Navigator.pushReplacementNamed(context, '/register'),
                   child: RichText(
-                    text: const TextSpan(
-                      style: TextStyle(color: Colors.black54, fontSize: 14),
+                    text: TextSpan(
+                      style: const TextStyle(color: Colors.black54, fontSize: 14),
                       children: [
-                        TextSpan(text: "Don't have an account? "),
+                        const TextSpan(text: "Don't have an account? "),
                         TextSpan(
                           text: "Register",
                           style: TextStyle(
@@ -169,9 +173,11 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildTextField(
+    BuildContext context, {
     required String hintText,
     required IconData icon,
+    required Color brandColor,
     bool isPassword = false,
   }) {
     return TextFormField(
@@ -198,7 +204,7 @@ class LoginScreen extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: brandColor, width: 1),
+          borderSide: BorderSide(color: brandColor, width: 1),
         ),
       ),
     );

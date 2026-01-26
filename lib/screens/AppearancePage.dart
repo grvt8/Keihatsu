@@ -46,9 +46,9 @@ class AppearancePage extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  _buildThemeToggle(context, "System", ThemeMode.system, themeProvider.themeMode == ThemeMode.system, brandColor),
-                  _buildThemeToggle(context, "Light", ThemeMode.light, themeProvider.themeMode == ThemeMode.light, brandColor),
-                  _buildThemeToggle(context, "Dark", ThemeMode.dark, themeProvider.themeMode == ThemeMode.dark, brandColor),
+                  _buildThemeToggle(context, "System", ThemeMode.system, themeProvider.themeMode == ThemeMode.system, brandColor, textColor),
+                  _buildThemeToggle(context, "Light", ThemeMode.light, themeProvider.themeMode == ThemeMode.light, brandColor, textColor),
+                  _buildThemeToggle(context, "Dark", ThemeMode.dark, themeProvider.themeMode == ThemeMode.dark, brandColor, textColor),
                 ],
               ),
             ),
@@ -63,6 +63,14 @@ class AppearancePage extends StatelessWidget {
                   _buildThemePreset(
                     context, 
                     "Default", 
+                    Colors.black, 
+                    Colors.white,
+                    themeProvider.brandColor == Colors.black && themeProvider.bgColor == Colors.white
+                  ),
+                  const SizedBox(width: 15),
+                  _buildThemePreset(
+                    context, 
+                    "Original Orange", 
                     const Color(0xFFF97316), 
                     const Color(0xFFFFEDD5),
                     themeProvider.brandColor == const Color(0xFFF97316)
@@ -159,7 +167,7 @@ class AppearancePage extends StatelessWidget {
     );
   }
 
-  Widget _buildThemeToggle(BuildContext context, String label, ThemeMode mode, bool isActive, Color brandColor) {
+  Widget _buildThemeToggle(BuildContext context, String label, ThemeMode mode, bool isActive, Color brandColor, Color textColor) {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     return Expanded(
       child: GestureDetector(
@@ -178,7 +186,7 @@ class AppearancePage extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: isActive ? Colors.white : Colors.black87,
+                  color: isActive ? Colors.white : textColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),

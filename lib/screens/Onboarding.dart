@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
+import 'package:provider/provider.dart';
+import '../theme_provider.dart';
 
 class Onboarding extends StatefulWidget {
   const Onboarding({super.key});
@@ -10,8 +12,6 @@ class Onboarding extends StatefulWidget {
 }
 
 class _OnboardingState extends State<Onboarding> {
-  static const Color brandColor = Color(0xFFF97316);
-  static const Color bgColor = Color(0xFFFFEDD5);
   static const Color bgColor2 = Color(0x00000000);
 
   @override
@@ -27,6 +27,8 @@ class _OnboardingState extends State<Onboarding> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
       backgroundColor: bgColor2,
       body: Center(
@@ -39,12 +41,12 @@ class _OnboardingState extends State<Onboarding> {
             ),
             Text(
               'Keihatsu',
-              style: GoogleFonts.mysteryQuest(
-                textStyle: const TextStyle(
+              style: GoogleFonts.hennyPenny(
+                textStyle: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
-                  color: brandColor,
+                  color: themeProvider.brandColor,
                 ),
               ),
             ),

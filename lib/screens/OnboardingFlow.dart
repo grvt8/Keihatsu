@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../theme_provider.dart';
 import 'LoginScreen.dart';
 
 
@@ -38,12 +40,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     super.dispose();
   }
 
-
-  static const Color brandColor = Color(0xFFF97316); // Orange
-  static const Color bgColor = Color(0xFFFFEDD5); // Cream
-
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final brandColor = themeProvider.brandColor;
+    final bgColor = themeProvider.bgColor;
+
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
@@ -97,7 +99,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: List.generate(
                             _pages.length,
-                                (i) => _buildDot(i == _currentPage),
+                                (i) => _buildDot(i == _currentPage, brandColor),
                           ),
                         ),
                         const SizedBox(height: 32),
@@ -189,7 +191,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     );
   }
 
-  Widget _buildDot(bool isActive) {
+  Widget _buildDot(bool isActive, Color brandColor) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.symmetric(horizontal: 6),
