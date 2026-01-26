@@ -34,7 +34,7 @@ class _HomePageState extends State<HomePage> {
         elevation: 0,
         title: Text(
           'Keihatsu',
-          style: GoogleFonts.mysteryQuest(
+          style: GoogleFonts.hennyPenny(
             textStyle: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 24),
           ),
         ),
@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Text(
             title,
-            style: GoogleFonts.mysteryQuest(
+            style: GoogleFonts.hennyPenny(
               textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
             ),
           ),

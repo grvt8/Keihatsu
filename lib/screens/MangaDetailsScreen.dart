@@ -98,7 +98,7 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> {
                 title: _showTitle
                     ? Text(
                         widget.manga["title"]!,
-                        style: GoogleFonts.mysteryQuest(
+                        style: GoogleFonts.hennyPenny(
                           textStyle: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       )
@@ -147,7 +147,7 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> {
                               children: [
                                 Text(
                                   widget.manga["title"]!,
-                                  style: GoogleFonts.mysteryQuest(
+                                  style: GoogleFonts.hennyPenny(
                                     textStyle: const TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,

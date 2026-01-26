@@ -154,7 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 Text(
                                   "Kaizel",
-                                  style: GoogleFonts.mysteryQuest(
+                                  style: GoogleFonts.hennyPenny(
                                     textStyle: TextStyle(
                                       fontSize: 32,
                                       fontWeight: FontWeight.bold,

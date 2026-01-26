@@ -21,21 +21,27 @@ class RegisterScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'images/keihatsu.png',
-                  height: 150,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(50),
+                  child: Image.asset(
+                    'images/keihatsu.png',
+                    height: 150,
+                    width: 150,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   "Create Account",
-                  style: GoogleFonts.barriecito(
+                  style: GoogleFonts.hennyPenny(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: brandColor,
                   ),
                 ),
                 const Text(
-                  "Sign up to get started",
+                  "Sync your library and reading history to the cloud",
+                  textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.grey, fontSize: 14),
                 ),
                 const SizedBox(height: 50),
