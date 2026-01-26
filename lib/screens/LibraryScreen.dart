@@ -22,25 +22,28 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
+    final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
 
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: bgColor,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Text(
           'Library',
           style: GoogleFonts.mysteryQuest(
             textStyle: TextStyle(
-              color: themeProvider.themeMode == ThemeMode.dark ? Colors.white : Colors.black87,
+              color: textColor,
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: themeProvider.themeMode == ThemeMode.dark ? Colors.white : Colors.black87)),
-          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel(), color: themeProvider.themeMode == ThemeMode.dark ? Colors.white : Colors.black87)),
-          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell(), color: themeProvider.themeMode == ThemeMode.dark ? Colors.white : Colors.black87)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: textColor)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel(), color: textColor)),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell(), color: textColor)),
         ],
       ),
       body: GridView.builder(

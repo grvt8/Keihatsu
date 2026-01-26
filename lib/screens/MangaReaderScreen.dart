@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -100,7 +99,8 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
           if (_showControls)
             Positioned(
               top: 0, left: 0, right: 0,
-              child: _buildGlassBox(
+              child: Container(
+                color: brandColor,
                 child: SafeArea(
                   bottom: false,
                   child: Padding(
@@ -130,7 +130,8 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
           if (_showControls)
             Positioned(
               bottom: 0, left: 0, right: 0,
-              child: _buildGlassBox(
+              child: Container(
+                color: brandColor,
                 child: SafeArea(
                   top: false,
                   child: Padding(
@@ -150,7 +151,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                                 value: _sliderValue,
                                 min: 1,
                                 max: pages.isEmpty ? 1 : pages.length.toDouble(),
-                                activeColor: brandColor,
+                                activeColor: Colors.white,
                                 inactiveColor: Colors.white24,
                                 onChanged: (val) => setState(() => _sliderValue = val),
                               ),
@@ -165,10 +166,10 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            Icon(PhosphorIcons.phoneSlash(), color: Colors.white70),
-                            Icon(PhosphorIcons.arrowsOut(), color: Colors.white70),
-                            Icon(PhosphorIcons.selectionBackground(), color: Colors.white70),
-                            Icon(PhosphorIcons.gear(), color: Colors.white70),
+                            Icon(PhosphorIcons.phoneSlash(), color: Colors.white),
+                            Icon(PhosphorIcons.arrowsOut(), color: Colors.white),
+                            Icon(PhosphorIcons.selectionBackground(), color: Colors.white),
+                            Icon(PhosphorIcons.gear(), color: Colors.white),
                           ],
                         ),
                       ],
@@ -180,9 +181,19 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
 
           if (_showControls)
             Positioned(
-              right: 20, bottom: 120,
-              child: _buildGlassBox(
-                borderRadius: BorderRadius.circular(30),
+              right: 20, bottom: 140,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: brandColor,
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(10),
                   child: Column(
@@ -196,23 +207,6 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
               ),
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildGlassBox({required Widget child, BorderRadius? borderRadius}) {
-    return ClipRRect(
-      borderRadius: borderRadius ?? BorderRadius.zero,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4),
-            borderRadius: borderRadius,
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
-          ),
-          child: child,
-        ),
       ),
     );
   }

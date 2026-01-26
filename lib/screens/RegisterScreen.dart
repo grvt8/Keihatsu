@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../theme_provider.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen ({super.key});
 
-  // Using colors as defined in the project
-  static const Color brandColor = Color(0xFFF97316); // Orange
-  static const Color bgColor = Color(0xFFFFEDD5); // Cream
-  static const Color bgColor2 = Color(0xFFFFFFFF);
-
-
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final brandColor = themeProvider.brandColor;
+    final bgColor = themeProvider.bgColor;
+
     return Scaffold(
-      backgroundColor: bgColor2,
+      backgroundColor: bgColor,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -46,7 +46,7 @@ class RegisterScreen extends StatelessWidget {
                   height: 55,
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: brandColor),
+                      side: BorderSide(color: brandColor),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -62,7 +62,7 @@ class RegisterScreen extends StatelessWidget {
                           height: 20,
                         ),
                         const SizedBox(width: 12),
-                        const Text(
+                        Text(
                           "Sign up with Google",
                           style: TextStyle(
                             color: brandColor,
@@ -97,10 +97,10 @@ class RegisterScreen extends StatelessWidget {
                 GestureDetector(
                   onTap: () => Navigator.pushReplacementNamed(context, '/login'),
                   child: RichText(
-                    text: const TextSpan(
-                      style: TextStyle(color: Colors.black54, fontSize: 14),
+                    text: TextSpan(
+                      style: const TextStyle(color: Colors.black54, fontSize: 14),
                       children: [
-                        TextSpan(text: "Already have an account? "),
+                        const TextSpan(text: "Already have an account? "),
                         TextSpan(
                           text: "Log In",
                           style: TextStyle(

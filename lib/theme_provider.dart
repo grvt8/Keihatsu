@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class ThemeProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
-  Color _brandColor = const Color(0xFFF97316);
-  Color _bgColor = const Color(0xFFFFEDD5);
+  Color _brandColor = Colors.black;
+  Color _bgColor = Colors.white;
   bool _pureBlackDarkMode = false;
 
   ThemeMode get themeMode => _themeMode;
@@ -20,8 +20,6 @@ class ThemeProvider extends ChangeNotifier {
 
   void setThemeMode(ThemeMode mode) {
     _themeMode = mode;
-    // Sync pure black with dark mode if needed, or keep them separate?
-    // User said they are the same toggle.
     _pureBlackDarkMode = (mode == ThemeMode.dark);
     notifyListeners();
   }

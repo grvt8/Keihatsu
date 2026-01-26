@@ -30,6 +30,7 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: bgColor,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Text(
           'Keihatsu',
