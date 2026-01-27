@@ -299,9 +299,9 @@ class CommentsBottomSheet extends StatelessWidget {
                         // Actions
                         Row(
                           children: [
-                            IconButton(icon: Icon(PhosphorIcons.caretUp(PhosphorIconsStyle.bold), size: 20, color: textColor.withOpacity(0.6)), onPressed: () {}),
+                            IconButton(icon: Icon(PhosphorIcons.arrowFatLinesUp(PhosphorIconsStyle.bold), size: 20, color: textColor.withOpacity(0.6)), onPressed: () {}),
                             Text(likes, style: TextStyle(fontSize: 13, color: textColor.withOpacity(0.6), fontWeight: FontWeight.bold)),
-                            IconButton(icon: Icon(PhosphorIcons.caretDown(PhosphorIconsStyle.bold), size: 20, color: textColor.withOpacity(0.6)), onPressed: () {}),
+                            IconButton(icon: Icon(PhosphorIcons.arrowFatLineDown(PhosphorIconsStyle.bold), size: 20, color: textColor.withOpacity(0.6)), onPressed: () {}),
                             const SizedBox(width: 10),
                             Text("Reply", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textColor.withOpacity(0.6))),
                             const Spacer(),
