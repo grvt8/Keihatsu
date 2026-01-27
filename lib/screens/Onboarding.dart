@@ -12,8 +12,6 @@ class Onboarding extends StatefulWidget {
 }
 
 class _OnboardingState extends State<Onboarding> {
-  static const Color bgColor2 = Color(0x00000000);
-
   @override
   void initState() {
     super.initState();
@@ -30,7 +28,7 @@ class _OnboardingState extends State<Onboarding> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     
     return Scaffold(
-      backgroundColor: bgColor2,
+      backgroundColor: themeProvider.brandColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -46,7 +44,7 @@ class _OnboardingState extends State<Onboarding> {
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
-                  color: themeProvider.brandColor,
+                  color: themeProvider.bgColor,
                 ),
               ),
             ),

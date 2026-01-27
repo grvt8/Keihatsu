@@ -88,25 +88,25 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> {
             controller: _scrollController,
             slivers: [
               SliverAppBar(
-                backgroundColor: _showTitle ? bgColor : Colors.transparent,
+                backgroundColor: _showTitle ? Colors.black : Colors.transparent,
                 elevation: 0,
                 pinned: true,
                 leading: IconButton(
-                  icon: Icon(PhosphorIcons.arrowLeft(), color: _showTitle ? textColor : Colors.white),
+                  icon: Icon(PhosphorIcons.arrowLeft(), color: _showTitle ? Colors.white : Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
                 title: _showTitle
                     ? Text(
                         widget.manga["title"]!,
                         style: GoogleFonts.hennyPenny(
-                          textStyle: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold),
+                          textStyle: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       )
                     : null,
                 actions: [
-                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.downloadSimple(), color: _showTitle ? textColor : Colors.white)),
-                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel(), color: _showTitle ? textColor : Colors.white)),
-                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.dotsThreeVertical(), color: _showTitle ? textColor : Colors.white)),
+                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.downloadSimple(), color: _showTitle ? Colors.white : Colors.white)),
+                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel(), color: _showTitle ? Colors.white : Colors.white)),
+                  IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.dotsThreeVertical(), color: _showTitle ? Colors.white : Colors.white)),
                 ],
               ),
               SliverToBoxAdapter(
