@@ -16,9 +16,9 @@ class MainNavigationBar extends StatelessWidget {
 
     final routes = {
       0: '/home',
-      1: '/library', // Placeholder
+      1: '/library',
       2: '/history',
-      3: '/home',
+      3: '/extensions',
       4: '/profile',
     };
 
