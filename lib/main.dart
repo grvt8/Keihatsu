@@ -13,6 +13,7 @@ import 'screens/LibraryScreen.dart';
 import 'screens/HistoryScreen.dart';
 import 'screens/ProfileScreen.dart';
 import 'screens/AppearancePage.dart';
+import 'screens/ExtensionsScreen.dart';
 
 void main() {
   runApp(
@@ -73,6 +74,7 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => const ProfileScreen(),
         '/appearance': (context) => const AppearancePage(),
         '/home': (context) => const HomePage(),
+        '/extensions': (context) => const ExtensionsScreen(),
       },
     );
   }
