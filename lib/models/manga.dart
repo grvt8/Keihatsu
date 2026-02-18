@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class Manga {
   final String id;
   final String url;
@@ -36,6 +38,21 @@ class Manga {
       genres: json['genres'] != null ? List<String>.from(json['genres']) : null,
       sourceId: json['sourceId'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'url': url,
+      'title': title,
+      'thumbnailUrl': thumbnailUrl,
+      'description': description,
+      'author': author,
+      'artist': artist,
+      'status': status,
+      'genres': genres,
+      'sourceId': sourceId,
+    };
   }
 }
 

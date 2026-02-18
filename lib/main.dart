@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'theme_provider.dart';
+import 'providers/library_provider.dart';
 
 // Screens
 import 'screens/Onboarding.dart';
@@ -17,8 +18,11 @@ import 'screens/ExtensionsScreen.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LibraryProvider()),
+      ],
       child: const MyApp(),
     ),
   );

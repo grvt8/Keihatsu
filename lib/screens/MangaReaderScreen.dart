@@ -1,48 +1,85 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../theme_provider.dart';
+import '../models/manga.dart';
+import '../models/chapter.dart';
+import '../services/sources_api.dart';
 import '../components/Comments.dart';
 
 class MangaReaderScreen extends StatefulWidget {
-  final String title;
-  const MangaReaderScreen({super.key, required this.title});
+  final Manga manga;
+  final List<Chapter> chapters;
+  final int initialChapterIndex;
+
+  const MangaReaderScreen({
+    super.key,
+    required this.manga,
+    required this.chapters,
+    required this.initialChapterIndex,
+  });
 
   @override
   State<MangaReaderScreen> createState() => _MangaReaderScreenState();
 }
 
 class _MangaReaderScreenState extends State<MangaReaderScreen> {
-  int _currentChapterIndex = 0;
+  late int _currentChapterIndex;
   double _sliderValue = 1;
   bool _showControls = true;
-  List<dynamic> _chaptersData = [];
   bool _isLoading = true;
+  List<ReaderPage> _pages = [];
+  final SourcesApi _sourcesApi = SourcesApi();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _loadChaptersJson();
-  }
-
-  Future<void> _loadChaptersJson() async {
-    final String response = await rootBundle.loadString('lib/data/chapters.json');
-    final data = await json.decode(response);
-    setState(() {
-      _chaptersData = data['chapters'];
-      _isLoading = false;
+    _currentChapterIndex = widget.initialChapterIndex;
+    _loadPages();
+    
+    _scrollController.addListener(() {
+      if (_pages.isNotEmpty) {
+        // Simple heuristic to update slider based on scroll position
+        // This can be improved by tracking individual item visibility
+        double maxScroll = _scrollController.position.maxScrollExtent;
+        double currentScroll = _scrollController.position.pixels;
+        if (maxScroll > 0) {
+          setState(() {
+            _sliderValue = ((currentScroll / maxScroll) * (_pages.length - 1)).clamp(0, _pages.length - 1) + 1;
+          });
+        }
+      }
     });
   }
 
-  List<String> _getPageImages() {
-    if (_chaptersData.isEmpty) return [];
-    final chapter = _chaptersData[_currentChapterIndex];
-    final String folder = chapter['folder'];
-    final List<dynamic> pages = chapter['pages'];
+  Future<void> _loadPages() async {
+    setState(() {
+      _isLoading = true;
+      _pages = [];
+    });
 
-    return pages.map((page) => "manwhaChps/$folder/$page").toList();
+    try {
+      final chapter = widget.chapters[_currentChapterIndex];
+      final pages = await _sourcesApi.getPages(widget.manga.sourceId, chapter.id);
+      setState(() {
+        _pages = pages;
+        _isLoading = false;
+        _sliderValue = 1;
+      });
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(0);
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading pages: $e')),
+        );
+      }
+    }
   }
 
   void _showCommentsBottomSheet() {
@@ -68,11 +105,9 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-
     final themeProvider = Provider.of<ThemeProvider>(context);
     final brandColor = themeProvider.brandColor;
-    final pages = _getPageImages();
+    final currentChapter = widget.chapters[_currentChapterIndex];
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -80,41 +115,72 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
         children: [
           GestureDetector(
             onTap: () => setState(() => _showControls = !_showControls),
-            child: ListView.builder(
-              itemCount: pages.length,
-              itemBuilder: (context, index) {
-                return Image.asset(
-                  pages[index],
-                  fit: BoxFit.fitWidth,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 400,
-                    color: Colors.grey[900],
-                    child: const Center(child: Icon(Icons.broken_image, color: Colors.white24)),
-                  ),
-                );
-              },
-            ),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                : _pages.isEmpty
+                    ? const Center(child: Text("No pages found", style: TextStyle(color: Colors.white)))
+                    : ListView.builder(
+                        controller: _scrollController,
+                        itemCount: _pages.length,
+                        itemBuilder: (context, index) {
+                          return Image.network(
+                            _pages[index].imageUrl,
+                            fit: BoxFit.fitWidth,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                height: 400,
+                                color: Colors.grey[900],
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                        : null,
+                                    color: brandColor.withOpacity(0.5),
+                                  ),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              height: 400,
+                              color: Colors.grey[900],
+                              child: const Center(child: Icon(Icons.broken_image, color: Colors.white24)),
+                            ),
+                          );
+                        },
+                      ),
           ),
 
           if (_showControls)
             Positioned(
               top: 0, left: 0, right: 0,
               child: Container(
-                color: brandColor,
+                color: brandColor.withOpacity(0.9),
                 child: SafeArea(
                   bottom: false,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                     child: Row(
                       children: [
-                        IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () => Navigator.pop(context),
+                        ),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(widget.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16), overflow: TextOverflow.ellipsis),
-                              Text("Chapter ${_chaptersData[_currentChapterIndex]['id']}", style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                              Text(
+                                widget.manga.title,
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                currentChapter.name,
+                                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ],
                           ),
                         ),
@@ -131,7 +197,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
             Positioned(
               bottom: 0, left: 0, right: 0,
               child: Container(
-                color: brandColor,
+                color: brandColor.withOpacity(0.9),
                 child: SafeArea(
                   top: false,
                   child: Padding(
@@ -143,23 +209,37 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                           children: [
                             IconButton(
                               icon: Icon(PhosphorIcons.caretDoubleLeft(), color: Colors.white),
-                              onPressed: _currentChapterIndex > 0 ? () => setState(() => _currentChapterIndex--) : null,
+                              onPressed: _currentChapterIndex < widget.chapters.length - 1 
+                                ? () {
+                                    setState(() => _currentChapterIndex++);
+                                    _loadPages();
+                                  } 
+                                : null,
                             ),
                             Text("${_sliderValue.toInt()}", style: const TextStyle(color: Colors.white)),
                             Expanded(
                               child: Slider(
                                 value: _sliderValue,
                                 min: 1,
-                                max: pages.isEmpty ? 1 : pages.length.toDouble(),
+                                max: _pages.isEmpty ? 1 : _pages.length.toDouble(),
                                 activeColor: Colors.white,
                                 inactiveColor: Colors.white24,
-                                onChanged: (val) => setState(() => _sliderValue = val),
+                                onChanged: (val) {
+                                  setState(() => _sliderValue = val);
+                                  // Jump to page on change
+                                  // Implementation depends on height of images
+                                },
                               ),
                             ),
-                            Text("${pages.length}", style: const TextStyle(color: Colors.white)),
+                            Text("${_pages.length}", style: const TextStyle(color: Colors.white)),
                             IconButton(
                               icon: Icon(PhosphorIcons.caretDoubleRight(), color: Colors.white),
-                              onPressed: _currentChapterIndex < _chaptersData.length - 1 ? () => setState(() => _currentChapterIndex++) : null,
+                              onPressed: _currentChapterIndex > 0 
+                                ? () {
+                                    setState(() => _currentChapterIndex--);
+                                    _loadPages();
+                                  } 
+                                : null,
                             ),
                           ],
                         ),
