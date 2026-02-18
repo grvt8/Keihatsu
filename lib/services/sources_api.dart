@@ -7,7 +7,7 @@ import '../models/chapter.dart';
 class SourcesApi {
   final String baseUrl;
 
-  SourcesApi({this.baseUrl = 'http://localhost:3000'});
+  SourcesApi({this.baseUrl = 'http://192.168.59.84:3000'});
 
   Future<List<Source>> getSources() async {
     final response = await http.get(Uri.parse('$baseUrl/sources'));
