@@ -61,7 +61,7 @@ class _HomePageState extends State<HomePage> {
         ),
         actions: [
           IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: textColor)),
-          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell(), color: textColor)),
+          IconButton(onPressed: () {}, icon: Icon(Icons.notifications, color: textColor)),
         ],
       ),
       body: RefreshIndicator(

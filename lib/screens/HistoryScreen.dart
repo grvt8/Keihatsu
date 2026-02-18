@@ -118,7 +118,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   }
                 },
                 child: Container(
-                  color: isSelected ? brandColor.withOpacity(0.1) : Colors.transparent,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12.0),
+                    border: Border.all(
+                      color: Colors.transparent,
+                      width: 1.0,
+                    ),
+                    color: isSelected ? brandColor.withOpacity(0.1) : Colors.transparent,
+
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
                     children: [
