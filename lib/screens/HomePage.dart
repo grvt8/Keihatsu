@@ -3,7 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../components/MainNavigationBar.dart';
-import '../data/manga_data.dart';
+import '../models/manga.dart';
+import '../services/sources_api.dart';
 import '../theme_provider.dart';
 import 'MangaDetailsScreen.dart';
 
@@ -16,6 +17,26 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final int _currentIndex = 0;
+  final SourcesApi _sourcesApi = SourcesApi();
+
+  late Future<List<Manga>> _popularMangaFuture;
+  late Future<List<Manga>> _latestMangaFuture;
+
+  final String _defaultSourceId = 'manhuatop';
+
+  @override
+  void initState() {
+    super.initState();
+    _popularMangaFuture = _sourcesApi.getMangaList(_defaultSourceId, 'popular').then((page) => page.mangas);
+    _latestMangaFuture = _sourcesApi.getMangaList(_defaultSourceId, 'latest').then((page) => page.mangas);
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      _popularMangaFuture = _sourcesApi.getMangaList(_defaultSourceId, 'popular').then((page) => page.mangas);
+      _latestMangaFuture = _sourcesApi.getMangaList(_defaultSourceId, 'latest').then((page) => page.mangas);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,53 +64,79 @@ class _HomePageState extends State<HomePage> {
           IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell(), color: textColor)),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Continue Reading Section
-            _buildSectionHeader("Continue Reading", textColor, onSeeMore: () {
-              Navigator.pushReplacementNamed(context, '/library');
-            }),
-            SizedBox(
-              height: 220,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: 5,
-                itemBuilder: (context, index) {
-                  final manga = mangaData[index];
-                  return _buildMangaCard(context, manga, brandColor, textColor, cardColor);
-                },
-              ),
-            ),
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        color: brandColor,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Popular Now Section
+              _buildSectionHeader("Popular Now", textColor, onSeeMore: () {
+                Navigator.pushReplacementNamed(context, '/library');
+              }),
+              _buildFutureMangaList(_popularMangaFuture, brandColor, textColor, cardColor, height: 220),
 
-            const SizedBox(height: 30),
+              const SizedBox(height: 30),
 
-            // You Might Like Section
-            _buildSectionHeader("You might like", textColor),
-            _buildHorizontalMangaList(context, mangaData.skip(5).take(6).toList(), brandColor, textColor, cardColor),
+              // Latest Updates Section
+              _buildSectionHeader("Latest Updates", textColor),
+              _buildFutureMangaList(_latestMangaFuture, brandColor, textColor, cardColor, height: 200, compact: true),
 
-            const SizedBox(height: 30),
+              const SizedBox(height: 30),
 
-            // Your Friends Read Section
-            _buildSectionHeader("Your friends read", textColor),
-            _buildHorizontalMangaList(context, mangaData.skip(11).take(6).toList(), brandColor, textColor, cardColor),
+              // Recommendations (Using Popular for now)
+              _buildSectionHeader("You might like", textColor),
+              _buildFutureMangaList(_popularMangaFuture, brandColor, textColor, cardColor, height: 200, compact: true, skip: 5),
 
-            const SizedBox(height: 30),
-
-            // Most Bookmarked Section
-            _buildSectionHeader("Most bookmarked", textColor),
-            _buildHorizontalMangaList(context, mangaData.reversed.take(6).toList(), brandColor, textColor, cardColor),
-
-            const SizedBox(height: 100), // Space for navigation bar
-          ],
+              const SizedBox(height: 100), // Space for navigation bar
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: MainNavigationBar(
         currentIndex: _currentIndex,
         brandColor: brandColor,
       ),
+    );
+  }
+
+  Widget _buildFutureMangaList(Future<List<Manga>> future, Color brandColor, Color textColor, Color cardColor, {required double height, bool compact = false, int skip = 0}) {
+    return FutureBuilder<List<Manga>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return SizedBox(
+            height: height,
+            child: Center(child: CircularProgressIndicator(color: brandColor)),
+          );
+        } else if (snapshot.hasError) {
+          return SizedBox(
+            height: height,
+            child: Center(child: Icon(PhosphorIcons.warningCircle(), color: Colors.red)),
+          );
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return SizedBox(
+            height: height,
+            child: const Center(child: Text("No data found")),
+          );
+        }
+
+        final mangas = snapshot.data!.skip(skip).toList();
+        return SizedBox(
+          height: height,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: mangas.length,
+            itemBuilder: (context, index) {
+              final manga = mangas[index];
+              return _buildMangaCard(context, manga, brandColor, textColor, cardColor, compact: compact);
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -117,22 +164,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildHorizontalMangaList(BuildContext context, List<Map<String, String>> data, Color brandColor, Color textColor, Color cardColor) {
-    return SizedBox(
-      height: 200,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: data.length,
-        itemBuilder: (context, index) {
-          final manga = data[index];
-          return _buildMangaCard(context, manga, brandColor, textColor, cardColor, compact: true);
-        },
-      ),
-    );
-  }
-
-  Widget _buildMangaCard(BuildContext context, Map<String, String> manga, Color brandColor, Color textColor, Color cardColor, {bool compact = false}) {
+  Widget _buildMangaCard(BuildContext context, Manga manga, Color brandColor, Color textColor, Color cardColor, {bool compact = false}) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -155,11 +187,15 @@ class _HomePageState extends State<HomePage> {
                 borderRadius: BorderRadius.circular(15),
                 child: Stack(
                   children: [
-                    Image.asset(
-                      manga["image"]!,
+                    Image.network(
+                      manga.thumbnailUrl,
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[800],
+                        child: const Icon(Icons.broken_image, color: Colors.white54),
+                      ),
                     ),
                     if (!compact)
                       Positioned(
@@ -185,14 +221,14 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    manga["title"]!,
+                    manga.title,
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textColor),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (!compact)
                     Text(
-                      manga["chapter"] ?? "Ch. 1",
+                      manga.status ?? "Latest",
                       style: TextStyle(fontSize: 11, color: brandColor, fontWeight: FontWeight.bold),
                     ),
                 ],
