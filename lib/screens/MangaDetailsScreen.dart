@@ -19,12 +19,15 @@ class MangaDetailsScreen extends StatefulWidget {
   State<MangaDetailsScreen> createState() => _MangaDetailsScreenState();
 }
 
-class _MangaDetailsScreenState extends State<MangaDetailsScreen> {
+class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTickerProviderStateMixin {
   late ScrollController _scrollController;
   bool _showTitle = false;
   late Future<Manga> _mangaDetailsFuture;
   late Future<List<Chapter>> _chaptersFuture;
   final SourcesApi _sourcesApi = SourcesApi();
+  bool _showAllChapters = false;
+  late AnimationController _arrowController;
+  late Future<List<Manga>> _recommendedMangaFuture;
 
   @override
   void initState() {
@@ -40,11 +43,18 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> {
 
     _mangaDetailsFuture = _sourcesApi.getMangaDetails(widget.manga.sourceId, widget.manga.id);
     _chaptersFuture = _sourcesApi.getChapters(widget.manga.sourceId, widget.manga.id);
+    _recommendedMangaFuture = _sourcesApi.getMangaList(widget.manga.sourceId, 'popular').then((p) => p.mangas);
+
+    _arrowController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _arrowController.dispose();
     super.dispose();
   }
 
@@ -318,6 +328,8 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> {
                                 );
                               }
                               final chapters = snapshot.data ?? [];
+                              final displayedChapters = _showAllChapters ? chapters : chapters.take(3).toList();
+
                               return Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
@@ -352,14 +364,123 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 10),
-                                    ...List.generate(
-                                      chapters.length > 3 ? 3 : chapters.length,
-                                      (index) => _buildChapterTile(context, chapters, index, brandColor, textColor),
+                                    ...displayedChapters.asMap().entries.map(
+                                      (entry) => _buildChapterTile(context, chapters, entry.key, brandColor, textColor),
                                     ),
+                                    if (!_showAllChapters && chapters.length > 3)
+                                      GestureDetector(
+                                        onTap: () => setState(() => _showAllChapters = true),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 10),
+                                          child: AnimatedBuilder(
+                                            animation: _arrowController,
+                                            builder: (context, child) {
+                                              return Transform.translate(
+                                                offset: Offset(0, 5 * _arrowController.value),
+                                                child: Icon(
+                                                  Icons.keyboard_double_arrow_down_rounded,
+                                                  color: brandColor,
+                                                  size: 30,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ),
                                   ],
                                 ),
                               );
                             },
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // "You may also like" Section
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: cardColor,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text("You may also like", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textColor)),
+                                    Row(
+                                      children: [
+                                        const Text("More", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                                        Icon(PhosphorIcons.caretRight(), color: Colors.grey, size: 16),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 15),
+                                SizedBox(
+                                  height: 200,
+                                  child: FutureBuilder<List<Manga>>(
+                                    future: _recommendedMangaFuture,
+                                    builder: (context, snapshot) {
+                                      if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                                      final recommendations = snapshot.data!.where((m) => m.id != widget.manga.id).take(6).toList();
+                                      return ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: recommendations.length,
+                                        itemBuilder: (context, index) {
+                                          final recommendation = recommendations[index];
+                                          return Padding(
+                                            padding: const EdgeInsets.only(right: 15),
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => MangaDetailsScreen(manga: recommendation),
+                                                  ),
+                                                );
+                                              },
+                                              child: SizedBox(
+                                                width: 100,
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    ClipRRect(
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      child: Image.network(
+                                                        recommendation.thumbnailUrl,
+                                                        width: 100,
+                                                        height: 140,
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    Text(
+                                                      recommendation.title,
+                                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: textColor),
+                                                      maxLines: 2,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
 
                           const SizedBox(height: 100),
