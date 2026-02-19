@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../theme_provider.dart';
+import '../components/CustomBackButton.dart';
 
 class DownloadQueueScreen extends StatefulWidget {
   const DownloadQueueScreen({super.key});
@@ -51,10 +52,7 @@ class _DownloadQueueScreenState extends State<DownloadQueueScreen> {
       appBar: AppBar(
         backgroundColor: bgColor,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(PhosphorIcons.arrowLeft(), color: textColor),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: const CustomBackButton(),
         title: Text(
           'Download Queue',
           style: GoogleFonts.hennyPenny(

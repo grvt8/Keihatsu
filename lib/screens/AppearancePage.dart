@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keihatsu/components/CustomBackButton.dart';
 import 'package:provider/provider.dart';
 import '../theme_provider.dart';
 
@@ -18,10 +19,7 @@ class AppearancePage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: bgColor,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textColor),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: const CustomBackButton(),
         title: Text(
           'Appearance',
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
