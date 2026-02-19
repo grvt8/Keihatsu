@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keihatsu/components/CustomBackButton.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -120,10 +121,7 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
                     backgroundColor: _showTitle ? Colors.black : Colors.transparent,
                     elevation: 0,
                     pinned: true,
-                    leading: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
+                    leading: const CustomBackButton(),
                     title: _showTitle
                         ? Text(
                             manga.title,
