@@ -12,6 +12,9 @@ class DownloadQueueScreen extends StatefulWidget {
 }
 
 class _DownloadQueueScreenState extends State<DownloadQueueScreen> {
+  // Track expanded state for each manga group
+  final Set<int> _expandedIndices = {0}; // Start with the first one expanded
+
   // Static mock data for reference
   final List<Map<String, dynamic>> _downloads = [
     {
@@ -76,7 +79,7 @@ class _DownloadQueueScreenState extends State<DownloadQueueScreen> {
               itemCount: _downloads.length,
               itemBuilder: (context, index) {
                 final group = _downloads[index];
-                return _buildDownloadGroup(group, brandColor, textColor, cardColor);
+                return _buildDownloadGroup(index, group, brandColor, textColor, cardColor);
               },
             ),
     );
@@ -100,7 +103,10 @@ class _DownloadQueueScreenState extends State<DownloadQueueScreen> {
     );
   }
 
-  Widget _buildDownloadGroup(Map<String, dynamic> group, Color brandColor, Color textColor, Color cardColor) {
+  Widget _buildDownloadGroup(int index, Map<String, dynamic> group, Color brandColor, Color textColor, Color cardColor) {
+    final bool isExpanded = _expandedIndices.contains(index);
+    final int downloadingCount = (group['chapters'] as List).where((c) => c['status'] == 'Downloading').length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -122,74 +128,105 @@ class _DownloadQueueScreenState extends State<DownloadQueueScreen> {
           ),
           child: Column(
             children: [
-              Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.asset(
-                      group['thumbnail'],
-                      width: 50,
-                      height: 70,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (isExpanded) {
+                      _expandedIndices.remove(index);
+                    } else {
+                      _expandedIndices.add(index);
+                    }
+                  });
+                },
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.asset(
+                        group['thumbnail'],
                         width: 50,
                         height: 70,
-                        color: Colors.grey[800],
-                        child: const Icon(Icons.image_not_supported, color: Colors.white24),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: 50,
+                          height: 70,
+                          color: Colors.grey[800],
+                          child: const Icon(Icons.image_not_supported, color: Colors.white24),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: Text(
-                      group['manga'],
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const Divider(height: 30, color: Colors.white10),
-              ...((group['chapters'] as List).map((chapter) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 15),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            chapter['name'],
-                            style: TextStyle(color: textColor, fontWeight: FontWeight.w500),
-                          ),
-                          Text(
-                            chapter['status'],
+                            group['manga'],
                             style: TextStyle(
-                              color: chapter['status'] == 'Completed' ? Colors.green : brandColor,
-                              fontSize: 12,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "$downloadingCount chapters downloading",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: textColor.withOpacity(0.5),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: LinearProgressIndicator(
-                          value: chapter['progress'],
-                          backgroundColor: Colors.white10,
-                          color: chapter['status'] == 'Completed' ? Colors.green : brandColor,
-                          minHeight: 6,
+                    ),
+                    Icon(
+                      isExpanded ? Icons.arrow_drop_up_rounded : Icons.arrow_drop_down_rounded,
+                      color: textColor.withOpacity(0.5),
+                      size: 30,
+                    ),
+                  ],
+                ),
+              ),
+              if (isExpanded) ...[
+                const Divider(height: 30, color: Colors.white10),
+                ...((group['chapters'] as List).map((chapter) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 15),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              chapter['name'],
+                              style: TextStyle(color: textColor, fontWeight: FontWeight.w500),
+                            ),
+                            Text(
+                              chapter['status'],
+                              style: TextStyle(
+                                color: chapter['status'] == 'Completed' ? Colors.green : brandColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList()),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: LinearProgressIndicator(
+                            value: chapter['progress'],
+                            backgroundColor: Colors.white10,
+                            color: chapter['status'] == 'Completed' ? Colors.green : brandColor,
+                            minHeight: 6,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList()),
+              ],
             ],
           ),
         ),
