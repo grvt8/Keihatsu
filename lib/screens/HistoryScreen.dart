@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../data/manga_data.dart';
 import '../components/MainNavigationBar.dart';
 import '../theme_provider.dart';
+import '../providers/library_provider.dart';
+import '../models/manga.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -52,6 +54,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final libraryProvider = Provider.of<LibraryProvider>(context);
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
@@ -93,9 +96,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: mangaData.length,
         itemBuilder: (context, index) {
-          final manga = mangaData[index];
+          final data = mangaData[index];
+          
+          // Construct a Manga object from static data for library interaction
+          final manga = Manga(
+            id: data["title"]!, // Using title as ID for static data
+            sourceId: "local",
+            title: data["title"]!,
+            url: "",
+            thumbnailUrl: data["image"]!,
+            description: "",
+            status: "Ongoing"
+          );
+
           final isSelected = _selectedIndices.contains(index);
           bool showDate = index == 0 || mangaData[index]["date"] != mangaData[index - 1]["date"];
+          final bool isInLibrary = libraryProvider.isInLibrary(manga.id, manga.sourceId);
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,7 +120,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Text(
-                    manga["date"]!,
+                    data["date"]!,
                     style: TextStyle(fontWeight: FontWeight.bold, color: textColor.withOpacity(0.6)),
                   ),
                 ),
@@ -135,7 +151,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(4),
                             child: Image.asset(
-                              manga["image"]!,
+                              data["image"]!,
                               width: 50,
                               height: 70,
                               fit: BoxFit.cover,
@@ -159,7 +175,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              manga["title"]!,
+                              data["title"]!,
                               style: GoogleFonts.hennyPenny(
                                 textStyle: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -170,14 +186,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              "${manga["chapter"]} - ${manga["time"]}",
+                              "${data["chapter"]} - ${data["time"]}",
                               style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 13),
                             ),
                           ],
                         ),
                       ),
                       if (!_isSelectionMode) ...[
-                        IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.heart(), size: 20, color: textColor)),
+                        IconButton(
+                          onPressed: () => libraryProvider.toggleLibrary(manga),
+                          icon: Icon(
+                            isInLibrary ? PhosphorIcons.bookBookmark(PhosphorIconsStyle.fill) : PhosphorIcons.bookBookmark(),
+                            size: 20,
+                            color: isInLibrary ? brandColor : textColor,
+                          ),
+                        ),
                         IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.trash(), size: 20, color: textColor)),
                       ] else
                         Checkbox(
