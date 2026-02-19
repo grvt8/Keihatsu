@@ -6,6 +6,7 @@ import '../components/MainNavigationBar.dart';
 import '../theme_provider.dart';
 import 'SettingsScreen.dart';
 import 'StatsScreen.dart';
+import 'DownloadQueueScreen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -241,7 +242,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
                       children: [
-                        _buildSingleTile("Download Queue", PhosphorIcons.cloudArrowDown(), cardColor, textColor),
+                        _buildSingleTile("Download Queue", PhosphorIcons.cloudArrowDown(), cardColor, textColor, onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const DownloadQueueScreen()),
+                          );
+                        }),
                         const SizedBox(height: 20),
                         Container(
                           decoration: BoxDecoration(
@@ -398,19 +404,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(height: 40, width: 1, color: textColor.withOpacity(0.1));
   }
 
-  Widget _buildSingleTile(String title, PhosphorIconData icon, Color color, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 28, color: textColor),
-          const SizedBox(width: 15),
-          Text(title, style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w500)),
-        ],
+  Widget _buildSingleTile(String title, PhosphorIconData icon, Color color, Color textColor, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 28, color: textColor),
+            const SizedBox(width: 15),
+            Text(title, style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w500)),
+          ],
+        ),
       ),
     );
   }
