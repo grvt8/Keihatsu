@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../components/MainNavigationBar.dart';
 import '../theme_provider.dart';
 import 'SettingsScreen.dart';
+import 'StatsScreen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -55,7 +56,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             pinned: true,
             backgroundColor: bgColor,
             elevation: 0,
-            // Header when scrolled down
             title: _showTitle
                 ? Row(
                     children: [
@@ -85,7 +85,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               background: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // Banner Image
                   Container(
                     height: 140,
                     width: double.infinity,
@@ -100,7 +99,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-                  // Top Icons (visible only when not scrolled)
                   if (!_showTitle)
                     SafeArea(
                       child: Padding(
@@ -111,7 +109,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ),
-                  // Profile Picture (overlapping)
                   Positioned(
                     bottom: 10,
                     left: 20,
@@ -141,7 +138,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               offset: const Offset(0, 10),
               child: Column(
                 children: [
-                  // User Info & Share Button
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
@@ -197,7 +193,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 30),
-                  // Stats Row
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Container(
@@ -221,7 +216,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // Badge Images Box
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Container(
@@ -243,7 +237,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // Menu Groups
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
@@ -263,8 +256,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   MaterialPageRoute(builder: (context) => const SettingsScreen()),
                                 );
                               }, textColor),
-                              _buildGroupTile("Inbox", PhosphorIcons.mailbox(), false, () {}, textColor),
-                              _buildGroupTile("Stats", PhosphorIcons.chartLineUp(), false, () {}, textColor),
+                              _buildGroupTile("Inbox", PhosphorIcons.mailbox(), true, () {}, textColor),
+                              _buildGroupTile("Stats", PhosphorIcons.chartLineUp(), false, () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const StatsScreen()),
+                                );
+                              }, textColor),
                             ],
                           ),
                         ),
@@ -280,7 +278,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 themeProvider.setPureBlackDarkMode(val);
                               }, textColor),
                               _buildGroupTile("Help & Support", PhosphorIcons.question(), true, () {}, textColor),
-                              _buildGroupTile("Donate", PhosphorIcons.tipJar(), false, () {}, textColor),
+                              _buildGroupTile("Donate", PhosphorIcons.tipJar(), true, () {}, textColor),
                               _buildGroupTile("About", PhosphorIcons.info(), false, () {}, textColor)
                             ],
                           ),

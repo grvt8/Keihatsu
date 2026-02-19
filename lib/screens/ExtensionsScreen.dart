@@ -18,6 +18,7 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
   final int _currentIndex = 3;
   late Future<List<Source>> _sourcesFuture;
   final SourcesApi _sourcesApi = SourcesApi();
+  final Map<String, bool> _sourceStatus = {};
 
   @override
   void initState() {
@@ -113,6 +114,10 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
   }
 
   Widget _buildSourceCard(Source source, Color brandColor, Color textColor, Color cardColor) {
+    if (!_sourceStatus.containsKey(source.id)) {
+      _sourceStatus[source.id] = true;
+    }
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -165,20 +170,14 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
               ],
             ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: Navigate to source browsing screen
+          Switch(
+            value: _sourceStatus[source.id]!,
+            activeColor: brandColor,
+            onChanged: (val) {
+              setState(() {
+                _sourceStatus[source.id] = val;
+              });
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: brandColor,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-            ),
-            child: const Text('Browse'),
           ),
         ],
       ),
