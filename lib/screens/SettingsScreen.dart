@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../theme_provider.dart';
+import '../components/CustomBackButton.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -14,7 +15,6 @@ class SettingsScreen extends StatelessWidget {
     final bgColor = themeProvider.effectiveBgColor;
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
     final Color textColor = isDarkMode ? Colors.white : Colors.black87;
-    final Color cardColor = isDarkMode ? Colors.white10 : Colors.white.withOpacity(0.5);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -22,10 +22,7 @@ class SettingsScreen extends StatelessWidget {
         backgroundColor: bgColor,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(PhosphorIcons.arrowLeft(), color: textColor),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: const CustomBackButton(),
         title: Text(
           'Settings',
           style: GoogleFonts.hennyPenny(

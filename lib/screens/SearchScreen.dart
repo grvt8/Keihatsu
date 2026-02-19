@@ -6,6 +6,7 @@ import '../models/manga.dart';
 import '../models/source.dart';
 import '../services/sources_api.dart';
 import '../theme_provider.dart';
+import '../components/CustomBackButton.dart';
 import 'MangaDetailsScreen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -85,6 +86,7 @@ class _SearchScreenState extends State<SearchScreen> {
         backgroundColor: bgColor,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        leading: const CustomBackButton(),
         title: TextField(
           controller: _searchController,
           autofocus: true,
