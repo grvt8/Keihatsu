@@ -7,6 +7,7 @@ import '../models/manga.dart';
 import '../services/sources_api.dart';
 import '../theme_provider.dart';
 import 'MangaDetailsScreen.dart';
+import 'SearchScreen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -60,7 +61,15 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: textColor)),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SearchScreen()),
+              );
+            },
+            icon: Icon(Icons.search_rounded, color: textColor),
+          ),
           IconButton(onPressed: () {}, icon: Icon(Icons.notifications, color: textColor)),
         ],
       ),

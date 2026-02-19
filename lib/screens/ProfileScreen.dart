@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../components/MainNavigationBar.dart';
 import '../theme_provider.dart';
+import 'SettingsScreen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -164,7 +165,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                                 const SizedBox(width: 10),
                                 Icon(PhosphorIcons.pencilLine(), size: 20, color: textColor.withOpacity(0.6)),
-                                // Icon(PhosphorIcons.hammer(PhosphorIconsStyle.fill), color: Colors.tealAccent, size: 24),
                               ],
                             ),
                             Text(
@@ -221,7 +221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // Badge Images Box (Mirrored from PublicProfileScreen)
+                  // Badge Images Box
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Container(
@@ -258,7 +258,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Column(
                             children: [
                               _buildGroupTile("Settings", PhosphorIcons.gear(), true, () {
-                                Navigator.pushNamed(context, '/appearance');
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                                );
                               }, textColor),
                               _buildGroupTile("Inbox", PhosphorIcons.mailbox(), false, () {}, textColor),
                               _buildGroupTile("Stats", PhosphorIcons.chartLineUp(), false, () {}, textColor),
@@ -336,7 +339,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
         const SizedBox(width: 16),
-        Icon(PhosphorIcons.gear(), color: iconColor, size: 28),
+        IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+            );
+          },
+          icon: Icon(PhosphorIcons.gear(), color: iconColor, size: 28),
+        ),
       ],
     );
   }

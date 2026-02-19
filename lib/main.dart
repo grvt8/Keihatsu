@@ -15,6 +15,7 @@ import 'screens/HistoryScreen.dart';
 import 'screens/ProfileScreen.dart';
 import 'screens/AppearancePage.dart';
 import 'screens/ExtensionsScreen.dart';
+import 'screens/SettingsScreen.dart';
 
 void main() {
   runApp(
@@ -79,6 +80,7 @@ class MyApp extends StatelessWidget {
         '/appearance': (context) => const AppearancePage(),
         '/home': (context) => const HomePage(),
         '/extensions': (context) => const ExtensionsScreen(),
+        '/settings': (context) => const SettingsScreen(),
       },
     );
   }
