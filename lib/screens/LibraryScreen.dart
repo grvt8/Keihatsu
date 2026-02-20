@@ -35,7 +35,7 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
   bool _showItemCount = false;
 
   late TabController _categoryTabController;
-  final List<String> _categories = ["Default", "Reading", "Completed", "On Hold", "Dropped", "Plan to Read"];
+  final List<String> _categories = ["All", "Regression", "Murim", "Tower", "Romance", "System"];
 
   @override
   void initState() {
@@ -185,34 +185,34 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
           ),
           const SizedBox(height: 25),
           _buildSectionTitle(textColor, "Overlay"),
-          _buildCheckbox("Downloaded chapters", _showDownloaded, brandColor, textColor, (val) {
-            setState(() => _showDownloaded = val!);
+          _buildToggle("Downloaded chapters", _showDownloaded, brandColor, textColor, (val) {
+            setState(() => _showDownloaded = val);
             setModalState(() {});
           }),
-          _buildCheckbox("Unread chapters", _showUnread, brandColor, textColor, (val) {
-            setState(() => _showUnread = val!);
+          _buildToggle("Unread chapters", _showUnread, brandColor, textColor, (val) {
+            setState(() => _showUnread = val);
             setModalState(() {});
           }),
-          _buildCheckbox("Local source", _showLocalSource, brandColor, textColor, (val) {
-            setState(() => _showLocalSource = val!);
+          _buildToggle("Local source", _showLocalSource, brandColor, textColor, (val) {
+            setState(() => _showLocalSource = val);
             setModalState(() {});
           }),
-          _buildCheckbox("Language", _showLanguage, brandColor, textColor, (val) {
-            setState(() => _showLanguage = val!);
+          _buildToggle("Language", _showLanguage, brandColor, textColor, (val) {
+            setState(() => _showLanguage = val);
             setModalState(() {});
           }),
-          _buildCheckbox("Continue reading button", _showContinueButton, brandColor, textColor, (val) {
-            setState(() => _showContinueButton = val!);
+          _buildToggle("Continue reading button", _showContinueButton, brandColor, textColor, (val) {
+            setState(() => _showContinueButton = val);
             setModalState(() {});
           }),
           const SizedBox(height: 25),
           _buildSectionTitle(textColor, "Tabs"),
-          _buildCheckbox("Show category tabs", _showCategoryTabs, brandColor, textColor, (val) {
-            setState(() => _showCategoryTabs = val!);
+          _buildToggle("Show category tabs", _showCategoryTabs, brandColor, textColor, (val) {
+            setState(() => _showCategoryTabs = val);
             setModalState(() {});
           }),
-          _buildCheckbox("Show number of items", _showItemCount, brandColor, textColor, (val) {
-            setState(() => _showItemCount = val!);
+          _buildToggle("Show number of items", _showItemCount, brandColor, textColor, (val) {
+            setState(() => _showItemCount = val);
             setModalState(() {});
           }),
         ],
@@ -260,27 +260,18 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildCheckbox(String label, bool value, Color brandColor, Color textColor, Function(bool?) onChanged) {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        checkboxTheme: CheckboxThemeData(
-          fillColor: MaterialStateProperty.resolveWith((states) {
-            if (states.contains(MaterialState.selected)) return brandColor;
-            return null;
-          }),
-          side: BorderSide(color: textColor.withOpacity(0.3), width: 1.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-        ),
-      ),
-      child: CheckboxListTile(
+  Widget _buildToggle(String label, bool value, Color brandColor, Color textColor, Function(bool) onChanged) {
+    return ListTile(
+      title: Text(label, style: TextStyle(color: textColor, fontSize: 14)),
+      contentPadding: EdgeInsets.zero,
+      trailing: Switch(
         value: value,
         onChanged: onChanged,
-        title: Text(label, style: TextStyle(color: textColor, fontSize: 14)),
-        contentPadding: EdgeInsets.zero,
-        controlAffinity: ListTileControlAffinity.leading,
-        dense: true,
-        visualDensity: VisualDensity.compact,
+        activeColor: brandColor,
+        activeTrackColor: brandColor.withOpacity(0.5),
       ),
+      dense: true,
+      visualDensity: VisualDensity.compact,
     );
   }
 
@@ -340,12 +331,15 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(cat),
+                        Text(
+                          (cat),
+                          style: TextStyle(fontFamily: 'Delius', color: textColor, fontWeight: FontWeight.bold),
+                        ),
                         if (_showItemCount) ...[
                           const SizedBox(width: 4),
                           Text(
                             "(${filteredLibrary.length})", // Placeholder count
-                            style: TextStyle(fontSize: 10, color: textColor.withOpacity(0.3)),
+                            style: TextStyle(fontSize: 15, color: textColor.withOpacity(0.3)),
                           ),
                         ],
                       ],
@@ -408,14 +402,14 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
       padding: const EdgeInsets.all(10),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: _itemsPerRow,
-        childAspectRatio: 0.7,
+        childAspectRatio: _displayStyle == DisplayStyle.comfortable ? 0.6 : 0.7,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
       ),
       itemCount: mangas.length,
       itemBuilder: (context, index) {
         final manga = mangas[index];
-        return _buildMangaGridItem(context, manga, brandColor);
+        return _buildMangaGridItem(context, manga, brandColor, textColor);
       },
     );
   }
@@ -531,7 +525,9 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildMangaGridItem(BuildContext context, Manga manga, Color brandColor) {
+  Widget _buildMangaGridItem(BuildContext context, Manga manga, Color brandColor, Color textColor) {
+    final bool isComfortable = _displayStyle == DisplayStyle.comfortable;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -541,58 +537,79 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
           ),
         );
       },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Image.network(
-                manga.thumbnailUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  color: Colors.grey[800],
-                  child: const Icon(Icons.broken_image, color: Colors.white54),
-                ),
-              ),
-            ),
-            if (_displayStyle != DisplayStyle.coverOnly)
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withOpacity(0.8),
-                      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Image.network(
+                      manga.thumbnailUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[800],
+                        child: const Icon(Icons.broken_image, color: Colors.white54),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            Positioned(
-              top: 8,
-              left: 8,
-              child: _buildChapterBadge("109"),
-            ),
-            if (_displayStyle != DisplayStyle.coverOnly)
-              Positioned(
-                bottom: 8,
-                left: 8,
-                right: 8,
-                child: Text(
-                  manga.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                  if (!isComfortable && _displayStyle != DisplayStyle.coverOnly)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.8),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: _buildChapterBadge("109"),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                  if (!isComfortable && _displayStyle != DisplayStyle.coverOnly)
+                    Positioned(
+                      bottom: 8,
+                      left: 8,
+                      right: 8,
+                      child: Text(
+                        manga.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
               ),
-          ],
-        ),
+            ),
+          ),
+          if (isComfortable)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 2, right: 2),
+              child: Text(
+                manga.title,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+        ],
       ),
     );
   }
