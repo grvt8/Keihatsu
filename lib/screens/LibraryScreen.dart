@@ -31,8 +31,8 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
   bool _showLocalSource = true;
   bool _showLanguage = true;
   bool _showContinueButton = false;
-  bool _showCategoryTabs = false;
-  bool _showItemCount = false;
+  bool _showCategoryTabs = true;
+  bool _showItemCount = true;
 
   late TabController _categoryTabController;
   final List<String> _categories = ["All", "Regression", "Murim", "Tower", "Romance", "System"];
@@ -319,10 +319,12 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
                   ),
                 ),
               ),
+
         bottom: _showCategoryTabs
             ? TabBar(
                 controller: _categoryTabController,
                 isScrollable: true,
+                tabAlignment: TabAlignment.start,
                 indicatorColor: brandColor,
                 labelColor: brandColor,
                 unselectedLabelColor: textColor.withOpacity(0.5),
@@ -339,7 +341,7 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
                           const SizedBox(width: 4),
                           Text(
                             "(${filteredLibrary.length})", // Placeholder count
-                            style: TextStyle(fontSize: 15, color: textColor.withOpacity(0.3)),
+                            style: TextStyle(fontSize: 15, color: brandColor),
                           ),
                         ],
                       ],
@@ -414,15 +416,33 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildChapterBadge(String chapter) {
+  Widget _buildBadgeRow() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (_showUnread) ...[
+          _buildSingleBadge("41", const Color(0xFFFFB3B3)),
+          const SizedBox(width: 2),
+        ],
+        if (_showDownloaded) ...[
+          _buildSingleBadge("225", const Color(0xFF8DE19C)),
+          const SizedBox(width: 2),
+        ],
+        if (_showLanguage)
+          _buildSingleBadge("EN", const Color(0xFFFFB3B3)),
+      ],
+    );
+  }
+
+  Widget _buildSingleBadge(String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: const Color(0xFF8DE19C),
+        color: color,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        chapter,
+        text,
         style: GoogleFonts.denkOne(
           textStyle: const TextStyle(
             color: Colors.black,
@@ -477,7 +497,7 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
           fontSize: 13,
         ),
       ),
-      trailing: _buildChapterBadge("109"),
+      trailing: _buildBadgeRow(),
     );
   }
 
@@ -573,7 +593,7 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
                   Positioned(
                     top: 8,
                     left: 8,
-                    child: _buildChapterBadge("109"),
+                    child: _buildBadgeRow(),
                   ),
                   if (!isComfortable && _displayStyle != DisplayStyle.coverOnly)
                     Positioned(
