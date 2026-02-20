@@ -260,7 +260,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           child: Column(
                             children: [
-                              _buildGroupTile("Settings", PhosphorIcons.gear(), true, () {
+                              _buildGroupTile("Settings", Icons.settings_rounded, true, () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(builder: (context) => const SettingsScreen()),
@@ -448,7 +448,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildGroupTile(String title, PhosphorIconData icon, bool showDivider, VoidCallback onTap, Color textColor) {
+  Widget _buildGroupTile(String title, IconData icon, bool showDivider, VoidCallback onTap, Color textColor) {
     return Column(
       children: [
         ListTile(

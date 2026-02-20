@@ -20,8 +20,8 @@ class _DownloadQueueScreenState extends State<DownloadQueueScreen> {
   final List<Map<String, dynamic>> _downloads = [
     {
       'extension': 'ManhuaTop',
-      'manga': 'Solo Leveling',
-      'thumbnail': 'images/sololvl.png',
+      'manga': 'Superhuman Battlefield',
+      'thumbnail': 'images/superhumanbattlefield.png',
       'chapters': [
         {'name': 'Chapter 178', 'progress': 0.8, 'status': 'Downloading'},
         {'name': 'Chapter 177', 'progress': 1.0, 'status': 'Completed'},
@@ -29,8 +29,8 @@ class _DownloadQueueScreenState extends State<DownloadQueueScreen> {
     },
     {
       'extension': 'WeebCentral',
-      'manga': 'One Piece',
-      'thumbnail': 'images/keihatsu.png', // Fallback or placeholder
+      'manga': 'Player',
+      'thumbnail': 'images/player.jpg', // Fallback or placeholder
       'chapters': [
         {'name': 'Chapter 1105', 'progress': 0.3, 'status': 'Downloading'},
         {'name': 'Chapter 1104', 'progress': 0.0, 'status': 'Queued'},
