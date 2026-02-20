@@ -17,7 +17,7 @@ class LibraryScreen extends StatefulWidget {
   State<LibraryScreen> createState() => _LibraryScreenState();
 }
 
-class _LibraryScreenState extends State<LibraryScreen> {
+class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateMixin {
   final int _currentIndex = 1;
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
@@ -34,9 +34,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
   bool _showCategoryTabs = false;
   bool _showItemCount = false;
 
+  late TabController _categoryTabController;
+  final List<String> _categories = ["Default", "Reading", "Completed", "On Hold", "Dropped", "Plan to Read"];
+
+  @override
+  void initState() {
+    super.initState();
+    _categoryTabController = TabController(length: _categories.length, vsync: this);
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
+    _categoryTabController.dispose();
     super.dispose();
   }
 
@@ -318,6 +328,32 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   ),
                 ),
               ),
+        bottom: _showCategoryTabs
+            ? TabBar(
+                controller: _categoryTabController,
+                isScrollable: true,
+                indicatorColor: brandColor,
+                labelColor: brandColor,
+                unselectedLabelColor: textColor.withOpacity(0.5),
+                tabs: _categories.map((cat) {
+                  return Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(cat),
+                        if (_showItemCount) ...[
+                          const SizedBox(width: 4),
+                          Text(
+                            "(${filteredLibrary.length})", // Placeholder count
+                            style: TextStyle(fontSize: 10, color: textColor.withOpacity(0.3)),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                }).toList(),
+              )
+            : null,
         actions: [
           IconButton(
             onPressed: () {
@@ -344,7 +380,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
               ? _buildEmptyState(textColor)
               : filteredLibrary.isEmpty
                   ? _buildNoResultsState(textColor)
-                  : _buildLibraryContent(filteredLibrary, brandColor, textColor),
+                  : _showCategoryTabs
+                      ? TabBarView(
+                          controller: _categoryTabController,
+                          children: _categories.map((cat) => _buildLibraryContent(filteredLibrary, brandColor, textColor)).toList(),
+                        )
+                      : _buildLibraryContent(filteredLibrary, brandColor, textColor),
       bottomNavigationBar: MainNavigationBar(
         currentIndex: _currentIndex,
         brandColor: brandColor,
