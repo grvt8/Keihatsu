@@ -25,6 +25,13 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
   DisplayStyle _displayStyle = DisplayStyle.comfortable;
   int _itemsPerRow = 3;
 
+  // Filter settings
+  bool _filterDownloaded = false;
+  bool _filterUnread = false;
+  bool _filterStarted = false;
+  bool _filterBookmarked = false;
+  bool _filterCompleted = false;
+
   // Mock overlay settings for UI
   bool _showDownloaded = true;
   bool _showUnread = true;
@@ -67,7 +74,7 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
       builder: (context) {
         return DefaultTabController(
           length: 3,
-          initialIndex: 2, // Start on "Display" as in reference
+          initialIndex: 0,
           child: StatefulBuilder(
             builder: (context, setModalState) {
               return Container(
@@ -77,7 +84,6 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Drag Handle
                     const SizedBox(height: 12),
                     Center(
                       child: Container(
@@ -90,7 +96,6 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // Tabs
                     TabBar(
                       indicatorColor: brandColor,
                       labelColor: brandColor,
@@ -106,11 +111,11 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
                     ),
                     const Divider(height: 1, thickness: 0.5),
                     SizedBox(
-                      height: 450, // Fixed height for content
+                      height: 450,
                       child: TabBarView(
                         children: [
-                          _buildEmptyTab(textColor, "Filter Settings"),
-                          _buildEmptyTab(textColor, "Sort Settings"),
+                          _buildFilterTab(brandColor, textColor, setModalState),
+                          _buildSortTab(brandColor, textColor, setModalState),
                           _buildDisplayTab(brandColor, textColor, setModalState),
                         ],
                       ),
@@ -125,11 +130,50 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildEmptyTab(Color textColor, String title) {
-    return Center(
-      child: Text(
-        title,
-        style: TextStyle(color: textColor.withOpacity(0.5)),
+  Widget _buildFilterTab(Color brandColor, Color textColor, StateSetter setModalState) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          _buildToggle("Downloaded", _filterDownloaded, brandColor, textColor, (val) {
+            setState(() => _filterDownloaded = val);
+            setModalState(() {});
+          }),
+          _buildToggle("Unread", _filterUnread, brandColor, textColor, (val) {
+            setState(() => _filterUnread = val);
+            setModalState(() {});
+          }),
+          _buildToggle("Started", _filterStarted, brandColor, textColor, (val) {
+            setState(() => _filterStarted = val);
+            setModalState(() {});
+          }),
+          _buildToggle("Bookmarked", _filterBookmarked, brandColor, textColor, (val) {
+            setState(() => _filterBookmarked = val);
+            setModalState(() {});
+          }),
+          _buildToggle("Completed", _filterCompleted, brandColor, textColor, (val) {
+            setState(() => _filterCompleted = val);
+            setModalState(() {});
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSortTab(Color brandColor, Color textColor, StateSetter setModalState) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          _buildToggle("Alphabetically", false, brandColor, textColor, (val) {}),
+          _buildToggle("Total chapters", false, brandColor, textColor, (val) {}),
+          _buildToggle("Last read", true, brandColor, textColor, (val) {}),
+          _buildToggle("Last updated", false, brandColor, textColor, (val) {}),
+          _buildToggle("Unread count", false, brandColor, textColor, (val) {}),
+          _buildToggle("Latest chapter", false, brandColor, textColor, (val) {}),
+          _buildToggle("Date fetched", false, brandColor, textColor, (val) {}),
+          _buildToggle("Date added", false, brandColor, textColor, (val) {}),
+        ],
       ),
     );
   }
@@ -223,10 +267,12 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
   Widget _buildSectionTitle(Color textColor, String title) {
     return Text(
       title,
-      style: TextStyle(
-        color: textColor,
-        fontWeight: FontWeight.bold,
-        fontSize: 14,
+      style: GoogleFonts.dynaPuff(
+        textStyle: TextStyle(
+          color: textColor,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
       ),
     );
   }
@@ -262,7 +308,7 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
 
   Widget _buildToggle(String label, bool value, Color brandColor, Color textColor, Function(bool) onChanged) {
     return ListTile(
-      title: Text(label, style: TextStyle(color: textColor, fontSize: 14)),
+      title: Text(label, style: TextStyle(color: textColor, fontSize: 16)),
       contentPadding: EdgeInsets.zero,
       trailing: Switch(
         value: value,
