@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:keihatsu/screens/AboutScreen.dart';
+import 'package:keihatsu/screens/DonateScreen.dart';
 import 'package:keihatsu/screens/HelpAndSupportScreen.dart';
+import 'package:keihatsu/screens/InboxScreen.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../components/MainNavigationBar.dart';
@@ -264,7 +266,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   MaterialPageRoute(builder: (context) => const SettingsScreen()),
                                 );
                               }, textColor),
-                              _buildGroupTile("Inbox", PhosphorIcons.mailbox(), true, () {}, textColor),
+                              _buildGroupTile("Inbox", PhosphorIcons.mailbox(), true, () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const InboxScreen()),
+                                );
+                              }, textColor),
                               _buildGroupTile("Stats", PhosphorIcons.chartLineUp(), false, () {
                                 Navigator.push(
                                   context,
@@ -285,13 +292,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               _buildSwitchTile("Dark Mode", PhosphorIcons.sun(), themeProvider.pureBlackDarkMode, (val) {
                                 themeProvider.setPureBlackDarkMode(val);
                               }, textColor),
-                              _buildGroupTile("Help & Support", PhosphorIcons.question(), false, () {
+                              _buildGroupTile("Help & Support", PhosphorIcons.question(), true, () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(builder: (context) => const HelpAndSupportScreen()),
                                 );
                               }, textColor),
-                              _buildGroupTile("Donate", PhosphorIcons.tipJar(), true, () {}, textColor),
+                              _buildGroupTile("Donate", PhosphorIcons.tipJar(), true, () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const DonateScreen()),
+                                );
+                              }, textColor),
                               _buildGroupTile("About", PhosphorIcons.info(), false, () {
                                 Navigator.push(
                                   context,
