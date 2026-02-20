@@ -8,7 +8,7 @@ import '../providers/library_provider.dart';
 import '../theme_provider.dart';
 import 'MangaDetailsScreen.dart';
 
-enum DisplayMode { grid2, grid3, grid4, list }
+enum DisplayStyle { compact, comfortable, coverOnly, list }
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -22,7 +22,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
-  DisplayMode _displayMode = DisplayMode.grid3;
+  DisplayStyle _displayStyle = DisplayStyle.comfortable;
+  int _itemsPerRow = 3;
+
+  // Mock overlay settings for UI
+  bool _showDownloaded = true;
+  bool _showUnread = true;
+  bool _showLocalSource = true;
+  bool _showLanguage = true;
+  bool _showContinueButton = false;
+  bool _showCategoryTabs = false;
+  bool _showItemCount = false;
 
   @override
   void dispose() {
@@ -32,6 +42,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   void _showDisplaySettings() {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
     final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
     final textColor = isDarkMode ? Colors.white : Colors.black87;
@@ -39,91 +50,227 @@ class _LibraryScreenState extends State<LibraryScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: bgColor,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "Display Mode",
-                    style: GoogleFonts.denkOne(
-                      textStyle: TextStyle(fontSize: 20, color: textColor),
+        return DefaultTabController(
+          length: 3,
+          initialIndex: 2, // Start on "Display" as in reference
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              return Container(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Drag Handle
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: textColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildDisplayOption(
-                    context,
-                    "2x2 Grid",
-                    PhosphorIcons.squaresFour(),
-                    DisplayMode.grid2,
-                    setModalState,
-                  ),
-                  _buildDisplayOption(
-                    context,
-                    "3x3 Grid",
-                    PhosphorIcons.squaresFour(),
-                    DisplayMode.grid3,
-                    setModalState,
-                  ),
-                  _buildDisplayOption(
-                    context,
-                    "4x4 Grid",
-                    PhosphorIcons.gridFour(),
-                    DisplayMode.grid4,
-                    setModalState,
-                  ),
-                  _buildDisplayOption(
-                    context,
-                    "List View",
-                    PhosphorIcons.listBullets(),
-                    DisplayMode.list,
-                    setModalState,
-                  ),
-                  const SizedBox(height: 20),
-                ],
-              ),
-            );
-          },
+                    const SizedBox(height: 8),
+                    // Tabs
+                    TabBar(
+                      indicatorColor: brandColor,
+                      labelColor: brandColor,
+                      unselectedLabelColor: textColor.withOpacity(0.6),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      dividerColor: Colors.transparent,
+                      labelStyle: GoogleFonts.denkOne(fontSize: 16),
+                      tabs: const [
+                        Tab(text: "Filter"),
+                        Tab(text: "Sort"),
+                        Tab(text: "Display"),
+                      ],
+                    ),
+                    const Divider(height: 1, thickness: 0.5),
+                    SizedBox(
+                      height: 450, // Fixed height for content
+                      child: TabBarView(
+                        children: [
+                          _buildEmptyTab(textColor, "Filter Settings"),
+                          _buildEmptyTab(textColor, "Sort Settings"),
+                          _buildDisplayTab(brandColor, textColor, setModalState),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         );
       },
     );
   }
 
-  Widget _buildDisplayOption(
-    BuildContext context,
-    String title,
-    PhosphorIconData icon,
-    DisplayMode mode,
-    StateSetter setModalState,
-  ) {
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    final isSelected = _displayMode == mode;
-    final brandColor = themeProvider.brandColor;
-    final textColor = themeProvider.themeMode == ThemeMode.dark ? Colors.white : Colors.black87;
-
-    return ListTile(
-      onTap: () {
-        setState(() {
-          _displayMode = mode;
-        });
-        setModalState(() {});
-        Navigator.pop(context);
-      },
-      leading: Icon(icon, color: isSelected ? brandColor : textColor.withOpacity(0.6)),
-      title: Text(
+  Widget _buildEmptyTab(Color textColor, String title) {
+    return Center(
+      child: Text(
         title,
-        style: TextStyle(
-          color: isSelected ? brandColor : textColor,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        style: TextStyle(color: textColor.withOpacity(0.5)),
+      ),
+    );
+  }
+
+  Widget _buildDisplayTab(Color brandColor, Color textColor, StateSetter setModalState) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle(textColor, "Display mode"),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildChoiceChip("Compact grid", DisplayStyle.compact, brandColor, textColor, setModalState),
+              _buildChoiceChip("Comfortable grid", DisplayStyle.comfortable, brandColor, textColor, setModalState),
+              _buildChoiceChip("Cover-only grid", DisplayStyle.coverOnly, brandColor, textColor, setModalState),
+              _buildChoiceChip("List", DisplayStyle.list, brandColor, textColor, setModalState),
+            ],
+          ),
+          const SizedBox(height: 25),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildSectionTitle(textColor, "Items per row"),
+              Text(
+                "$_itemsPerRow",
+                style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: brandColor,
+              inactiveTrackColor: brandColor.withOpacity(0.2),
+              thumbColor: brandColor,
+              overlayColor: brandColor.withOpacity(0.1),
+              trackHeight: 4,
+            ),
+            child: Slider(
+              value: _itemsPerRow.toDouble(),
+              min: 2,
+              max: 6,
+              divisions: 4,
+              onChanged: (val) {
+                setState(() => _itemsPerRow = val.toInt());
+                setModalState(() {});
+              },
+            ),
+          ),
+          const SizedBox(height: 25),
+          _buildSectionTitle(textColor, "Overlay"),
+          _buildCheckbox("Downloaded chapters", _showDownloaded, brandColor, textColor, (val) {
+            setState(() => _showDownloaded = val!);
+            setModalState(() {});
+          }),
+          _buildCheckbox("Unread chapters", _showUnread, brandColor, textColor, (val) {
+            setState(() => _showUnread = val!);
+            setModalState(() {});
+          }),
+          _buildCheckbox("Local source", _showLocalSource, brandColor, textColor, (val) {
+            setState(() => _showLocalSource = val!);
+            setModalState(() {});
+          }),
+          _buildCheckbox("Language", _showLanguage, brandColor, textColor, (val) {
+            setState(() => _showLanguage = val!);
+            setModalState(() {});
+          }),
+          _buildCheckbox("Continue reading button", _showContinueButton, brandColor, textColor, (val) {
+            setState(() => _showContinueButton = val!);
+            setModalState(() {});
+          }),
+          const SizedBox(height: 25),
+          _buildSectionTitle(textColor, "Tabs"),
+          _buildCheckbox("Show category tabs", _showCategoryTabs, brandColor, textColor, (val) {
+            setState(() => _showCategoryTabs = val!);
+            setModalState(() {});
+          }),
+          _buildCheckbox("Show number of items", _showItemCount, brandColor, textColor, (val) {
+            setState(() => _showItemCount = val!);
+            setModalState(() {});
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(Color textColor, String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        color: textColor,
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+      ),
+    );
+  }
+
+  Widget _buildChoiceChip(String label, DisplayStyle style, Color brandColor, Color textColor, StateSetter setModalState) {
+    final isSelected = _displayStyle == style;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _displayStyle = style);
+        setModalState(() {});
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? brandColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? brandColor : textColor.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : textColor,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 13,
+          ),
         ),
       ),
-      trailing: isSelected ? Icon(Icons.check_circle, color: brandColor) : null,
+    );
+  }
+
+  Widget _buildCheckbox(String label, bool value, Color brandColor, Color textColor, Function(bool?) onChanged) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        checkboxTheme: CheckboxThemeData(
+          fillColor: MaterialStateProperty.resolveWith((states) {
+            if (states.contains(MaterialState.selected)) return brandColor;
+            return null;
+          }),
+          side: BorderSide(color: textColor.withOpacity(0.3), width: 1.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        ),
+      ),
+      child: CheckboxListTile(
+        value: value,
+        onChanged: onChanged,
+        title: Text(label, style: TextStyle(color: textColor, fontSize: 14)),
+        contentPadding: EdgeInsets.zero,
+        controlAffinity: ListTileControlAffinity.leading,
+        dense: true,
+        visualDensity: VisualDensity.compact,
+      ),
     );
   }
 
@@ -182,13 +329,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 }
               });
             },
-            icon: Icon(_isSearching ? Icons.close : PhosphorIcons.magnifyingGlass(), color: textColor),
+            icon: Icon(_isSearching ? Icons.close : Icons.search, color: textColor),
           ),
           IconButton(
             onPressed: _showDisplaySettings,
-            icon: Icon(PhosphorIcons.funnel(), color: textColor),
+            icon: Icon(Icons.filter_alt_rounded, color: textColor),
           ),
-          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell(), color: textColor)),
+          IconButton(onPressed: () {}, icon: Icon(Icons.notifications, color: textColor)),
         ],
       ),
       body: libraryProvider.isLoading
@@ -206,7 +353,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Widget _buildLibraryContent(List<Manga> mangas, Color brandColor, Color textColor) {
-    if (_displayMode == DisplayMode.list) {
+    if (_displayStyle == DisplayStyle.list) {
       return ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 10),
         itemCount: mangas.length,
@@ -216,14 +363,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
       );
     }
 
-    int crossAxisCount = 3;
-    if (_displayMode == DisplayMode.grid2) crossAxisCount = 2;
-    if (_displayMode == DisplayMode.grid4) crossAxisCount = 4;
-
     return GridView.builder(
       padding: const EdgeInsets.all(10),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
+        crossAxisCount: _itemsPerRow,
         childAspectRatio: 0.7,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
@@ -240,7 +383,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: const Color(0xFF8DE19C), // Light green like the reference image
+        color: const Color(0xFF8DE19C),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -267,29 +410,20 @@ class _LibraryScreenState extends State<LibraryScreen> {
         );
       },
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      leading: Stack(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: SizedBox(
-              width: 50,
-              height: 75,
-              child: Image.network(
-                manga.thumbnailUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  color: Colors.grey[800],
-                  child: const Icon(Icons.broken_image, color: Colors.white54, size: 20),
-                ),
-              ),
+      leading: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          width: 50,
+          height: 75,
+          child: Image.network(
+            manga.thumbnailUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              color: Colors.grey[800],
+              child: const Icon(Icons.broken_image, color: Colors.white54, size: 20),
             ),
           ),
-          Positioned(
-            top: 4,
-            left: 4,
-            child: _buildChapterBadge("109"), // Placeholder chapter number
-          ),
-        ],
+        ),
       ),
       title: Text(
         manga.title,
@@ -308,21 +442,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           fontSize: 13,
         ),
       ),
-      trailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: brandColor.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          "24 Ch.",
-          style: TextStyle(
-            color: brandColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
-          ),
-        ),
-      ),
+      trailing: _buildChapterBadge("109"),
     );
   }
 
@@ -394,40 +514,42 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ),
               ),
             ),
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.8),
-                    ],
+            if (_displayStyle != DisplayStyle.coverOnly)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.8),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
             Positioned(
               top: 8,
               left: 8,
-              child: _buildChapterBadge("109"), // Placeholder chapter number
+              child: _buildChapterBadge("109"),
             ),
-            Positioned(
-              bottom: 8,
-              left: 8,
-              right: 8,
-              child: Text(
-                manga.title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+            if (_displayStyle != DisplayStyle.coverOnly)
+              Positioned(
+                bottom: 8,
+                left: 8,
+                right: 8,
+                child: Text(
+                  manga.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
-            ),
           ],
         ),
       ),

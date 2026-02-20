@@ -165,7 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 10),
-                                Icon(PhosphorIcons.pencilLine(), size: 20, color: textColor.withOpacity(0.6)),
+                                Icon(Icons.edit_rounded, size: 20, color: textColor.withOpacity(0.6)),
                               ],
                             ),
                             Text(
@@ -342,7 +342,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Stack(
           children: [
-            Icon(PhosphorIcons.bell(), color: iconColor, size: 28),
+            Icon(Icons.notifications, color: iconColor, size: 28),
             Positioned(
               right: 0,
               top: -4,
