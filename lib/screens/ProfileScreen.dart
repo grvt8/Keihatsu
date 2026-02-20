@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:keihatsu/screens/AboutScreen.dart';
+import 'package:keihatsu/screens/DonateScreen.dart';
 import 'package:keihatsu/screens/HelpAndSupportScreen.dart';
 import 'package:keihatsu/screens/InboxScreen.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -297,7 +298,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   MaterialPageRoute(builder: (context) => const HelpAndSupportScreen()),
                                 );
                               }, textColor),
-                              _buildGroupTile("Donate", PhosphorIcons.tipJar(), true, () {}, textColor),
+                              _buildGroupTile("Donate", PhosphorIcons.tipJar(), true, () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const DonateScreen()),
+                                );
+                              }, textColor),
                               _buildGroupTile("About", PhosphorIcons.info(), false, () {
                                 Navigator.push(
                                   context,
