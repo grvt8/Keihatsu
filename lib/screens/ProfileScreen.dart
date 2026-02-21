@@ -102,12 +102,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: const AssetImage('images/profileBg.jpeg'),
+                        image: user?.bannerUrl != null && user!.bannerUrl!.isNotEmpty
+                            ? NetworkImage(user.bannerUrl!)
+                            : const AssetImage('images/profileBg.jpeg') as ImageProvider,
                         fit: BoxFit.cover,
                         colorFilter: ColorFilter.mode(
                           Colors.black.withOpacity(0.4),
                           BlendMode.darken,
                         ),
+                        onError: (exception, stackTrace) {
+                          debugPrint('Error loading banner image: $exception');
+                        },
                       ),
                     ),
                   ),

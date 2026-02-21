@@ -3,6 +3,7 @@ class User {
   final String? googleId;
   final String email;
   final String? avatarUrl;
+  final String? bannerUrl;
   final String? username;
   final String? bio;
   final DateTime? createdAt;
@@ -19,6 +20,7 @@ class User {
     this.googleId,
     required this.email,
     this.avatarUrl,
+    this.bannerUrl,
     this.username,
     this.bio,
     this.createdAt,
@@ -37,6 +39,7 @@ class User {
       googleId: json['googleId'],
       email: json['email'],
       avatarUrl: json['avatarUrl'],
+      bannerUrl: json['bannerUrl'],
       username: json['username'],
       bio: json['bio'],
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
@@ -56,6 +59,7 @@ class User {
       'googleId': googleId,
       'email': email,
       'avatarUrl': avatarUrl,
+      'bannerUrl': bannerUrl,
       'username': username,
       'bio': bio,
       'createdAt': createdAt?.toIso8601String(),
