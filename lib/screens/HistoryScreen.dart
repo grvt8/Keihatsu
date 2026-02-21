@@ -6,6 +6,7 @@ import '../data/manga_data.dart';
 import '../components/MainNavigationBar.dart';
 import '../theme_provider.dart';
 import '../providers/library_provider.dart';
+import '../providers/auth_provider.dart';
 import '../models/manga.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -55,6 +56,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final libraryProvider = Provider.of<LibraryProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
@@ -194,7 +196,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                       if (!_isSelectionMode) ...[
                         IconButton(
-                          onPressed: () => libraryProvider.toggleLibrary(manga),
+                          onPressed: () {
+                            if (authProvider.token != null) {
+                              libraryProvider.toggleLibrary(authProvider.token!, manga);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Please login to add to library")),
+                              );
+                            }
+                          },
                           icon: Icon(
                             isInLibrary ? PhosphorIcons.bookBookmark(PhosphorIconsStyle.fill) : PhosphorIcons.bookBookmark(),
                             size: 20,

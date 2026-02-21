@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'providers/library_provider.dart';
+import 'providers/auth_provider.dart';
 
 // Screens
 import 'screens/Onboarding.dart';
@@ -23,6 +24,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LibraryProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: const MyApp(),
     ),
@@ -35,6 +37,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -68,7 +71,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      initialRoute: '/onboarding',
+      initialRoute: authProvider.isAuthenticated ? '/home' : '/onboarding',
       routes: {
         '/onboarding': (context) => const Onboarding(),
         '/onboardingFlow': (context) => const OnboardingFlow(),

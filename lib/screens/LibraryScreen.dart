@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../components/MainNavigationBar.dart';
 import '../models/manga.dart';
 import '../providers/library_provider.dart';
+import '../providers/auth_provider.dart';
 import '../theme_provider.dart';
 import 'MangaDetailsScreen.dart';
 
@@ -42,12 +43,18 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
   bool _showItemCount = true;
 
   late TabController _categoryTabController;
-  final List<String> _categories = ["All", "Regression", "Murim", "Tower", "Romance", "System"];
 
   @override
   void initState() {
     super.initState();
-    _categoryTabController = TabController(length: _categories.length, vsync: this);
+    final libraryProvider = Provider.of<LibraryProvider>(context, listen: false);
+    _categoryTabController = TabController(length: libraryProvider.categories.length, vsync: this);
+    
+    // Fetch initial data
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.token != null) {
+      libraryProvider.fetchLibrary(authProvider.token!);
+    }
   }
 
   @override
@@ -55,6 +62,63 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
     _searchController.dispose();
     _categoryTabController.dispose();
     super.dispose();
+  }
+
+  void _showAddCategoryDialog() {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final libraryProvider = Provider.of<LibraryProvider>(context, listen: false);
+    final brandColor = themeProvider.brandColor;
+    final textColor = themeProvider.isDarkMode ? Colors.white : Colors.black87;
+    final categoryController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: themeProvider.effectiveBgColor,
+        title: Text("Add Category", style: GoogleFonts.denkOne(color: textColor)),
+        content: TextField(
+          controller: categoryController,
+          autofocus: true,
+          style: TextStyle(color: textColor),
+          decoration: InputDecoration(
+            hintText: "Category name",
+            hintStyle: TextStyle(color: textColor.withOpacity(0.5)),
+            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: brandColor)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel", style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final name = categoryController.text.trim();
+              if (name.isNotEmpty && authProvider.token != null) {
+                try {
+                  await libraryProvider.addCategory(authProvider.token!, name);
+                  if (mounted) {
+                    setState(() {
+                      _categoryTabController = TabController(
+                        length: libraryProvider.categories.length,
+                        vsync: this,
+                      );
+                    });
+                    Navigator.pop(context);
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Error: ${e.toString()}")),
+                  );
+                }
+              }
+            },
+            child: Text("Add", style: TextStyle(color: brandColor, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showDisplaySettings() {
@@ -334,6 +398,12 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
       return manga.title.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
 
+    // Re-initialize TabController if categories length changed
+    if (_categoryTabController.length != libraryProvider.categories.length) {
+      _categoryTabController.dispose();
+      _categoryTabController = TabController(length: libraryProvider.categories.length, vsync: this);
+    }
+
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
@@ -366,7 +436,7 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
                 ),
               ),
 
-        bottom: _showCategoryTabs
+        bottom: _showCategoryTabs && libraryProvider.categories.isNotEmpty
             ? TabBar(
                 controller: _categoryTabController,
                 isScrollable: true,
@@ -374,19 +444,19 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
                 indicatorColor: brandColor,
                 labelColor: brandColor,
                 unselectedLabelColor: textColor.withOpacity(0.5),
-                tabs: _categories.map((cat) {
+                tabs: libraryProvider.categories.map((cat) {
                   return Tab(
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          (cat),
+                          cat,
                           style: TextStyle(fontFamily: 'Delius', color: textColor, fontWeight: FontWeight.bold),
                         ),
                         if (_showItemCount) ...[
                           const SizedBox(width: 4),
                           Text(
-                            "(${filteredLibrary.length})", // Placeholder count
+                            "(${filteredLibrary.length})", // Simplified count for now
                             style: TextStyle(fontSize: 15, color: brandColor),
                           ),
                         ],
@@ -425,9 +495,14 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
                   : _showCategoryTabs
                       ? TabBarView(
                           controller: _categoryTabController,
-                          children: _categories.map((cat) => _buildLibraryContent(filteredLibrary, brandColor, textColor)).toList(),
+                          children: libraryProvider.categories.map((cat) => _buildLibraryContent(filteredLibrary, brandColor, textColor)).toList(),
                         )
                       : _buildLibraryContent(filteredLibrary, brandColor, textColor),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddCategoryDialog,
+        backgroundColor: brandColor,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       bottomNavigationBar: MainNavigationBar(
         currentIndex: _currentIndex,
         brandColor: brandColor,

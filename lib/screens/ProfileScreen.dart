@@ -8,9 +8,11 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../components/MainNavigationBar.dart';
 import '../theme_provider.dart';
+import '../providers/auth_provider.dart';
 import 'SettingsScreen.dart';
 import 'StatsScreen.dart';
 import 'DownloadQueueScreen.dart';
+import 'EditProfileScreen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -46,6 +48,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
+    final user = authProvider.user;
+    
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
     final Color cardColor = themeProvider.pureBlackDarkMode ? Colors.white10 : Colors.white.withOpacity(0.55);
@@ -64,14 +69,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: _showTitle
                 ? Row(
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 16,
-                        backgroundImage: AssetImage('images/user1.jpeg'),
+                        backgroundImage: user?.avatarUrl != null 
+                            ? NetworkImage(user!.avatarUrl!) 
+                            : const AssetImage('images/user1.jpeg') as ImageProvider,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          "Kaizel",
+                          user?.username ?? "Guest",
                           style: GoogleFonts.denkOne(
                             textStyle: TextStyle(
                               fontSize: 18,
@@ -95,12 +102,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: const AssetImage('images/profileBg.jpeg'),
+                        image: user?.bannerUrl != null && user!.bannerUrl!.isNotEmpty
+                            ? NetworkImage(user.bannerUrl!)
+                            : const AssetImage('images/profileBg.jpeg') as ImageProvider,
                         fit: BoxFit.cover,
                         colorFilter: ColorFilter.mode(
                           Colors.black.withOpacity(0.4),
                           BlendMode.darken,
                         ),
+                        onError: (exception, stackTrace) {
+                          debugPrint('Error loading banner image: $exception');
+                        },
                       ),
                     ),
                   ),
@@ -125,12 +137,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
-                        child: Image.asset(
-                          'images/user1.jpeg',
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
-                        ),
+                        child: user?.avatarUrl != null
+                            ? Image.network(
+                                user!.avatarUrl!,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, e, s) => Image.asset('images/user1.jpeg', width: 100, height: 100, fit: BoxFit.cover),
+                              )
+                            : Image.asset(
+                                'images/user1.jpeg',
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              ),
                       ),
                     ),
                   ),
@@ -155,7 +175,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Row(
                               children: [
                                 Text(
-                                  "Kaizel",
+                                  user?.username ?? "Guest",
                                   style: GoogleFonts.hennyPenny(
                                     textStyle: TextStyle(
                                       fontSize: 32,
@@ -165,11 +185,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 10),
-                                Icon(Icons.edit_rounded, size: 20, color: textColor.withOpacity(0.6)),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                                    );
+                                  },
+                                  child: Icon(Icons.edit_rounded, size: 20, color: textColor.withOpacity(0.6)),
+                                ),
                               ],
                             ),
                             Text(
-                              "Water is good, Lloyd is water",
+                              user?.bio ?? "No bio available",
                               style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 16),
                             ),
                             const SizedBox(height: 10),
@@ -177,11 +205,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 Icon(PhosphorIcons.calendarDots(), size: 18, color: textColor.withOpacity(0.4)),
                                 const SizedBox(width: 5),
-                                Text("Member since 2025", style: TextStyle(color: textColor.withOpacity(0.4))),
+                                Text(
+                                  user?.createdAt != null 
+                                      ? "Member since ${user!.createdAt!.year}" 
+                                      : "Guest User", 
+                                  style: TextStyle(color: textColor.withOpacity(0.4))
+                                ),
                                 const SizedBox(width: 20),
-                                Icon(PhosphorIcons.mapPinArea(), size: 18, color: textColor.withOpacity(0.4)),
-                                const SizedBox(width: 5),
-                                Text("Switzerland", style: TextStyle(color: textColor.withOpacity(0.4))),
+
                               ],
                             ),
                           ],
@@ -209,13 +240,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildStatItem("143", "in Library", textColor),
+                          _buildStatItem(user?.achievementCount.toString() ?? "0", "achievements", textColor),
                           _buildDivider(textColor),
-                          _buildStatItem("5h", "reading", textColor),
+                          _buildStatItem(user?.points.toString() ?? "0", "points", textColor),
                           _buildDivider(textColor),
-                          _buildStatItem("7", "read", textColor),
+                          _buildStatItem("0", "read", textColor),
                           _buildDivider(textColor),
-                          _buildStatItem("3", "comments", textColor),
+                          _buildStatItem("0", "comments", textColor),
                         ],
                       ),
                     ),
@@ -317,10 +348,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 30),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text("Log Out", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                  ),
+                  if (authProvider.isAuthenticated)
+                    TextButton(
+                      onPressed: () async {
+                        await authProvider.logout();
+                        if (context.mounted) {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        }
+                      },
+                      child: const Text("Log Out", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                    )
+                  else
+                    TextButton(
+                      onPressed: () => Navigator.pushNamed(context, '/login'),
+                      child: Text("Log In", style: TextStyle(color: brandColor, fontWeight: FontWeight.bold)),
+                    ),
                   const SizedBox(height: 80),
                 ],
               ),

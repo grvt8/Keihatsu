@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../theme_provider.dart';
+import '../providers/auth_provider.dart';
 import '../models/manga.dart';
 import '../models/chapter.dart';
 import '../services/sources_api.dart';
@@ -63,6 +64,7 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final libraryProvider = Provider.of<LibraryProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
@@ -215,7 +217,15 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
                                 isInLibrary ? PhosphorIcons.bookBookmark(PhosphorIconsStyle.fill) : PhosphorIcons.bookBookmark(),
                                 isInLibrary ? "In library" : "Add to library",
                                 brandColor,
-                                onTap: () => libraryProvider.toggleLibrary(manga),
+                                onTap: () {
+                                  if (authProvider.token != null) {
+                                    libraryProvider.toggleLibrary(authProvider.token!, manga);
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text("Please login to add to library")),
+                                    );
+                                  }
+                                },
                               ),
                               _buildActionButton(PhosphorIcons.hourglassHigh(), "Syncing", isDarkMode ? Colors.white70 : Colors.black54),
                               _buildActionButton(PhosphorIcons.arrowsClockwise(), "Tracking", isDarkMode ? Colors.white70 : Colors.black54),
