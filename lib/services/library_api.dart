@@ -38,11 +38,15 @@ class LibraryApi {
     return await http.get(uri, headers: _headers(token));
   }
 
-  Future<http.Response> addMangaToLibrary(String token, Map<String, dynamic> mangaData) async {
+  Future<http.Response> addMangaToLibrary(String token, Map<String, dynamic> mangaData, {List<String>? categories}) async {
+    final body = Map<String, dynamic>.from(mangaData);
+    if (categories != null) {
+      body['categories'] = categories;
+    }
     return await http.post(
       Uri.parse('$baseUrl/user/library'),
       headers: _headers(token),
-      body: json.encode(mangaData),
+      body: json.encode(body),
     );
   }
 
