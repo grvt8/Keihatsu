@@ -73,12 +73,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         radius: 16,
                         backgroundImage: user?.avatarUrl != null 
                             ? NetworkImage(user!.avatarUrl!) 
-                            : const AssetImage('images/user1.jpeg') as ImageProvider,
+                            : const AssetImage('images/avatar.jpeg') as ImageProvider,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          user?.username ?? "Guest",
+                          user?.username ?? "",
                           style: GoogleFonts.denkOne(
                             textStyle: TextStyle(
                               fontSize: 18,
@@ -143,10 +143,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 width: 100,
                                 height: 100,
                                 fit: BoxFit.cover,
-                                errorBuilder: (c, e, s) => Image.asset('images/user1.jpeg', width: 100, height: 100, fit: BoxFit.cover),
+                                errorBuilder: (c, e, s) => Image.asset('images/avatar.jpeg', width: 100, height: 100, fit: BoxFit.cover),
                               )
                             : Image.asset(
-                                'images/user1.jpeg',
+                                'images/avatar.jpeg',
                                 width: 100,
                                 height: 100,
                                 fit: BoxFit.cover,
@@ -169,53 +169,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  user?.username ?? "Guest",
-                                  style: GoogleFonts.hennyPenny(
-                                    textStyle: TextStyle(
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                      color: textColor,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (authProvider.isAuthenticated) ...[
+                                Row(
+                                  children: [
+                                    Text(
+                                      user?.username ?? "",
+                                      style: GoogleFonts.hennyPenny(
+                                        textStyle: TextStyle(
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                          color: textColor,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    const SizedBox(width: 10),
+                                    GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                                        );
+                                      },
+                                      child: Icon(Icons.edit_rounded, size: 20, color: textColor.withOpacity(0.6)),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 10),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-                                    );
-                                  },
-                                  child: Icon(Icons.edit_rounded, size: 20, color: textColor.withOpacity(0.6)),
-                                ),
-                              ],
-                            ),
-                            Text(
-                              user?.bio ?? "No bio available",
-                              style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 16),
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                Icon(PhosphorIcons.calendarDots(), size: 18, color: textColor.withOpacity(0.4)),
-                                const SizedBox(width: 5),
                                 Text(
-                                  user?.createdAt != null 
-                                      ? "Member since ${user!.createdAt!.year}" 
-                                      : "Guest User", 
-                                  style: TextStyle(color: textColor.withOpacity(0.4))
+                                  user?.bio ?? "No bio available",
+                                  style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 16),
                                 ),
-                                const SizedBox(width: 20),
-
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    Icon(PhosphorIcons.calendarDots(), size: 18, color: textColor.withOpacity(0.4)),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      user?.createdAt != null 
+                                          ? "Member since ${user!.createdAt!.year}" 
+                                          : "", 
+                                      style: TextStyle(color: textColor.withOpacity(0.4))
+                                    ),
+                                  ],
+                                ),
+                              ] else ...[
+                                const SizedBox(height: 10),
+                                _buildGoogleSignUpButton(authProvider, brandColor, textColor),
                               ],
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         Container(
                           padding: const EdgeInsets.all(12),
@@ -519,6 +524,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         Divider(height: 1, indent: 60, endIndent: 20, color: textColor.withOpacity(0.1)),
       ],
+    );
+  }
+
+  Widget _buildGoogleSignUpButton(AuthProvider authProvider, Color brandColor, Color textColor) {
+    return GestureDetector(
+      onTap: () => authProvider.loginWithGoogle(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset('images/google.png', width: 24, height: 24),
+            const SizedBox(width: 12),
+            const Text(
+              "Sign up with Google",
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../data/manga_data.dart';
 import '../components/MainNavigationBar.dart';
 import '../theme_provider.dart';
-import '../providers/library_provider.dart';
+import '../providers/offline_library_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/manga.dart';
 
@@ -55,7 +55,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final libraryProvider = Provider.of<LibraryProvider>(context);
+    final offlineLibrary = Provider.of<OfflineLibraryProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
@@ -113,7 +113,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
           final isSelected = _selectedIndices.contains(index);
           bool showDate = index == 0 || mangaData[index]["date"] != mangaData[index - 1]["date"];
-          final bool isInLibrary = libraryProvider.isInLibrary(manga.id, manga.sourceId);
+          final bool isInLibrary = offlineLibrary.isInLibrary(manga.id, manga.sourceId);
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +198,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         IconButton(
                           onPressed: () {
                             if (authProvider.token != null) {
-                              libraryProvider.toggleLibrary(authProvider.token!, manga);
+                              offlineLibrary.toggleLibrary(manga);
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text("Please login to add to library")),

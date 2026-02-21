@@ -22,7 +22,7 @@ class MangaRepository {
 
   Future<LocalManga?> getMangaDetails(String sourceId, String mangaId) async {
     final connectivity = await Connectivity().checkConnectivity();
-    final bool isOnline = connectivity != ConnectivityResult.none;
+    final bool isOnline = !connectivity.contains(ConnectivityResult.none);
 
     if (isOnline) {
       try {
@@ -33,14 +33,14 @@ class MangaRepository {
       }
     }
 
-    return await isar.localMangas.filter()
+    return await isar.collection<LocalManga>().filter()
         .sourceIdEqualTo(sourceId)
         .mangaIdEqualTo(mangaId)
         .findFirst();
   }
 
   Future<LocalManga> _cacheManga(Manga manga) async {
-    final existing = await isar.localMangas.filter()
+    final existing = await isar.collection<LocalManga>().filter()
         .sourceIdEqualTo(manga.sourceId)
         .mangaIdEqualTo(manga.id)
         .findFirst();
@@ -57,7 +57,7 @@ class MangaRepository {
       ..genres = manga.genres;
 
     await isar.writeTxn(() async {
-      await isar.localMangas.put(local);
+      await isar.collection<LocalManga>().put(local);
     });
 
     if (manga.thumbnailUrl != null && (existing?.thumbnailUrl != manga.thumbnailUrl || existing?.thumbnailLocalPath == null)) {
@@ -67,7 +67,7 @@ class MangaRepository {
       );
       if (localPath != null) {
         local.thumbnailLocalPath = localPath;
-        await isar.writeTxn(() => isar.localMangas.put(local));
+        await isar.writeTxn(() => isar.collection<LocalManga>().put(local));
       }
     }
     return local;
@@ -75,12 +75,12 @@ class MangaRepository {
 
   Future<List<LocalChapter>> getChapters(String sourceId, String mangaId) async {
     final connectivity = await Connectivity().checkConnectivity();
-    if (connectivity != ConnectivityResult.none) {
+    if (!connectivity.contains(ConnectivityResult.none)) {
       try {
         final remoteChapters = await api.getChapters(sourceId, mangaId);
         await isar.writeTxn(() async {
           for (var remote in remoteChapters) {
-            final existing = await isar.localChapters.filter()
+            final existing = await isar.collection<LocalChapter>().filter()
                 .sourceIdEqualTo(sourceId)
                 .mangaIdEqualTo(mangaId)
                 .chapterIdEqualTo(remote.id)
@@ -95,7 +95,7 @@ class MangaRepository {
               ..dateUpload = remote.dateUpload
               ..scanlator = remote.scanlator;
 
-            await isar.localChapters.put(local);
+            await isar.collection<LocalChapter>().put(local);
           }
         });
       } catch (e) {
@@ -103,7 +103,7 @@ class MangaRepository {
       }
     }
 
-    return await isar.localChapters.filter()
+    return await isar.collection<LocalChapter>().filter()
         .sourceIdEqualTo(sourceId)
         .mangaIdEqualTo(mangaId)
         .sortByChapterNumberDesc()
@@ -120,7 +120,7 @@ class MangaRepository {
           ..chapterId = chapterId
           ..index = page.index
           ..imageRemoteUrl = page.imageUrl;
-        await isar.localPages.put(localPage);
+        await isar.collection<LocalPage>().put(localPage);
       }
     });
 
@@ -131,23 +131,23 @@ class MangaRepository {
         'downloads/$sourceId/$mangaId/$chapterId/page${page.index.toString().padLeft(3, '0')}.jpg'
       );
       if (localPath != null) {
-        final lp = await isar.localPages.filter().chapterIdEqualTo(chapterId).indexEqualTo(page.index).findFirst();
+        final lp = await isar.collection<LocalPage>().filter().chapterIdEqualTo(chapterId).indexEqualTo(page.index).findFirst();
         if (lp != null) {
           lp.imageLocalPath = localPath;
-          await isar.writeTxn(() => isar.localPages.put(lp));
+          await isar.writeTxn(() => isar.collection<LocalPage>().put(lp));
         }
       }
     }
 
     // 3. Mark as downloaded
-    final chapter = await isar.localChapters.filter()
+    final chapter = await isar.collection<LocalChapter>().filter()
         .sourceIdEqualTo(sourceId)
         .mangaIdEqualTo(mangaId)
         .chapterIdEqualTo(chapterId)
         .findFirst();
     if (chapter != null) {
       chapter.downloaded = true;
-      await isar.writeTxn(() => isar.localChapters.put(chapter));
+      await isar.writeTxn(() => isar.collection<LocalChapter>().put(chapter));
     }
 
     // 4. Notify server (optional but requested)
@@ -164,6 +164,6 @@ class MangaRepository {
   }
 
   Future<List<LocalPage>> getChapterPages(String chapterId) async {
-    return await isar.localPages.filter().chapterIdEqualTo(chapterId).sortByIndex().findAll();
+    return await isar.collection<LocalPage>().filter().chapterIdEqualTo(chapterId).sortByIndex().findAll();
   }
 }

@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../theme_provider.dart';
 import '../components/CustomBackButton.dart';
+import 'LibrarySettingsScreen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -47,7 +48,10 @@ class SettingsScreen extends StatelessWidget {
             icon: PhosphorIcons.books(),
             title: "Library",
             subtitle: "Categories, global update, badges",
-            onTap: () {},
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LibrarySettingsScreen()),
+            ),
             textColor: textColor,
             brandColor: brandColor,
           ),

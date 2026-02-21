@@ -6,7 +6,7 @@ import '../services/library_api.dart';
 class LibraryProvider with ChangeNotifier {
   final LibraryApi _libraryApi = LibraryApi();
   List<Manga> _library = [];
-  List<String> _categories = ["All"];
+  List<String> _categories = ["Default"];
   bool _isLoading = false;
   String? _error;
 
@@ -51,7 +51,7 @@ class LibraryProvider with ChangeNotifier {
       final response = await _libraryApi.getCategories(token);
       if (response.statusCode == 200) {
         final List<dynamic> decoded = json.decode(response.body);
-        _categories = ["All", ...decoded.map((cat) => cat['name'] as String)];
+        _categories = ["Default", ...decoded.map((cat) => cat['name'] as String)];
       }
     } catch (e) {
       debugPrint("Error fetching categories: $e");

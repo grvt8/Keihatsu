@@ -1,6 +1,6 @@
 import 'package:isar/isar.dart';
 
-import 'local_models.g.dart';
+part 'local_models.g.dart';
 
 @collection
 class LocalSource {
@@ -24,7 +24,7 @@ class LocalSource {
 class LocalManga {
   Id id = Isar.autoIncrement;
 
-  @Index(unique: true, composite: [CompositeIndex('sourceId')], replace: true)
+  @Index(unique: true, replace: true, composite: [CompositeIndex('sourceId')])
   late String mangaId;
   late String sourceId;
 
@@ -45,7 +45,7 @@ class LocalManga {
 class LocalChapter {
   Id id = Isar.autoIncrement;
 
-  @Index(unique: true, composite: [CompositeIndex('mangaId'), CompositeIndex('sourceId')], replace: true)
+  @Index(unique: true, replace: true, composite: [CompositeIndex('mangaId'), CompositeIndex('sourceId')])
   late String chapterId;
   late String mangaId;
   late String sourceId;
@@ -76,13 +76,25 @@ class LocalPage {
 class LocalLibraryEntry {
   Id id = Isar.autoIncrement;
 
-  @Index(unique: true, composite: [CompositeIndex('sourceId')], replace: true)
+  @Index(unique: true)
+  String? serverId;
+
+  @Index(unique: true, replace: true, composite: [CompositeIndex('sourceId')])
   late String mangaId;
   late String sourceId;
 
-  bool bookmarked = false;
-  bool completed = false;
-  bool unread = true;
+  bool isBookmarked = true;
+  bool isCompleted = false;
+  bool isUnread = true;
+  bool isStarted = false;
+  
+  int downloadedCount = 0;
+  int unreadCount = 0;
+  int totalChapters = 0;
+
+  DateTime? lastReadAt;
+  DateTime? lastUpdatedAt;
+  DateTime? dateAddedAt;
 
   // Snapshot of manga metadata
   late String title;
@@ -131,6 +143,13 @@ class SyncOperation {
 class LocalUserPreferences {
   Id id = Isar.autoIncrement;
 
-  String? libraryDisplayStyle;
+  String categoriesDisplayMode = 'comfortable grid';
+  int libraryItemsPerRow = 3;
+  bool overlayShowDownloaded = true;
+  bool overlayShowUnread = true;
+  bool overlayShowLanguage = true;
+  bool tabsShowCategories = true;
+  bool tabsShowItemCount = true;
+
   late String sourcePreferencesJson; // Store as JSON string for simplicity
 }

@@ -80,6 +80,21 @@ class LibraryApi {
     );
   }
 
+  Future<http.Response> updateCategory(String token, String id, String name) async {
+    return await http.put(
+      Uri.parse('$baseUrl/user/categories/$id'),
+      headers: _headers(token),
+      body: json.encode({'name': name}),
+    );
+  }
+
+  Future<http.Response> deleteCategory(String token, String id) async {
+    return await http.delete(
+      Uri.parse('$baseUrl/user/categories/$id'),
+      headers: _headers(token),
+    );
+  }
+
   // --- Download Endpoint ---
   Future<http.Response> downloadChapter({
     required String token,
