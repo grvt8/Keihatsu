@@ -10,6 +10,7 @@ class ThemeProvider extends ChangeNotifier {
   Color get brandColor => _brandColor;
   Color get bgColor => _bgColor;
   bool get pureBlackDarkMode => _pureBlackDarkMode;
+  bool get isDarkMode => _themeMode == ThemeMode.dark || _pureBlackDarkMode;
 
   Color get effectiveBgColor {
     if (_pureBlackDarkMode) {
