@@ -6,6 +6,7 @@ import '../components/MainNavigationBar.dart';
 import '../models/source.dart';
 import '../services/sources_api.dart';
 import '../theme_provider.dart';
+import '../providers/auth_provider.dart';
 
 class ExtensionsScreen extends StatefulWidget {
   const ExtensionsScreen({super.key});
@@ -18,7 +19,6 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
   final int _currentIndex = 3;
   late Future<List<Source>> _sourcesFuture;
   final SourcesApi _sourcesApi = SourcesApi();
-  final Map<String, bool> _sourceStatus = {};
 
   @override
   void initState() {
@@ -29,6 +29,7 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
@@ -95,13 +96,14 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
           }
 
           final sources = snapshot.data!;
+          
           return ListView.separated(
             padding: const EdgeInsets.all(20),
             itemCount: sources.length,
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final source = sources[index];
-              return _buildSourceCard(source, brandColor, textColor, cardColor);
+              return _buildSourceCard(source, brandColor, textColor, cardColor, authProvider);
             },
           );
         },
@@ -113,19 +115,31 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
     );
   }
 
-  Widget _buildSourceCard(Source source, Color brandColor, Color textColor, Color cardColor) {
-    if (!_sourceStatus.containsKey(source.id)) {
-      _sourceStatus[source.id] = true;
-    }
+  Widget _buildSourceCard(Source source, Color brandColor, Color textColor, Color cardColor, AuthProvider authProvider) {
+    final pref = authProvider.preferences?.sourcePreferences[source.id];
+    final isEnabled = pref?.enabled ?? true;
+    final isPinned = pref?.pinned ?? false;
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: isEnabled ? cardColor : cardColor.withOpacity(0.2),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
         children: [
+          // Pin Icon
+          IconButton(
+            onPressed: () {
+              authProvider.updateSourcePreference(source.id, pinned: !isPinned);
+            },
+            icon: Icon(
+              isPinned ? PhosphorIcons.pushPin(PhosphorIconsStyle.fill) : PhosphorIcons.pushPin(),
+              color: isPinned ? brandColor : textColor.withOpacity(0.3),
+              size: 20,
+            ),
+          ),
+          
           Container(
             width: 50,
             height: 50,
@@ -139,6 +153,8 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
                   ? Image.network(
                       source.iconUrl!,
                       fit: BoxFit.cover,
+                      color: isEnabled ? null : Colors.grey,
+                      colorBlendMode: isEnabled ? null : BlendMode.saturation,
                       errorBuilder: (context, error, stackTrace) =>
                           Icon(PhosphorIcons.puzzlePiece(), color: brandColor),
                     )
@@ -155,14 +171,14 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: textColor,
+                    color: isEnabled ? textColor : textColor.withOpacity(0.4),
                   ),
                 ),
                 Text(
                   '${source.lang.toUpperCase()} • ${source.baseUrl}',
                   style: TextStyle(
                     fontSize: 12,
-                    color: textColor.withOpacity(0.6),
+                    color: isEnabled ? textColor.withOpacity(0.6) : textColor.withOpacity(0.2),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -171,12 +187,10 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
             ),
           ),
           Switch(
-            value: _sourceStatus[source.id]!,
+            value: isEnabled,
             activeColor: brandColor,
             onChanged: (val) {
-              setState(() {
-                _sourceStatus[source.id] = val;
-              });
+              authProvider.updateSourcePreference(source.id, enabled: val);
             },
           ),
         ],

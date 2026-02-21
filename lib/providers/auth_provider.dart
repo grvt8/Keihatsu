@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
+import '../models/user_preferences.dart';
 import '../services/auth_api.dart';
 
 class AuthProvider with ChangeNotifier {
@@ -15,11 +16,13 @@ class AuthProvider with ChangeNotifier {
 
   User? _user;
   String? _token;
+  UserPreferences? _preferences;
   bool _isLoading = false;
   bool _isInitialized = false;
 
   User? get user => _user;
   String? get token => _token;
+  UserPreferences? get preferences => _preferences;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _token != null;
 
@@ -45,12 +48,48 @@ class AuthProvider with ChangeNotifier {
     if (_token != null) {
       try {
         _user = await _authApi.getMe(_token!);
+        await fetchPreferences();
         notifyListeners();
       } catch (e) {
         _token = null;
         await prefs.remove('accessToken');
         notifyListeners();
       }
+    }
+  }
+
+  Future<void> fetchPreferences() async {
+    if (_token == null) return;
+    try {
+      _preferences = await _authApi.getPreferences(_token!);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error fetching preferences: $e");
+    }
+  }
+
+  Future<void> updateSourcePreference(String sourceId, {bool? enabled, bool? pinned}) async {
+    if (_token == null || _preferences == null) return;
+
+    final currentPrefs = _preferences!.sourcePreferences[sourceId] ?? SourcePreference();
+    final newPrefs = SourcePreference(
+      enabled: enabled ?? currentPrefs.enabled,
+      pinned: pinned ?? currentPrefs.pinned,
+    );
+
+    final updatedSourcePrefs = Map<String, SourcePreference>.from(_preferences!.sourcePreferences);
+    updatedSourcePrefs[sourceId] = newPrefs;
+
+    try {
+      _preferences = await _authApi.updatePreferences(_token!, {
+        'source_preferences': {
+          sourceId: newPrefs.toJson(),
+        }
+      });
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error updating preferences: $e");
+      rethrow;
     }
   }
 
@@ -85,6 +124,8 @@ class AuthProvider with ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('accessToken', _token!);
 
+      await fetchPreferences();
+
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -100,6 +141,7 @@ class AuthProvider with ChangeNotifier {
     } catch (_) {}
     _user = null;
     _token = null;
+    _preferences = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('accessToken');
     notifyListeners();

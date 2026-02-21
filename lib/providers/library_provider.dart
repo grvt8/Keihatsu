@@ -102,7 +102,7 @@ class LibraryProvider with ChangeNotifier {
   }
 
   // Add/Remove from library (Syncs with backend)
-  Future<void> toggleLibrary(String token, Manga manga) async {
+  Future<void> toggleLibrary(String token, Manga manga, {List<String>? selectedCategories}) async {
     final existingIndex = _library.indexWhere((m) => m.id == manga.id && m.sourceId == manga.sourceId);
     
     try {
@@ -114,7 +114,11 @@ class LibraryProvider with ChangeNotifier {
         }
       } else {
         // Add to remote
-        final response = await _libraryApi.addMangaToLibrary(token, manga.toJson());
+        final response = await _libraryApi.addMangaToLibrary(
+          token, 
+          manga.toJson(), 
+          categories: selectedCategories
+        );
         if (response.statusCode == 201 || response.statusCode == 200) {
           _library.add(manga);
         }
