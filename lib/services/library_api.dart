@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'api_constants.dart';
 
 class LibraryApi {
   final String baseUrl;
-  LibraryApi({this.baseUrl = 'http://192.168.1.127:3000'});
+  LibraryApi({this.baseUrl = ApiConstants.baseUrl});
 
   Map<String, String> _headers(String token) => {
     'Content-Type': 'application/json',

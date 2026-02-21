@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:keihatsu/components/CustomBackButton.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -8,8 +9,9 @@ import '../theme_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/manga.dart';
 import '../models/chapter.dart';
-import '../services/sources_api.dart';
-import '../providers/library_provider.dart';
+import '../models/local_models.dart';
+import '../services/manga_repository.dart';
+import '../providers/offline_library_provider.dart';
 import 'MangaReaderScreen.dart';
 
 class MangaDetailsScreen extends StatefulWidget {
@@ -24,12 +26,10 @@ class MangaDetailsScreen extends StatefulWidget {
 class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTickerProviderStateMixin {
   late ScrollController _scrollController;
   bool _showTitle = false;
-  late Future<Manga> _mangaDetailsFuture;
-  late Future<List<Chapter>> _chaptersFuture;
-  final SourcesApi _sourcesApi = SourcesApi();
+  late Future<LocalManga?> _mangaDetailsFuture;
+  late Future<List<LocalChapter>> _chaptersFuture;
   bool _showAllChapters = false;
   late AnimationController _arrowController;
-  late Future<List<Manga>> _recommendedMangaFuture;
 
   @override
   void initState() {
@@ -43,9 +43,9 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
       }
     });
 
-    _mangaDetailsFuture = _sourcesApi.getMangaDetails(widget.manga.sourceId, widget.manga.id);
-    _chaptersFuture = _sourcesApi.getChapters(widget.manga.sourceId, widget.manga.id);
-    _recommendedMangaFuture = _sourcesApi.getMangaList(widget.manga.sourceId, 'popular').then((p) => p.mangas);
+    final repo = Provider.of<MangaRepository>(context, listen: false);
+    _mangaDetailsFuture = repo.getMangaDetails(widget.manga.sourceId, widget.manga.id);
+    _chaptersFuture = repo.getChapters(widget.manga.sourceId, widget.manga.id);
 
     _arrowController = AnimationController(
       vsync: this,
@@ -60,114 +60,30 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
     super.dispose();
   }
 
-  void _showCategorySelectionModal(BuildContext context, String token, Manga manga, LibraryProvider libraryProvider) {
-    final List<String> selectedCategories = ["All"];
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    final textColor = themeProvider.isDarkMode ? Colors.white : Colors.black87;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: themeProvider.effectiveBgColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Container(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Add to Categories",
-                    style: GoogleFonts.denkOne(fontSize: 22, color: textColor),
-                  ),
-                  const SizedBox(height: 16),
-                  Flexible(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: libraryProvider.categories.length,
-                      itemBuilder: (context, index) {
-                        final category = libraryProvider.categories[index];
-                        final isSelected = selectedCategories.contains(category);
-                        return CheckboxListTile(
-                          title: Text(category, style: TextStyle(color: textColor, fontFamily: 'Delius')),
-                          value: isSelected,
-                          onChanged: (bool? value) {
-                            setModalState(() {
-                              if (value == true) {
-                                selectedCategories.add(category);
-                              } else {
-                                if (category != "All") {
-                                  selectedCategories.remove(category);
-                                }
-                              }
-                            });
-                          },
-                          activeColor: themeProvider.brandColor,
-                          checkColor: Colors.white,
-                          contentPadding: EdgeInsets.zero,
-                          controlAffinity: ListTileControlAffinity.leading,
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        try {
-                          await libraryProvider.toggleLibrary(token, manga, selectedCategories: selectedCategories);
-                          if (context.mounted) Navigator.pop(context);
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Error: ${e.toString()}")),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: themeProvider.brandColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                      ),
-                      child: const Text("Save", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final libraryProvider = Provider.of<LibraryProvider>(context);
-    final authProvider = Provider.of<AuthProvider>(context);
+    final offlineLibrary = Provider.of<OfflineLibraryProvider>(context);
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
     final Color cardColor = isDarkMode ? Colors.white10 : Colors.white.withOpacity(0.7);
     final Color textColor = isDarkMode ? Colors.white : Colors.black87;
-    final bool isInLibrary = libraryProvider.isInLibrary(widget.manga.id, widget.manga.sourceId);
+    final bool isInLibrary = offlineLibrary.isInLibrary(widget.manga.id, widget.manga.sourceId);
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: FutureBuilder<Manga>(
+      body: FutureBuilder<LocalManga?>(
         future: _mangaDetailsFuture,
-        initialData: widget.manga,
         builder: (context, mangaSnapshot) {
-          final manga = mangaSnapshot.data ?? widget.manga;
+          final manga = mangaSnapshot.data;
+          final displayTitle = manga?.title ?? widget.manga.title;
+          final displayThumb = manga?.thumbnailLocalPath != null 
+              ? FileImage(File(manga!.thumbnailLocalPath!)) as ImageProvider
+              : NetworkImage(widget.manga.thumbnailUrl);
 
           return Stack(
             children: [
-              // Background Blurred/Darkened Image
               Positioned(
                 top: 0,
                 left: 0,
@@ -176,8 +92,8 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: Image.network(
-                        manga.thumbnailUrl,
+                      child: Image(
+                        image: displayThumb,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Container(color: bgColor),
                       ),
@@ -211,17 +127,12 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
                     leading: const CustomBackButton(),
                     title: _showTitle
                         ? Text(
-                            manga.title,
+                            displayTitle,
                             style: GoogleFonts.hennyPenny(
                               textStyle: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                           )
                         : null,
-                    actions: [
-                      IconButton(onPressed: () {}, icon: const Icon(Icons.download, color: Colors.white)),
-                      IconButton(onPressed: () {}, icon: const Icon(Icons.filter_list, color: Colors.white)),
-                      IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert, color: Colors.white)),
-                    ],
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
@@ -232,7 +143,6 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Foreground Manga Cover
                               Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(8),
@@ -246,17 +156,11 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
-                                  child: Image.network(
-                                    manga.thumbnailUrl,
+                                  child: Image(
+                                    image: displayThumb,
                                     height: 180,
                                     width: 120,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) => Container(
-                                      height: 180,
-                                      width: 120,
-                                      color: Colors.grey,
-                                      child: const Icon(Icons.broken_image),
-                                    ),
                                   ),
                                 ),
                               ),
@@ -266,7 +170,7 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      manga.title,
+                                      displayTitle,
                                       style: GoogleFonts.hennyPenny(
                                         textStyle: const TextStyle(
                                           fontSize: 24,
@@ -283,18 +187,15 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
                                       ),
                                     ),
                                     const SizedBox(height: 8),
-                                    _buildInfoRow(PhosphorIcons.user(), manga.author ?? "Unknown"),
+                                    _buildInfoRow(PhosphorIcons.user(), manga?.author ?? "Unknown"),
                                     const SizedBox(height: 4),
-                                    _buildInfoRow(PhosphorIcons.pencilLine(), manga.artist ?? "Unknown"),
-                                    const SizedBox(height: 4),
-                                    _buildInfoRow(PhosphorIcons.clock(), "${manga.status ?? "Ongoing"} • ${manga.sourceId}"),
+                                    _buildInfoRow(PhosphorIcons.clock(), "${manga?.status ?? "Ongoing"} • ${widget.manga.sourceId}"),
                                   ],
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 25),
-                          // Action Buttons
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
@@ -302,23 +203,7 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
                                 isInLibrary ? PhosphorIcons.bookBookmark(PhosphorIconsStyle.fill) : PhosphorIcons.bookBookmark(),
                                 isInLibrary ? "In library" : "Add to library",
                                 brandColor,
-                                onTap: () {
-                                  if (authProvider.token != null) {
-                                    if (isInLibrary) {
-                                      libraryProvider.toggleLibrary(authProvider.token!, manga);
-                                    } else {
-                                      if (libraryProvider.categories.length <= 1) {
-                                        libraryProvider.toggleLibrary(authProvider.token!, manga, selectedCategories: ["All"]);
-                                      } else {
-                                        _showCategorySelectionModal(context, authProvider.token!, manga, libraryProvider);
-                                      }
-                                    }
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text("Please login to add to library")),
-                                    );
-                                  }
-                                },
+                                onTap: () => offlineLibrary.toggleLibrary(widget.manga),
                               ),
                               _buildActionButton(PhosphorIcons.hourglassHigh(), "Syncing", isDarkMode ? Colors.white70 : Colors.black54),
                               _buildActionButton(PhosphorIcons.arrowsClockwise(), "Tracking", isDarkMode ? Colors.white70 : Colors.black54),
@@ -327,69 +212,31 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
                           ),
                           const SizedBox(height: 25),
 
-                          // Box for Tags and Description
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: cardColor,
                               borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Scrollable Tags
-                                if (manga.genres != null && manga.genres!.isNotEmpty)
+                                if (manga?.genres != null)
                                   SingleChildScrollView(
                                     scrollDirection: Axis.horizontal,
                                     child: Row(
-                                      children: manga.genres!.map((genre) => Padding(
+                                      children: manga!.genres!.map((genre) => Padding(
                                         padding: const EdgeInsets.only(right: 10),
                                         child: _buildTag("# ${genre.toUpperCase()}", brandColor, textColor),
                                       )).toList(),
                                     ),
                                   ),
                                 const SizedBox(height: 15),
-                                // Description
                                 Text(
-                                  manga.description ?? "No description available.",
+                                  manga?.description ?? "No description available.",
                                   style: TextStyle(color: textColor.withOpacity(0.9), height: 1.4),
                                   maxLines: 5,
                                   overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 15),
-                                Divider(color: textColor.withOpacity(0.1)),
-                                const SizedBox(height: 10),
-                                // Chapters Future Builder
-                                FutureBuilder<List<Chapter>>(
-                                  future: _chaptersFuture,
-                                  builder: (context, chaptersSnapshot) {
-                                    final chapterCount = chaptersSnapshot.hasData ? chaptersSnapshot.data!.length : "...";
-                                    return Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "$chapterCount Chapters",
-                                              style: GoogleFonts.delius(
-                                                textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor),
-                                              ),
-                                            ),
-                                            const Text("Tap to see all", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                                          ],
-                                        ),
-                                        const Icon(Icons.chevron_right, color: Colors.grey),
-                                      ],
-                                    );
-                                  },
                                 ),
                               ],
                             ),
@@ -397,38 +244,11 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
 
                           const SizedBox(height: 20),
 
-                          // Chapters Preview Box
-                          FutureBuilder<List<Chapter>>(
+                          FutureBuilder<List<LocalChapter>>(
                             future: _chaptersFuture,
                             builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                return Container(
-                                  height: 100,
-                                  alignment: Alignment.center,
-                                  child: CircularProgressIndicator(color: brandColor),
-                                );
-                              }
-                              if (snapshot.hasError) {
-                                return Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(20.0),
-                                    child: Column(
-                                      children: [
-                                        const Text("Error loading chapters"),
-                                        TextButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              _chaptersFuture = _sourcesApi.getChapters(widget.manga.sourceId, widget.manga.id);
-                                            });
-                                          },
-                                          child: const Text("Retry"),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }
-                              final chapters = snapshot.data ?? [];
+                              if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                              final chapters = snapshot.data!;
                               final displayedChapters = _showAllChapters ? chapters : chapters.take(3).toList();
 
                               return Container(
@@ -436,224 +256,34 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
                                 decoration: BoxDecoration(
                                   color: cardColor,
                                   borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
                                 ),
                                 child: Column(
                                   children: [
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Row(
-                                          children: [
-                                            Text("${chapters.length}", style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold)),
-                                            const SizedBox(width: 5),
-                                            Text("Chapters", style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 18)),
-                                          ],
-                                        ),
-                                        Row(
-                                          children: [
-                                            const Text("More", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-                                            const Icon(Icons.chevron_right, color: Colors.grey, size: 16),
-                                          ],
-                                        ),
+                                        Text("${chapters.length} Chapters", style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold)),
+                                        const Icon(Icons.chevron_right, color: Colors.grey),
                                       ],
                                     ),
                                     const SizedBox(height: 10),
-                                    ...displayedChapters.asMap().entries.map(
-                                      (entry) => _buildChapterTile(context, chapters, entry.key, brandColor, textColor),
-                                    ),
+                                    ...displayedChapters.map((ch) => _buildChapterTile(context, ch, brandColor, textColor)),
                                     if (!_showAllChapters && chapters.length > 3)
                                       GestureDetector(
                                         onTap: () => setState(() => _showAllChapters = true),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(vertical: 10),
-                                          child: AnimatedBuilder(
-                                            animation: _arrowController,
-                                            builder: (context, child) {
-                                              return Transform.translate(
-                                                offset: Offset(0, 5 * _arrowController.value),
-                                                child: Icon(
-                                                  Icons.keyboard_double_arrow_down_rounded,
-                                                  color: brandColor,
-                                                  size: 30,
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ),
+                                        child: Icon(Icons.keyboard_double_arrow_down_rounded, color: brandColor, size: 30),
                                       ),
                                   ],
                                 ),
                               );
                             },
                           ),
-
-                          const SizedBox(height: 20),
-
-                          // "You may also like" Section
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: cardColor,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text("You may also like", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textColor)),
-                                    Row(
-                                      children: [
-                                        const Text("More", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-                                        Icon(PhosphorIcons.caretRight(), color: Colors.grey, size: 16),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 15),
-                                SizedBox(
-                                  height: 200,
-                                  child: FutureBuilder<List<Manga>>(
-                                    future: _recommendedMangaFuture,
-                                    builder: (context, snapshot) {
-                                      if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                                      final recommendations = snapshot.data!.where((m) => m.id != widget.manga.id).take(6).toList();
-                                      return ListView.builder(
-                                        scrollDirection: Axis.horizontal,
-                                        itemCount: recommendations.length,
-                                        itemBuilder: (context, index) {
-                                          final recommendation = recommendations[index];
-                                          return Padding(
-                                            padding: const EdgeInsets.only(right: 15),
-                                            child: GestureDetector(
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) => MangaDetailsScreen(manga: recommendation),
-                                                  ),
-                                                );
-                                              },
-                                              child: SizedBox(
-                                                width: 100,
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    ClipRRect(
-                                                      borderRadius: BorderRadius.circular(8),
-                                                      child: Image.network(
-                                                        recommendation.thumbnailUrl,
-                                                        width: 100,
-                                                        height: 140,
-                                                        fit: BoxFit.cover,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 8),
-                                                    Text(
-                                                      recommendation.title,
-                                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: textColor),
-                                                      maxLines: 2,
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
                           const SizedBox(height: 100),
                         ],
                       ),
                     ),
                   ),
                 ],
-              ),
-
-              // Floating Bottom Bar
-              Positioned(
-                bottom: 20,
-                left: 20,
-                right: 20,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      _buildBottomIconButton(Icons.download, Colors.white),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: FutureBuilder<List<Chapter>>(
-                          future: _chaptersFuture,
-                          builder: (context, snapshot) {
-                            final chapters = snapshot.data;
-                            return GestureDetector(
-                              onTap: (chapters != null && chapters.isNotEmpty) ? () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => MangaReaderScreen(
-                                      manga: manga,
-                                      chapters: chapters,
-                                      initialChapterIndex: chapters.length - 1,
-                                    ),
-                                  ),
-                                );
-                              } : null,
-                              child: Container(
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: (chapters != null && chapters.isNotEmpty) ? Colors.grey.shade400 : Colors.grey.shade800,
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    "Read now",
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      _buildBottomIconButton(Icons.check, Colors.white),
-                    ],
-                  ),
-                ),
               ),
             ],
           );
@@ -662,36 +292,12 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
     );
   }
 
-  Widget _buildBottomIconButton(IconData icon, Color color) {
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Icon(icon, color: color),
-    );
-  }
-
   Widget _buildInfoRow(PhosphorIconData icon, String text) {
     return Row(
       children: [
         Icon(icon, size: 16, color: Colors.white70),
         const SizedBox(width: 5),
-        Expanded(
-          child: Text(
-            text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              shadows: [
-                Shadow(blurRadius: 5.0, color: Colors.black, offset: Offset(1.0, 1.0)),
-              ],
-            ),
-          ),
-        ),
+        Expanded(child: Text(text, style: const TextStyle(color: Colors.white))),
       ],
     );
   }
@@ -716,63 +322,29 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: textColor.withOpacity(0.1)),
       ),
-      child: Text(
-        label,
-        style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 12),
-      ),
+      child: Text(label, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 12)),
     );
   }
 
-  Widget _buildChapterTile(BuildContext context, List<Chapter> chapters, int index, Color brandColor, Color textColor) {
-    final chapter = chapters[index];
+  Widget _buildChapterTile(BuildContext context, LocalChapter chapter, Color brandColor, Color textColor) {
+    final offlineLibrary = Provider.of<OfflineLibraryProvider>(context);
     final dateStr = DateFormat('MM/dd/yy').format(DateTime.fromMillisecondsSinceEpoch(chapter.dateUpload));
-    final libraryProvider = Provider.of<LibraryProvider>(context);
-    final authProvider = Provider.of<AuthProvider>(context);
-    
-    final isDownloading = libraryProvider.downloadingChapterIds.contains(chapter.id);
-    final isCompleted = libraryProvider.completedChapterIds.contains(chapter.id);
+    final isDownloading = offlineLibrary.downloadingIds.contains(chapter.chapterId);
 
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MangaReaderScreen(
-              manga: widget.manga,
-              chapters: chapters,
-              initialChapterIndex: index,
-            ),
-          ),
-        );
-      },
+      contentPadding: EdgeInsets.zero,
       leading: Icon(PhosphorIcons.circle(PhosphorIconsStyle.fill), size: 10, color: brandColor),
-      title: Text(chapter.name, style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
+      title: Text(chapter.name, style: TextStyle(color: textColor)),
       subtitle: Text(dateStr, style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.6))),
       trailing: IconButton(
         icon: isDownloading 
             ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: brandColor))
-            : Icon(
-                isCompleted ? Icons.check_circle : PhosphorIcons.downloadSimple(),
-                color: isCompleted ? Colors.green : Colors.grey
-              ),
-        onPressed: (isDownloading || isCompleted) ? null : () async {
-          if (authProvider.token == null) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please login to download")));
-            return;
-          }
-          try {
-            await libraryProvider.downloadChapter(
-              authProvider.token!,
-              widget.manga.sourceId,
-              widget.manga.id,
-              chapter.id,
-            );
-          } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
-          }
-        },
+            : Icon(chapter.downloaded ? Icons.check_circle : PhosphorIcons.downloadSimple(), color: chapter.downloaded ? Colors.green : Colors.grey),
+        onPressed: (isDownloading || chapter.downloaded) ? null : () => offlineLibrary.downloadChapter(chapter.sourceId, chapter.mangaId, chapter.chapterId),
       ),
+      onTap: () {
+        // Navigate to reader using local data if available
+      },
     );
   }
 }
