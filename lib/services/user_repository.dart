@@ -18,26 +18,44 @@ class UserRepository {
   });
 
   Future<LocalUserPreferences?> getPreferences() async {
-    return await isar.localUserPreferences.where().findFirst();
+    return await isar.collection<LocalUserPreferences>().where().findFirst();
   }
 
   Future<void> refreshPreferences(String token) async {
     final connectivity = await Connectivity().checkConnectivity();
-    if (connectivity == ConnectivityResult.none) return;
+    if (connectivity.contains(ConnectivityResult.none)) return;
 
     try {
-      final response = await api.getPreferences(token);
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final prefs = await getPreferences() ?? LocalUserPreferences();
-        
-        prefs.libraryDisplayStyle = data['library_display_style'];
-        prefs.sourcePreferencesJson = json.encode(data['source_preferences']);
-        
-        await isar.writeTxn(() => isar.localUserPreferences.put(prefs));
-      }
+      final prefsData = await api.getPreferences(token);
+      await _savePreferencesLocally(prefsData);
     } catch (e) {
       print('Error refreshing preferences: $e');
+    }
+  }
+
+  Future<void> _savePreferencesLocally(UserPreferences prefsData) async {
+    final localPrefs = await getPreferences() ?? LocalUserPreferences();
+    
+    localPrefs.categoriesDisplayMode = prefsData.categoriesDisplayMode;
+    localPrefs.libraryItemsPerRow = prefsData.libraryItemsPerRow;
+    localPrefs.overlayShowDownloaded = prefsData.overlayShowDownloaded;
+    localPrefs.overlayShowUnread = prefsData.overlayShowUnread;
+    localPrefs.overlayShowLanguage = prefsData.overlayShowLanguage;
+    localPrefs.tabsShowCategories = prefsData.tabsShowCategories;
+    localPrefs.tabsShowItemCount = prefsData.tabsShowItemCount;
+    localPrefs.sourcePreferencesJson = json.encode(
+      prefsData.sourcePreferences.map((k, v) => MapEntry(k, v.toJson()))
+    );
+    
+    await isar.writeTxn(() => isar.collection<LocalUserPreferences>().put(localPrefs));
+  }
+
+  Future<void> updatePreferences(String token, Map<String, dynamic> updates) async {
+    try {
+      final updatedPrefs = await api.updatePreferences(token, updates);
+      await _savePreferencesLocally(updatedPrefs);
+    } catch (e) {
+      print('Error updating preferences: $e');
     }
   }
 
@@ -48,25 +66,24 @@ class UserRepository {
     Map<String, dynamic> sourcePrefs = json.decode(prefs.sourcePreferencesJson);
     final current = sourcePrefs[sourceId] ?? {'enabled': true, 'pinned': false};
     
-    sourcePrefs[sourceId] = {
+    final newSourcePref = {
       'enabled': enabled ?? current['enabled'],
       'pinned': pinned ?? current['pinned'],
     };
 
-    prefs.sourcePreferencesJson = json.encode(sourcePrefs);
-    await isar.writeTxn(() => isar.localUserPreferences.put(prefs));
-
-    // In a real app, queue a SyncOperation for PUT /user/preferences
+    await updatePreferences(token, {
+      'source_preferences': {
+        sourceId: newSourcePref
+      }
+    });
   }
 
   Future<String?> getCachedAvatar(String? remoteUrl) async {
     if (remoteUrl == null) return null;
-    final appDir = await fileService.getAppDirectory();
     final fileName = remoteUrl.split('/').last;
-    final localPath = '${appDir}/profile/avatar_$fileName';
+    final localPath = 'profile/avatar_$fileName';
 
-    // Basic caching logic: check if exists, otherwise download
-    final file = await fileService.downloadFile(remoteUrl, 'profile/avatar_$fileName');
+    final file = await fileService.downloadFile(remoteUrl, localPath);
     return file;
   }
 }

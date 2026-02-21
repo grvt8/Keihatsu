@@ -69,6 +69,17 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updatePreferences(Map<String, dynamic> updates) async {
+    if (_token == null) return;
+    try {
+      _preferences = await _authApi.updatePreferences(_token!, updates);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error updating preferences: $e");
+      rethrow;
+    }
+  }
+
   Future<void> updateSourcePreference(String sourceId, {bool? enabled, bool? pinned}) async {
     if (_token == null || _preferences == null) return;
 
@@ -78,18 +89,13 @@ class AuthProvider with ChangeNotifier {
       pinned: pinned ?? currentPrefs.pinned,
     );
 
-    final updatedSourcePrefs = Map<String, SourcePreference>.from(_preferences!.sourcePreferences);
-    updatedSourcePrefs[sourceId] = newPrefs;
-
     try {
-      _preferences = await _authApi.updatePreferences(_token!, {
+      await updatePreferences({
         'source_preferences': {
           sourceId: newPrefs.toJson(),
         }
       });
-      notifyListeners();
     } catch (e) {
-      debugPrint("Error updating preferences: $e");
       rethrow;
     }
   }

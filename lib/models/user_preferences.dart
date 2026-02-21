@@ -20,11 +20,23 @@ class SourcePreference {
 }
 
 class UserPreferences {
-  final String? libraryDisplayStyle;
+  final String categoriesDisplayMode; // "compact grid", "cover grid", "comfortable grid", "list"
+  final int libraryItemsPerRow;
+  final bool overlayShowDownloaded;
+  final bool overlayShowUnread;
+  final bool overlayShowLanguage;
+  final bool tabsShowCategories;
+  final bool tabsShowItemCount;
   final Map<String, SourcePreference> sourcePreferences;
 
   UserPreferences({
-    this.libraryDisplayStyle,
+    this.categoriesDisplayMode = 'comfortable grid',
+    this.libraryItemsPerRow = 3,
+    this.overlayShowDownloaded = true,
+    this.overlayShowUnread = true,
+    this.overlayShowLanguage = true,
+    this.tabsShowCategories = true,
+    this.tabsShowItemCount = true,
     this.sourcePreferences = const {},
   });
 
@@ -37,24 +49,48 @@ class UserPreferences {
     });
 
     return UserPreferences(
-      libraryDisplayStyle: json['library_display_style'],
+      categoriesDisplayMode: json['categories_display_mode'] ?? 'comfortable grid',
+      libraryItemsPerRow: json['library_items_per_row'] ?? 3,
+      overlayShowDownloaded: json['overlay_show_downloaded'] ?? true,
+      overlayShowUnread: json['overlay_show_unread'] ?? true,
+      overlayShowLanguage: json['overlay_show_language'] ?? true,
+      tabsShowCategories: json['tabs_show_categories'] ?? true,
+      tabsShowItemCount: json['tabs_show_item_count'] ?? true,
       sourcePreferences: sourcePrefs,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'library_display_style': libraryDisplayStyle,
+      'categories_display_mode': categoriesDisplayMode,
+      'library_items_per_row': libraryItemsPerRow,
+      'overlay_show_downloaded': overlayShowDownloaded,
+      'overlay_show_unread': overlayShowUnread,
+      'overlay_show_language': overlayShowLanguage,
+      'tabs_show_categories': tabsShowCategories,
+      'tabs_show_item_count': tabsShowItemCount,
       'source_preferences': sourcePreferences.map((key, value) => MapEntry(key, value.toJson())),
     };
   }
 
   UserPreferences copyWith({
-    String? libraryDisplayStyle,
+    String? categoriesDisplayMode,
+    int? libraryItemsPerRow,
+    bool? overlayShowDownloaded,
+    bool? overlayShowUnread,
+    bool? overlayShowLanguage,
+    bool? tabsShowCategories,
+    bool? tabsShowItemCount,
     Map<String, SourcePreference>? sourcePreferences,
   }) {
     return UserPreferences(
-      libraryDisplayStyle: libraryDisplayStyle ?? this.libraryDisplayStyle,
+      categoriesDisplayMode: categoriesDisplayMode ?? this.categoriesDisplayMode,
+      libraryItemsPerRow: libraryItemsPerRow ?? this.libraryItemsPerRow,
+      overlayShowDownloaded: overlayShowDownloaded ?? this.overlayShowDownloaded,
+      overlayShowUnread: overlayShowUnread ?? this.overlayShowUnread,
+      overlayShowLanguage: overlayShowLanguage ?? this.overlayShowLanguage,
+      tabsShowCategories: tabsShowCategories ?? this.tabsShowCategories,
+      tabsShowItemCount: tabsShowItemCount ?? this.tabsShowItemCount,
       sourcePreferences: sourcePreferences ?? this.sourcePreferences,
     );
   }

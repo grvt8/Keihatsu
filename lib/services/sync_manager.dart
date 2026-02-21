@@ -15,7 +15,7 @@ class SyncManager {
     required this.getToken,
   }) {
     Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
-      if (results.isNotEmpty && results.first != ConnectivityResult.none) {
+      if (results.isNotEmpty && !results.contains(ConnectivityResult.none)) {
         processSyncQueue();
       }
     });
@@ -29,7 +29,7 @@ class SyncManager {
       ..completed = false;
 
     await isar.writeTxn(() async {
-      await isar.syncOperations.put(op);
+      await isar.collection<SyncOperation>().put(op);
     });
 
     processSyncQueue();
@@ -42,7 +42,7 @@ class SyncManager {
     final connectivity = await Connectivity().checkConnectivity();
     if (connectivity.contains(ConnectivityResult.none)) return;
 
-    final pendingOps = await isar.syncOperations
+    final pendingOps = await isar.collection<SyncOperation>()
         .filter()
         .completedEqualTo(false)
         .sortByTimestamp()
@@ -56,7 +56,27 @@ class SyncManager {
         switch (op.type) {
           case 'ADD_LIBRARY':
             final response = await libraryApi.addMangaToLibrary(token, payload);
-            success = response.statusCode == 200 || response.statusCode == 201;
+            if (response.statusCode == 200 || response.statusCode == 201) {
+              final data = json.decode(response.body);
+              final mangaId = payload['mangaId'];
+              final sourceId = payload['sourceId'];
+              
+              // Update local entry with serverId
+              final localEntry = await isar.collection<LocalLibraryEntry>().filter()
+                  .mangaIdEqualTo(mangaId)
+                  .sourceIdEqualTo(sourceId)
+                  .findFirst();
+              
+              if (localEntry != null) {
+                localEntry.serverId = data['id'];
+                await isar.writeTxn(() => isar.collection<LocalLibraryEntry>().put(localEntry));
+              }
+              success = true;
+            }
+            break;
+          case 'UPDATE_LIBRARY':
+            final response = await libraryApi.updateLibraryEntry(token, payload['id'], payload['updates']);
+            success = response.statusCode == 200 || response.statusCode == 204;
             break;
           case 'REMOVE_LIBRARY':
             final response = await libraryApi.deleteMangaFromLibrary(token, payload['id']);
@@ -66,31 +86,35 @@ class SyncManager {
             final response = await libraryApi.createCategory(token, payload['name']);
             if (response.statusCode == 200 || response.statusCode == 201) {
               final data = json.decode(response.body);
-              final localCat = await isar.localCategorys.get(payload['localId']);
+              final localCat = await isar.collection<LocalCategory>().get(payload['localId']);
               if (localCat != null) {
                 localCat.serverId = data['id'];
                 localCat.isSynced = true;
-                await isar.writeTxn(() => isar.localCategorys.put(localCat));
+                await isar.writeTxn(() => isar.collection<LocalCategory>().put(localCat));
               }
               success = true;
             }
             break;
-          case 'UPDATE_PREFERENCES':
-             // Call PUT /user/preferences
-             success = true; // Placeholder
-             break;
+          case 'UPDATE_CATEGORY':
+            final response = await libraryApi.updateCategory(token, payload['id'], payload['name']);
+            success = response.statusCode == 200 || response.statusCode == 204;
+            break;
+          case 'DELETE_CATEGORY':
+            final response = await libraryApi.deleteCategory(token, payload['id']);
+            success = response.statusCode == 200 || response.statusCode == 204;
+            break;
         }
 
         if (success) {
           op.completed = true;
-          await isar.writeTxn(() => isar.syncOperations.put(op));
+          await isar.writeTxn(() => isar.collection<SyncOperation>().put(op));
         } else {
           op.retryCount++;
-          await isar.writeTxn(() => isar.syncOperations.put(op));
+          await isar.writeTxn(() => isar.collection<SyncOperation>().put(op));
         }
       } catch (e) {
         op.retryCount++;
-        await isar.writeTxn(() => isar.syncOperations.put(op));
+        await isar.writeTxn(() => isar.collection<SyncOperation>().put(op));
       }
     }
   }

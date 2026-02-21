@@ -57,9 +57,8 @@ void main() async {
   final libraryApi = LibraryApi();
   final authApi = AuthApi();
 
-  // We need a way to get the token. 
-  // For now, we'll use a placeholder or let the AuthProvider handle it.
-  String? getToken() => null; // This will be updated once AuthProvider is ready
+  // We'll update the token retrieval logic later when AuthProvider is integrated
+  String? getToken() => null;
 
   final syncManager = SyncManager(
     isar: isar,
@@ -89,7 +88,7 @@ void main() async {
             mangaRepo: mangaRepo,
             getToken: () => Provider.of<AuthProvider>(context, listen: false).token,
           ),
-          update: (context, auth, previous) => previous!..refresh(false),
+          update: (context, auth, previous) => previous!,
         ),
       ],
       child: const MyApp(),

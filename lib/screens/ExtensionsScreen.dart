@@ -123,19 +123,6 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
       ),
       child: Row(
         children: [
-          // Pin Icon
-          IconButton(
-            onPressed: () async {
-              await repo.pinSource(source.sourceId, !source.pinned);
-              _loadSources();
-            },
-            icon: Icon(
-              source.pinned ? PhosphorIcons.pushPin(PhosphorIconsStyle.fill) : PhosphorIcons.pushPin(),
-              color: source.pinned ? brandColor : textColor.withOpacity(0.3),
-              size: 20,
-            ),
-          ),
-          
           Container(
             width: 50,
             height: 50,
@@ -180,6 +167,18 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
+            ),
+          ),
+          // Pin Icon moved beside the toggles
+          IconButton(
+            onPressed: () async {
+              await repo.pinSource(source.sourceId, !source.pinned);
+              _loadSources();
+            },
+            icon: Icon(
+              source.pinned ? PhosphorIcons.pushPin(PhosphorIconsStyle.fill) : PhosphorIcons.pushPin(),
+              color: source.pinned ? brandColor : textColor.withOpacity(0.3),
+              size: 20,
             ),
           ),
           Switch(
