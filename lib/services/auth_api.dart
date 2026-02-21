@@ -4,11 +4,12 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import '../models/user.dart';
 import '../models/user_preferences.dart';
+import 'api_constants.dart';
 
 class AuthApi {
   final String baseUrl;
 
-  AuthApi({this.baseUrl = 'http://192.168.1.127:3000'});
+  AuthApi({this.baseUrl = ApiConstants.baseUrl});
 
   Future<AuthResponse> loginWithGoogle(String idToken) async {
     try {

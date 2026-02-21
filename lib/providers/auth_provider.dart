@@ -5,12 +5,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import '../models/user_preferences.dart';
 import '../services/auth_api.dart';
+import '../services/api_constants.dart';
 
 class AuthProvider with ChangeNotifier {
   static const String _webClientId = '887783028868-hgp7fi78npk9otdkk6hil8ot74asaj83.apps.googleusercontent.com';
   
   final AuthApi _authApi = AuthApi(
-    baseUrl: 'http://192.168.1.127:3000',
+    baseUrl: ApiConstants.baseUrl,
   );
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 

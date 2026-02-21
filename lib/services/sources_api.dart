@@ -3,13 +3,12 @@ import 'package:http/http.dart' as http;
 import '../models/source.dart';
 import '../models/manga.dart';
 import '../models/chapter.dart';
+import 'api_constants.dart';
 
 class SourcesApi {
-  // Using the IP address that was previously working for your physical device (TECNO BG6).
-  // If your machine's IP changes, update this string.
   final String baseUrl;
 
-  SourcesApi({this.baseUrl = 'http://192.168.1.127:3000'});
+  SourcesApi({this.baseUrl = ApiConstants.baseUrl});
 
   Future<List<Source>> getSources() async {
     try {

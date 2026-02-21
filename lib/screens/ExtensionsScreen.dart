@@ -1,10 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../components/MainNavigationBar.dart';
-import '../models/source.dart';
-import '../services/sources_api.dart';
+import '../models/local_models.dart';
+import '../services/sources_repository.dart';
 import '../theme_provider.dart';
 import '../providers/auth_provider.dart';
 
@@ -17,24 +18,30 @@ class ExtensionsScreen extends StatefulWidget {
 
 class _ExtensionsScreenState extends State<ExtensionsScreen> {
   final int _currentIndex = 3;
-  late Future<List<Source>> _sourcesFuture;
-  final SourcesApi _sourcesApi = SourcesApi();
+  late Future<List<LocalSource>> _sourcesFuture;
 
   @override
   void initState() {
     super.initState();
-    _sourcesFuture = _sourcesApi.getSources();
+    _loadSources();
+  }
+
+  void _loadSources({bool forceRefresh = false}) {
+    final repo = Provider.of<SourcesRepository>(context, listen: false);
+    setState(() {
+      _sourcesFuture = repo.getSources(forceRefresh: forceRefresh);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final authProvider = Provider.of<AuthProvider>(context);
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
     final Color textColor = isDarkMode ? Colors.white : Colors.black87;
     final Color cardColor = isDarkMode ? Colors.white10 : Colors.white.withOpacity(0.5);
+    final repo = Provider.of<SourcesRepository>(context, listen: false);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -50,16 +57,12 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              setState(() {
-                _sourcesFuture = _sourcesApi.getSources();
-              });
-            },
+            onPressed: () => _loadSources(forceRefresh: true),
             icon: Icon(PhosphorIcons.arrowsClockwise(), color: textColor),
           ),
         ],
       ),
-      body: FutureBuilder<List<Source>>(
+      body: FutureBuilder<List<LocalSource>>(
         future: _sourcesFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -76,11 +79,7 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
                     style: TextStyle(color: textColor, fontSize: 16),
                   ),
                   TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _sourcesFuture = _sourcesApi.getSources();
-                      });
-                    },
+                    onPressed: () => _loadSources(),
                     child: Text('Retry', style: TextStyle(color: brandColor)),
                   ),
                 ],
@@ -103,7 +102,7 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final source = sources[index];
-              return _buildSourceCard(source, brandColor, textColor, cardColor, authProvider);
+              return _buildSourceCard(source, brandColor, textColor, cardColor, repo);
             },
           );
         },
@@ -115,27 +114,24 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
     );
   }
 
-  Widget _buildSourceCard(Source source, Color brandColor, Color textColor, Color cardColor, AuthProvider authProvider) {
-    final pref = authProvider.preferences?.sourcePreferences[source.id];
-    final isEnabled = pref?.enabled ?? true;
-    final isPinned = pref?.pinned ?? false;
-
+  Widget _buildSourceCard(LocalSource source, Color brandColor, Color textColor, Color cardColor, SourcesRepository repo) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isEnabled ? cardColor : cardColor.withOpacity(0.2),
+        color: source.enabled ? cardColor : cardColor.withOpacity(0.2),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
         children: [
           // Pin Icon
           IconButton(
-            onPressed: () {
-              authProvider.updateSourcePreference(source.id, pinned: !isPinned);
+            onPressed: () async {
+              await repo.pinSource(source.sourceId, !source.pinned);
+              _loadSources();
             },
             icon: Icon(
-              isPinned ? PhosphorIcons.pushPin(PhosphorIconsStyle.fill) : PhosphorIcons.pushPin(),
-              color: isPinned ? brandColor : textColor.withOpacity(0.3),
+              source.pinned ? PhosphorIcons.pushPin(PhosphorIconsStyle.fill) : PhosphorIcons.pushPin(),
+              color: source.pinned ? brandColor : textColor.withOpacity(0.3),
               size: 20,
             ),
           ),
@@ -149,12 +145,12 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: source.iconUrl != null
-                  ? Image.network(
-                      source.iconUrl!,
+              child: source.iconLocalPath != null
+                  ? Image.file(
+                      File(source.iconLocalPath!),
                       fit: BoxFit.cover,
-                      color: isEnabled ? null : Colors.grey,
-                      colorBlendMode: isEnabled ? null : BlendMode.saturation,
+                      color: source.enabled ? null : Colors.grey,
+                      colorBlendMode: source.enabled ? null : BlendMode.saturation,
                       errorBuilder: (context, error, stackTrace) =>
                           Icon(PhosphorIcons.puzzlePiece(), color: brandColor),
                     )
@@ -171,14 +167,14 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: isEnabled ? textColor : textColor.withOpacity(0.4),
+                    color: source.enabled ? textColor : textColor.withOpacity(0.4),
                   ),
                 ),
                 Text(
                   '${source.lang.toUpperCase()} • ${source.baseUrl}',
                   style: TextStyle(
                     fontSize: 12,
-                    color: isEnabled ? textColor.withOpacity(0.6) : textColor.withOpacity(0.2),
+                    color: source.enabled ? textColor.withOpacity(0.6) : textColor.withOpacity(0.2),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -187,10 +183,11 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
             ),
           ),
           Switch(
-            value: isEnabled,
+            value: source.enabled,
             activeColor: brandColor,
-            onChanged: (val) {
-              authProvider.updateSourcePreference(source.id, enabled: val);
+            onChanged: (val) async {
+              await repo.toggleSource(source.sourceId, val);
+              _loadSources();
             },
           ),
         ],
