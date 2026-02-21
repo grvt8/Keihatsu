@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import '../models/user.dart';
+import '../models/user_preferences.dart';
 
 class AuthApi {
   final String baseUrl;
@@ -92,6 +93,38 @@ class AuthApi {
     } catch (e) {
       print('Update Profile Exception: $e');
       rethrow;
+    }
+  }
+
+  // --- User Preferences Endpoints ---
+
+  Future<UserPreferences> getPreferences(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/user/preferences'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return UserPreferences.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to fetch preferences');
+    }
+  }
+
+  Future<UserPreferences> updatePreferences(String token, Map<String, dynamic> preferences) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/user/preferences'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode(preferences),
+    );
+
+    if (response.statusCode == 200) {
+      return UserPreferences.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to update preferences');
     }
   }
 }

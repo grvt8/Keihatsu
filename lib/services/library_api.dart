@@ -75,5 +75,21 @@ class LibraryApi {
     );
   }
 
-  // ... (Other category methods can follow the same pattern)
+  // --- Download Endpoint ---
+  Future<http.Response> downloadChapter({
+    required String token,
+    required String sourceId,
+    required String mangaId,
+    required String chapterId,
+  }) async {
+    return await http.post(
+      Uri.parse('$baseUrl/downloads/process'),
+      headers: _headers(token),
+      body: json.encode({
+        'sourceId': sourceId,
+        'mangaId': mangaId,
+        'chapterId': chapterId,
+      }),
+    );
+  }
 }

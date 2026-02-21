@@ -633,6 +633,12 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
   Widget _buildChapterTile(BuildContext context, List<Chapter> chapters, int index, Color brandColor, Color textColor) {
     final chapter = chapters[index];
     final dateStr = DateFormat('MM/dd/yy').format(DateTime.fromMillisecondsSinceEpoch(chapter.dateUpload));
+    final libraryProvider = Provider.of<LibraryProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
+    
+    final isDownloading = libraryProvider.downloadingChapterIds.contains(chapter.id);
+    final isCompleted = libraryProvider.completedChapterIds.contains(chapter.id);
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       onTap: () {
@@ -651,8 +657,28 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen> with SingleTick
       title: Text(chapter.name, style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
       subtitle: Text(dateStr, style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.6))),
       trailing: IconButton(
-        icon: const Icon(Icons.download, color: Colors.grey),
-        onPressed: () {},
+        icon: isDownloading 
+            ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: brandColor))
+            : Icon(
+                isCompleted ? Icons.check_circle : Icons.download,
+                color: isCompleted ? Colors.green : Colors.grey
+              ),
+        onPressed: (isDownloading || isCompleted) ? null : () async {
+          if (authProvider.token == null) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please login to download")));
+            return;
+          }
+          try {
+            await libraryProvider.downloadChapter(
+              authProvider.token!,
+              widget.manga.sourceId,
+              widget.manga.id,
+              chapter.id,
+            );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+          }
+        },
       ),
     );
   }
