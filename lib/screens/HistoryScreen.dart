@@ -84,11 +84,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
           if (_isSelectionMode)
             IconButton(
               onPressed: _deleteSelected,
-              icon: Icon(PhosphorIcons.trash(), color: textColor),
+              icon: Icon(Icons.delete, color: textColor),
             )
           else ...[
-            IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.magnifyingGlass(), color: textColor)),
-            IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.trash(), color: textColor)),
+            IconButton(onPressed: () {}, icon: Icon(Icons.search_rounded, color: textColor)),
+            IconButton(onPressed: () {}, icon: Icon(Icons.delete, color: textColor)),
           ],
         ],
       ),
@@ -201,7 +201,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             color: isInLibrary ? brandColor : textColor,
                           ),
                         ),
-                        IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.trash(), size: 20, color: textColor)),
+                        IconButton(onPressed: () {}, icon: Icon(Icons.delete, size: 20, color: textColor)),
                       ] else
                         Checkbox(
                           value: isSelected,

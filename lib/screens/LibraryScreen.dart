@@ -475,7 +475,7 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
           const SizedBox(width: 2),
         ],
         if (_showLanguage)
-          _buildSingleBadge("EN", const Color(0xFFFFB3B3)),
+          _buildSingleBadge("EN", const Color(0xFFFFD067)),
       ],
     );
   }
