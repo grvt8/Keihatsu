@@ -40,14 +40,12 @@ class LibraryApi {
   }
 
   Future<http.Response> addMangaToLibrary(String token, Map<String, dynamic> mangaData, {List<String>? categories}) async {
-    final body = Map<String, dynamic>.from(mangaData);
-    if (categories != null) {
-      body['categories'] = categories;
-    }
+    // Note: Spec doesn't include categories in POST body, but we keep the parameter for compatibility.
+    // If categories are needed, they should be set via assignMangaToCategory after this call.
     return await http.post(
       Uri.parse('$baseUrl/user/library'),
       headers: _headers(token),
-      body: json.encode(body),
+      body: json.encode(mangaData),
     );
   }
 
@@ -59,16 +57,20 @@ class LibraryApi {
     );
   }
 
-  Future<http.Response> deleteMangaFromLibrary(String token, String id) async {
+  // Alias for backward compatibility
+  Future<http.Response> deleteMangaFromLibrary(String token, String id) => deleteLibraryEntry(token, id);
+
+  Future<http.Response> deleteLibraryEntry(String token, String id) async {
     return await http.delete(Uri.parse('$baseUrl/user/library/$id'), headers: _headers(token));
   }
 
   // --- Categories Endpoints ---
 
   Future<http.Response> getCategories(String token, {bool includeCount = false}) async {
-    final uri = Uri.parse('$baseUrl/user/categories').replace(
-      queryParameters: {'include_count': includeCount.toString()},
-    );
+    final queryParams = {
+      if (includeCount) 'include_count': 'true',
+    };
+    final uri = Uri.parse('$baseUrl/user/categories').replace(queryParameters: queryParams);
     return await http.get(uri, headers: _headers(token));
   }
 
@@ -92,6 +94,30 @@ class LibraryApi {
     return await http.delete(
       Uri.parse('$baseUrl/user/categories/$id'),
       headers: _headers(token),
+    );
+  }
+
+  Future<http.Response> assignMangaToCategory(String token, String mangaId, String categoryId) async {
+    return await http.post(
+      Uri.parse('$baseUrl/manga/$mangaId/category/$categoryId'),
+      headers: _headers(token),
+    );
+  }
+
+  // --- User Preferences Endpoints ---
+
+  Future<http.Response> getPreferences(String token) async {
+    return await http.get(
+      Uri.parse('$baseUrl/user/preferences'),
+      headers: _headers(token),
+    );
+  }
+
+  Future<http.Response> updatePreferences(String token, Map<String, dynamic> preferences) async {
+    return await http.put(
+      Uri.parse('$baseUrl/user/preferences'),
+      headers: _headers(token),
+      body: json.encode(preferences),
     );
   }
 

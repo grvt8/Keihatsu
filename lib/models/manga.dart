@@ -11,6 +11,7 @@ class Manga {
   final String? status;
   final List<String>? genres;
   final String sourceId;
+  final String? lang;
 
   Manga({
     required this.id,
@@ -23,6 +24,7 @@ class Manga {
     this.status,
     this.genres,
     required this.sourceId,
+    this.lang,
   });
 
   factory Manga.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,7 @@ class Manga {
       status: json['status'],
       genres: json['genres'] != null ? List<String>.from(json['genres']) : null,
       sourceId: json['sourceId'],
+      lang: json['lang'],
     );
   }
 
@@ -52,6 +55,7 @@ class Manga {
       'status': status,
       'genres': genres,
       'sourceId': sourceId,
+      'lang': lang,
     };
   }
 }

@@ -174,9 +174,7 @@ class LibrarySettingsScreen extends StatelessWidget {
           TextButton(
             onPressed: () async {
               if (controller.text.trim().isNotEmpty) {
-                // To be implemented in repository: updateCategory
-                // For now, we use a placeholder or assume repo will handle it
-                // await offlineLibrary.libraryRepo.updateCategory(category.id, controller.text.trim());
+                await offlineLibrary.libraryRepo.updateCategory(category.serverId ?? '', controller.text.trim());
                 if (context.mounted) Navigator.pop(context);
               }
             },
@@ -198,8 +196,9 @@ class LibrarySettingsScreen extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
           TextButton(
             onPressed: () async {
-              // To be implemented in repository: deleteCategory
-              // await offlineLibrary.libraryRepo.deleteCategory(category.id);
+              if (category.serverId != null) {
+                await offlineLibrary.libraryRepo.deleteCategory(category.serverId!);
+              }
               if (context.mounted) Navigator.pop(context);
             },
             child: const Text("Delete", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),

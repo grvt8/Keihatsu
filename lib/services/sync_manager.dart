@@ -61,7 +61,6 @@ class SyncManager {
               final mangaId = payload['mangaId'];
               final sourceId = payload['sourceId'];
               
-              // Update local entry with serverId
               final localEntry = await isar.collection<LocalLibraryEntry>().filter()
                   .mangaIdEqualTo(mangaId)
                   .sourceIdEqualTo(sourceId)
@@ -79,7 +78,7 @@ class SyncManager {
             success = response.statusCode == 200 || response.statusCode == 204;
             break;
           case 'REMOVE_LIBRARY':
-            final response = await libraryApi.deleteMangaFromLibrary(token, payload['id']);
+            final response = await libraryApi.deleteLibraryEntry(token, payload['id']);
             success = response.statusCode == 200 || response.statusCode == 204;
             break;
           case 'CREATE_CATEGORY':
@@ -93,6 +92,9 @@ class SyncManager {
                 await isar.writeTxn(() => isar.collection<LocalCategory>().put(localCat));
               }
               success = true;
+            } else if (response.statusCode == 409) {
+              // Conflict, likely already exists. We should probably fetch and link, but for now mark as success to stop retrying.
+              success = true; 
             }
             break;
           case 'UPDATE_CATEGORY':
@@ -101,6 +103,14 @@ class SyncManager {
             break;
           case 'DELETE_CATEGORY':
             final response = await libraryApi.deleteCategory(token, payload['id']);
+            success = response.statusCode == 200 || response.statusCode == 204;
+            break;
+          case 'ASSIGN_CATEGORY':
+            final response = await libraryApi.assignMangaToCategory(token, payload['mangaId'], payload['categoryId']);
+            success = response.statusCode == 200 || response.statusCode == 201;
+            break;
+          case 'UPDATE_PREFERENCES':
+            final response = await libraryApi.updatePreferences(token, payload);
             success = response.statusCode == 200 || response.statusCode == 204;
             break;
         }

@@ -100,6 +100,7 @@ class LocalLibraryEntry {
   late String title;
   String? thumbnailUrl;
   String? author;
+  String? language;
 }
 
 @collection
@@ -143,6 +144,7 @@ class SyncOperation {
 class LocalUserPreferences {
   Id id = Isar.autoIncrement;
 
+  String libraryDisplayStyle = 'grid'; // 'grid' or 'list'
   String categoriesDisplayMode = 'comfortable grid';
   int libraryItemsPerRow = 3;
   bool overlayShowDownloaded = true;
