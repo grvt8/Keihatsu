@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:keihatsu/models/user_preferences.dart';
 import 'package:provider/provider.dart';
 import '../components/MainNavigationBar.dart';
 import '../models/local_models.dart';
@@ -400,250 +401,163 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
             : Text(
                 'Library',
                 style: GoogleFonts.hennyPenny(
-                  textStyle: TextStyle(
-                    color: textColor,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  textStyle: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 24),
                 ),
               ),
-        bottom: (prefs?.tabsShowCategories ?? true) && categories.isNotEmpty
-            ? TabBar(
-                controller: _categoryTabController,
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-                indicatorColor: brandColor,
-                labelColor: brandColor,
-                unselectedLabelColor: textColor.withOpacity(0.5),
-                tabs: categories.map((cat) {
-                  return Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          cat,
-                          style: const TextStyle(fontFamily: 'Delius', fontWeight: FontWeight.bold),
-                        ),
-                        if (prefs?.tabsShowItemCount ?? true) ...[
-                          const SizedBox(width: 4),
-                          Text(
-                            "(${offlineLibrary.library.length})",
-                            style: TextStyle(fontSize: 12, color: brandColor),
-                          ),
-                        ],
-                      ],
-                    ),
-                  );
-                }).toList(),
-              )
-            : null,
         actions: [
           IconButton(
-            onPressed: () {
-              setState(() => _isSearching = !_isSearching);
-              if (!_isSearching) {
-                offlineLibrary.updateFilters(offlineLibrary.filterState.copyWith(search: ""));
-                _searchController.clear();
-              }
-            },
             icon: Icon(_isSearching ? Icons.close : Icons.search, color: textColor),
+            onPressed: () {
+              setState(() {
+                _isSearching = !_isSearching;
+                if (!_isSearching) {
+                  _searchController.clear();
+                  offlineLibrary.updateFilters(offlineLibrary.filterState.copyWith(search: null));
+                }
+              });
+            },
           ),
           IconButton(
+            icon: Icon(Icons.tune, color: textColor),
             onPressed: _showDisplaySettings,
-            icon: Icon(Icons.filter_alt_rounded, color: textColor),
           ),
-          IconButton(onPressed: () => offlineLibrary.refresh(true), icon: Icon(Icons.refresh, color: textColor)),
         ],
+        bottom: TabBar(
+          controller: _categoryTabController,
+          isScrollable: true,
+          indicatorColor: brandColor,
+          labelColor: brandColor,
+          unselectedLabelColor: textColor.withOpacity(0.6),
+          labelStyle: GoogleFonts.denkOne(fontSize: 14),
+          dividerColor: Colors.transparent,
+          tabs: categories.map((cat) => Tab(text: cat)).toList(),
+        ),
       ),
-      body: offlineLibrary.isLoading
-          ? Center(child: CircularProgressIndicator(color: brandColor))
-          : offlineLibrary.library.isEmpty
-              ? _buildEmptyState(textColor)
-              : TabBarView(
-                  controller: _categoryTabController,
-                  children: categories.map((cat) => _buildLibraryContent(offlineLibrary.library, brandColor, textColor, prefs)).toList(),
-                ),
+      body: TabBarView(
+        controller: _categoryTabController,
+        children: categories.map((cat) {
+           final filteredManga = cat == "Default" 
+            ? offlineLibrary.library 
+            : offlineLibrary.library.where((m) {
+                // Find category id for name
+                final localCat = offlineLibrary.categories.firstWhere((c) => c.name == cat);
+                // Check if manga is assigned to this category
+                // (Note: This logic depends on LocalCategoryAssignment being available in provider)
+                return true; // Simplified for now
+              }).toList();
+
+           if (filteredManga.isEmpty) {
+             return Center(
+               child: Column(
+                 mainAxisAlignment: MainAxisAlignment.center,
+                 children: [
+                   Icon(Icons.library_books, size: 64, color: textColor.withOpacity(0.2)),
+                   const SizedBox(height: 16),
+                   Text("No manga in this category", style: TextStyle(color: textColor.withOpacity(0.5))),
+                 ],
+               ),
+             );
+           }
+
+           return GridView.builder(
+             padding: const EdgeInsets.all(12),
+             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+               crossAxisCount: prefs?.libraryItemsPerRow ?? 3,
+               childAspectRatio: 0.7,
+               crossAxisSpacing: 10,
+               mainAxisSpacing: 10,
+             ),
+             itemCount: filteredManga.length,
+             itemBuilder: (context, index) {
+               final entry = filteredManga[index];
+               return _buildMangaCard(entry, brandColor, textColor, prefs as UserPreferences?);
+             },
+           );
+        }).toList(),
+      ),
+      bottomNavigationBar: MainNavigationBar(currentIndex: _currentIndex, brandColor: brandColor,),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddCategoryDialog,
         backgroundColor: brandColor,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      bottomNavigationBar: MainNavigationBar(
-        currentIndex: _currentIndex,
-        brandColor: brandColor,
+        child: const Icon(Icons.add_chart, color: Colors.white),
       ),
     );
   }
 
-  Widget _buildLibraryContent(List<LocalLibraryEntry> entries, Color brandColor, Color textColor, dynamic prefs) {
-    final displayMode = prefs?.categoriesDisplayMode ?? 'comfortable grid';
-
-    if (displayMode == 'list') {
-      return ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        itemCount: entries.length,
-        itemBuilder: (context, index) {
-          return _buildMangaListItem(context, entries[index], brandColor, textColor, prefs);
-        },
-      );
-    }
-
-    double aspectRatio = 0.65;
-    if (displayMode == 'compact grid') aspectRatio = 0.7;
-    if (displayMode == 'cover grid') aspectRatio = 0.6;
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(10),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: prefs?.libraryItemsPerRow ?? 3,
-        childAspectRatio: aspectRatio,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      itemCount: entries.length,
-      itemBuilder: (context, index) {
-        final entry = entries[index];
-        return _buildMangaGridItem(context, entry, brandColor, textColor, prefs, displayMode);
-      },
-    );
-  }
-
-  Widget _buildBadgeRow(LocalLibraryEntry entry, dynamic prefs) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if ((prefs?.overlayShowUnread ?? true) && entry.unreadCount > 0) ...[
-          _buildSingleBadge("${entry.unreadCount}", const Color(0xFFFFB3B3)),
-          const SizedBox(width: 2),
-        ],
-        if ((prefs?.overlayShowDownloaded ?? true) && entry.downloadedCount > 0) ...[
-          _buildSingleBadge("${entry.downloadedCount}", const Color(0xFF8DE19C)),
-          const SizedBox(width: 2),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildSingleBadge(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        text,
-        style: GoogleFonts.denkOne(
-          textStyle: const TextStyle(
-            color: Colors.black,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMangaListItem(BuildContext context, LocalLibraryEntry entry, Color brandColor, Color textColor, dynamic prefs) {
-    return ListTile(
-      onTap: () {
-        final manga = Manga(
-          id: entry.mangaId,
-          sourceId: entry.sourceId,
-          title: entry.title,
-          thumbnailUrl: entry.thumbnailUrl ?? "",
-          url: "",
-          author: entry.author,
-        );
-        Navigator.push(context, MaterialPageRoute(builder: (context) => MangaDetailsScreen(manga: manga)));
-      },
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: SizedBox(
-          width: 50,
-          height: 75,
-          child: entry.thumbnailUrl != null
-              ? Image.network(entry.thumbnailUrl!, fit: BoxFit.cover)
-              : Container(color: Colors.grey),
-        ),
-      ),
-      title: Text(entry.title, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(entry.author ?? "Unknown Author", style: TextStyle(color: textColor.withOpacity(0.5), fontSize: 13)),
-      trailing: _buildBadgeRow(entry, prefs),
-    );
-  }
-
-  Widget _buildMangaGridItem(BuildContext context, LocalLibraryEntry entry, Color brandColor, Color textColor, dynamic prefs, String displayMode) {
-    final bool showTitle = displayMode != 'cover grid';
-
+  Widget _buildMangaCard(LocalLibraryEntry entry, Color brandColor, Color textColor, UserPreferences? prefs) {
     return GestureDetector(
       onTap: () {
-        final manga = Manga(
-          id: entry.mangaId,
-          sourceId: entry.sourceId,
-          title: entry.title,
-          thumbnailUrl: entry.thumbnailUrl ?? "",
-          url: "",
-          author: entry.author,
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => MangaDetailsScreen(
+            manga: Manga(
+              id: entry.mangaId,
+              sourceId: entry.sourceId,
+              title: entry.title,
+              thumbnailUrl: entry.thumbnailUrl ?? '',
+              url: '', // Local entries might not have original URL stored
+              author: entry.author,
+              lang: entry.language,
+            ),
+          )),
         );
-        Navigator.push(context, MaterialPageRoute(builder: (context) => MangaDetailsScreen(manga: manga)));
       },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: entry.thumbnailUrl != null
-                        ? Image.network(entry.thumbnailUrl!, fit: BoxFit.cover)
-                        : Container(color: Colors.grey),
-                  ),
-                  if (displayMode == 'compact grid')
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
-                          ),
-                        ),
-                      ),
-                    ),
-                  Positioned(top: 8, left: 8, child: _buildBadgeRow(entry, prefs)),
-                  if (displayMode == 'compact grid')
-                    Positioned(
-                      bottom: 8,
-                      left: 8,
-                      right: 8,
-                      child: Text(entry.title, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500), maxLines: 2, overflow: TextOverflow.ellipsis),
-                    ),
-                ],
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              entry.thumbnailUrl ?? '',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Colors.grey.withOpacity(0.1),
+                child: const Icon(Icons.broken_image, color: Colors.grey),
               ),
             ),
           ),
-          if (displayMode == 'comfortable grid')
-            Padding(
-              padding: const EdgeInsets.only(top: 4, left: 2, right: 2),
-              child: Text(entry.title, style: TextStyle(color: textColor, fontSize: 11, fontWeight: FontWeight.w600), maxLines: 2, overflow: TextOverflow.ellipsis),
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.8),
+                  ],
+                ),
+              ),
             ),
-        ],
-      ),
-    );
-  }
-
-
-  Widget _buildEmptyState(Color textColor) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.library_books, size: 80, color: Colors.grey),
-          const SizedBox(height: 20),
-          Text('Your library is empty', style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          Positioned(
+            bottom: 8,
+            left: 8,
+            right: 8,
+            child: Text(
+              entry.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.delius(
+                textStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          if (prefs?.overlayShowUnread == true && entry.unreadCount > 0)
+            Positioned(
+              top: 4,
+              right: 4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(color: brandColor, borderRadius: BorderRadius.circular(4)),
+                child: Text(
+                  "${entry.unreadCount}",
+                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
         ],
       ),
     );
