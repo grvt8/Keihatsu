@@ -18,7 +18,21 @@ class LibraryRepository {
   });
 
   Stream<List<LocalLibraryEntry>> watchLibrary() {
-    return isar.collection<LocalLibraryEntry>().where().watch(fireImmediately: true);
+    return isar.collection<LocalLibraryEntry>().where().watch(
+      fireImmediately: true,
+    );
+  }
+
+  Stream<List<LocalCategoryAssignment>> watchCategoryAssignments() {
+    return isar.collection<LocalCategoryAssignment>().where().watch(
+      fireImmediately: true,
+    );
+  }
+
+  Stream<List<LocalCategory>> watchCategories() {
+    return isar.collection<LocalCategory>().where().watch(
+      fireImmediately: true,
+    );
   }
 
   Future<List<LocalLibraryEntry>> getLibrary({
@@ -46,7 +60,7 @@ class LibraryRepository {
         search: search,
       );
     }
-    
+
     return await isar.collection<LocalLibraryEntry>().where().findAll();
   }
 
@@ -79,16 +93,20 @@ class LibraryRepository {
 
       if (response.statusCode == 200) {
         final List<dynamic> remoteData = json.decode(response.body);
-        
+
         await isar.writeTxn(() async {
           for (var item in remoteData) {
             final mangaId = item['mangaId'];
             final sourceId = item['sourceId'];
 
-            var entry = await isar.collection<LocalLibraryEntry>().filter()
-                .mangaIdEqualTo(mangaId)
-                .sourceIdEqualTo(sourceId)
-                .findFirst() ?? LocalLibraryEntry();
+            var entry =
+                await isar
+                    .collection<LocalLibraryEntry>()
+                    .filter()
+                    .mangaIdEqualTo(mangaId)
+                    .sourceIdEqualTo(sourceId)
+                    .findFirst() ??
+                    LocalLibraryEntry();
 
             entry
               ..serverId = item['id']
@@ -105,25 +123,35 @@ class LibraryRepository {
               ..downloadedCount = item['downloadedCount'] ?? 0
               ..unreadCount = item['unreadCount'] ?? 0
               ..totalChapters = item['totalChapters'] ?? 0
-              ..lastReadAt = item['lastReadAt'] != null ? DateTime.parse(item['lastReadAt']) : null
-              ..lastUpdatedAt = item['lastUpdatedAt'] != null ? DateTime.parse(item['lastUpdatedAt']) : null
-              ..dateAddedAt = item['dateAddedAt'] != null ? DateTime.parse(item['dateAddedAt']) : null;
-            
+              ..lastReadAt = item['lastReadAt'] != null
+                  ? DateTime.parse(item['lastReadAt'])
+                  : null
+              ..lastUpdatedAt = item['lastUpdatedAt'] != null
+                  ? DateTime.parse(item['lastUpdatedAt'])
+                  : null
+              ..dateAddedAt = item['dateAddedAt'] != null
+                  ? DateTime.parse(item['dateAddedAt'])
+                  : null;
+
             await isar.collection<LocalLibraryEntry>().put(entry);
 
             if (item['categories'] != null) {
               final List<dynamic> categories = item['categories'];
-              await isar.collection<LocalCategoryAssignment>().filter()
-                .mangaIdEqualTo(mangaId)
-                .sourceIdEqualTo(sourceId)
-                .deleteAll();
+              await isar
+                  .collection<LocalCategoryAssignment>()
+                  .filter()
+                  .mangaIdEqualTo(mangaId)
+                  .sourceIdEqualTo(sourceId)
+                  .deleteAll();
 
               for (var catData in categories) {
                 final serverCatId = catData['id'];
-                var localCat = await isar.collection<LocalCategory>().filter()
-                  .serverIdEqualTo(serverCatId)
-                  .findFirst();
-                
+                var localCat = await isar
+                    .collection<LocalCategory>()
+                    .filter()
+                    .serverIdEqualTo(serverCatId)
+                    .findFirst();
+
                 if (localCat == null) {
                   localCat = LocalCategory()
                     ..serverId = serverCatId
@@ -136,7 +164,9 @@ class LibraryRepository {
                   ..mangaId = mangaId
                   ..sourceId = sourceId
                   ..localCategoryId = localCat.id;
-                await isar.collection<LocalCategoryAssignment>().put(assignment);
+                await isar.collection<LocalCategoryAssignment>().put(
+                  assignment,
+                );
               }
             }
           }
@@ -147,7 +177,11 @@ class LibraryRepository {
     }
   }
 
-  Future<void> addToLibrary(String token, Manga manga, {List<String>? categories}) async {
+  Future<void> addToLibrary(
+      String token,
+      Manga manga, {
+        List<String>? categories,
+      }) async {
     final entry = LocalLibraryEntry()
       ..mangaId = manga.id
       ..sourceId = manga.sourceId
@@ -160,19 +194,6 @@ class LibraryRepository {
 
     await isar.writeTxn(() async {
       await isar.collection<LocalLibraryEntry>().put(entry);
-      
-      if (categories != null) {
-        for (var catName in categories) {
-           final cat = await isar.collection<LocalCategory>().filter().nameEqualTo(catName).findFirst();
-           if (cat != null) {
-             final assignment = LocalCategoryAssignment()
-              ..mangaId = manga.id
-              ..sourceId = manga.sourceId
-              ..localCategoryId = cat.id;
-             await isar.collection<LocalCategoryAssignment>().put(assignment);
-           }
-        }
-      }
     });
 
     await syncManager.addToQueue('ADD_LIBRARY', {
@@ -182,17 +203,82 @@ class LibraryRepository {
       'thumbnailUrl': manga.thumbnailUrl,
       'author': manga.author,
     });
+
+    if (categories != null && categories.isNotEmpty) {
+      for (var catName in categories) {
+        final cat = await isar
+            .collection<LocalCategory>()
+            .filter()
+            .nameEqualTo(catName)
+            .findFirst();
+        if (cat != null) {
+          await toggleCategoryAssignment(manga.id, manga.sourceId, cat.id);
+        }
+      }
+    }
   }
 
-  Future<void> updateLibraryEntry(String token, String mangaId, Map<String, dynamic> updates) async {
-    final entry = await isar.collection<LocalLibraryEntry>().filter().mangaIdEqualTo(mangaId).findFirst();
+  Future<void> toggleCategoryAssignment(
+      String mangaId,
+      String sourceId,
+      int localCategoryId,
+      ) async {
+    final existing = await isar
+        .collection<LocalCategoryAssignment>()
+        .filter()
+        .mangaIdEqualTo(mangaId)
+        .sourceIdEqualTo(sourceId)
+        .localCategoryIdEqualTo(localCategoryId)
+        .findFirst();
+
+    final cat = await isar.collection<LocalCategory>().get(localCategoryId);
+
+    if (existing != null) {
+      await isar.writeTxn(
+            () => isar.collection<LocalCategoryAssignment>().delete(existing.id),
+      );
+      // Note: Backend API currently only supports "set", so "removal" would be
+      // assigning to a different category or clearing.
+    } else {
+      final assignment = LocalCategoryAssignment()
+        ..mangaId = mangaId
+        ..sourceId = sourceId
+        ..localCategoryId = localCategoryId;
+
+      await isar.writeTxn(
+            () => isar.collection<LocalCategoryAssignment>().put(assignment),
+      );
+
+      await syncManager.addToQueue('ASSIGN_CATEGORY', {
+        'mangaId': mangaId,
+        'localCategoryId': localCategoryId,
+        'serverIdCategory': cat?.serverId,
+      });
+    }
+  }
+
+  Future<void> updateLibraryEntry(
+      String token,
+      String mangaId,
+      Map<String, dynamic> updates,
+      ) async {
+    final entry = await isar
+        .collection<LocalLibraryEntry>()
+        .filter()
+        .mangaIdEqualTo(mangaId)
+        .findFirst();
     if (entry != null) {
-      if (updates.containsKey('isBookmarked')) entry.isBookmarked = updates['isBookmarked'];
+      if (updates.containsKey('isBookmarked'))
+        entry.isBookmarked = updates['isBookmarked'];
       if (updates.containsKey('isUnread')) entry.isUnread = updates['isUnread'];
-      if (updates.containsKey('isStarted')) entry.isStarted = updates['isStarted'];
-      if (updates.containsKey('isCompleted')) entry.isCompleted = updates['isCompleted'];
-      
-      await isar.writeTxn(() => isar.collection<LocalLibraryEntry>().put(entry));
+      if (updates.containsKey('isStarted'))
+        entry.isStarted = updates['isStarted'];
+      if (updates.containsKey('isCompleted'))
+        entry.isCompleted = updates['isCompleted'];
+
+      await isar.writeTxn(
+            () => isar.collection<LocalLibraryEntry>().put(entry),
+      );
 
       if (entry.serverId != null) {
         await syncManager.addToQueue('UPDATE_LIBRARY', {
@@ -203,8 +289,14 @@ class LibraryRepository {
     }
   }
 
-  Future<void> removeFromLibrary(String token, String mangaId, String sourceId) async {
-    final entry = await isar.collection<LocalLibraryEntry>().filter()
+  Future<void> removeFromLibrary(
+      String token,
+      String mangaId,
+      String sourceId,
+      ) async {
+    final entry = await isar
+        .collection<LocalLibraryEntry>()
+        .filter()
         .mangaIdEqualTo(mangaId)
         .sourceIdEqualTo(sourceId)
         .findFirst();
@@ -212,52 +304,89 @@ class LibraryRepository {
     final serverId = entry?.serverId;
 
     await isar.writeTxn(() async {
-      await isar.collection<LocalLibraryEntry>().filter()
+      await isar
+          .collection<LocalLibraryEntry>()
+          .filter()
           .mangaIdEqualTo(mangaId)
           .sourceIdEqualTo(sourceId)
           .deleteAll();
-      
-      await isar.collection<LocalCategoryAssignment>().filter()
+
+      await isar
+          .collection<LocalCategoryAssignment>()
+          .filter()
           .mangaIdEqualTo(mangaId)
           .sourceIdEqualTo(sourceId)
           .deleteAll();
     });
 
     if (serverId != null) {
-      await syncManager.addToQueue('REMOVE_LIBRARY', {
-        'id': serverId,
-      });
+      await syncManager.addToQueue('REMOVE_LIBRARY', {'id': serverId});
     }
   }
 
-  // --- Category methods for backward compatibility ---
+  // --- Category methods ---
 
   Future<List<LocalCategory>> getCategories() async {
     return await isar.collection<LocalCategory>().where().findAll();
   }
 
   Future<void> createCategory(String name) async {
-    final category = LocalCategory()..name = name..isSynced = false;
+    // Generate a temporary local ID to satisfy unique index constraint until sync
+    // Using timestamp + random component ensures uniqueness even if multiple are created quickly
+    final tempServerId =
+        'local_${DateTime.now().millisecondsSinceEpoch}_${(DateTime.now().microsecond % 1000)}';
+
+    final category = LocalCategory()
+      ..name = name
+      ..isSynced = false
+      ..serverId = tempServerId;
+
     await isar.writeTxn(() async {
       await isar.collection<LocalCategory>().put(category);
     });
-    await syncManager.addToQueue('CREATE_CATEGORY', {'name': name, 'localId': category.id});
-  }
 
-  Future<void> updateCategory(String id, String name) async {
-    final category = await isar.collection<LocalCategory>().filter().serverIdEqualTo(id).findFirst();
-    if (category != null) {
-       category.name = name;
-       category.isSynced = false;
-       await isar.writeTxn(() => isar.collection<LocalCategory>().put(category));
-    }
-    await syncManager.addToQueue('UPDATE_CATEGORY', {'id': id, 'name': name});
-  }
-
-  Future<void> deleteCategory(String id) async {
-    await isar.writeTxn(() async {
-      await isar.collection<LocalCategory>().filter().serverIdEqualTo(id).deleteAll();
+    // We pass the tempServerId so we can find it later if needed, though localId is primary
+    await syncManager.addToQueue('CREATE_CATEGORY', {
+      'name': name,
+      'localId': category.id,
+      'tempServerId': tempServerId,
     });
-    await syncManager.addToQueue('DELETE_CATEGORY', {'id': id});
+  }
+
+  Future<void> updateCategory(int localId, String name) async {
+    final category = await isar.collection<LocalCategory>().get(localId);
+    if (category != null) {
+      category.name = name;
+      category.isSynced = false;
+      await isar.writeTxn(() => isar.collection<LocalCategory>().put(category));
+
+      if (category.serverId != null) {
+        await syncManager.addToQueue('UPDATE_CATEGORY', {
+          'id': category.serverId,
+          'name': name,
+        });
+      }
+    }
+  }
+
+  Future<void> deleteCategory(int localId) async {
+    final category = await isar.collection<LocalCategory>().get(localId);
+    if (category == null) return;
+
+    final serverId = category.serverId;
+
+    await isar.writeTxn(() async {
+      await isar.collection<LocalCategory>().delete(localId);
+      // Also delete any assignments for this category
+      await isar
+          .collection<LocalCategoryAssignment>()
+          .filter()
+          .localCategoryIdEqualTo(localId)
+          .deleteAll();
+    });
+
+    if (serverId != null) {
+      await syncManager.addToQueue('DELETE_CATEGORY', {'id': serverId});
+    }
   }
 }
