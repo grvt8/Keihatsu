@@ -138,4 +138,41 @@ class LibraryApi {
       }),
     );
   }
+
+  // --- History Endpoints ---
+  Future<http.Response> syncHistory({
+    required String token,
+    required String mangaId,
+    required String sourceId,
+    required String chapterId,
+    required int pageNumber,
+    required DateTime lastReadAt,
+  }) async {
+    return await http.post(
+      Uri.parse('$baseUrl/history/sync'),
+      headers: _headers(token),
+      body: json.encode({
+        'mangaId': mangaId,
+        'sourceId': sourceId,
+        'chapterId': chapterId,
+        'pageNumber': pageNumber,
+        'lastReadAt': lastReadAt.toIso8601String(),
+      }),
+    );
+  }
+
+  Future<http.Response> getHistory(String token, {int page = 1, int limit = 50}) async {
+    final uri = Uri.parse('$baseUrl/history').replace(queryParameters: {
+      'page': page.toString(),
+      'limit': limit.toString(),
+    });
+    return await http.get(uri, headers: _headers(token));
+  }
+
+  Future<http.Response> deleteHistoryEntry(String token, String mangaId) async {
+    return await http.delete(
+      Uri.parse('$baseUrl/history/$mangaId'),
+      headers: _headers(token),
+    );
+  }
 }

@@ -6,19 +6,111 @@ import '../models/chapter.dart';
 import 'sources_api.dart';
 import 'file_service.dart';
 import 'library_api.dart';
+import 'sync_manager.dart';
 
 class MangaRepository {
   final Isar isar;
   final SourcesApi api;
   final FileService fileService;
   final LibraryApi libraryApi;
+  final SyncManager? syncManager; // Optional, can be injected
 
   MangaRepository({
     required this.isar,
     required this.api,
     required this.fileService,
     required this.libraryApi,
+    this.syncManager,
   });
+
+  Future<void> updateReadingProgress({
+    required LocalManga manga,
+    required String chapterId,
+    required int pageIndex,
+    String? token, // Auth token for syncing
+  }) async {
+    final now = DateTime.now();
+
+    // 1. Update LocalManga
+    manga.lastReadAt = now;
+    await isar.writeTxn(() async {
+      await isar.collection<LocalManga>().put(manga);
+    });
+
+    // 2. Update LocalChapter
+    final chapter = await isar.collection<LocalChapter>().filter()
+        .sourceIdEqualTo(manga.sourceId)
+        .mangaIdEqualTo(manga.mangaId)
+        .chapterIdEqualTo(chapterId)
+        .findFirst();
+
+    if (chapter != null) {
+      chapter.lastReadAt = now;
+      chapter.lastPageRead = pageIndex;
+      await isar.writeTxn(() async {
+        await isar.collection<LocalChapter>().put(chapter);
+      });
+    } else {
+      // If chapter doesn't exist locally (streaming), create a skeleton
+      final newChapter = LocalChapter()
+        ..chapterId = chapterId
+        ..mangaId = manga.mangaId
+        ..sourceId = manga.sourceId
+        ..name = "Chapter" // Placeholder, should be updated when chapter details are fetched
+        ..chapterNumber = 0 // Placeholder
+        ..dateUpload = now.millisecondsSinceEpoch
+        ..lastReadAt = now
+        ..lastPageRead = pageIndex;
+
+      await isar.writeTxn(() async {
+        await isar.collection<LocalChapter>().put(newChapter);
+      });
+    }
+
+    // 3. Update LocalLibraryEntry (if exists)
+    final libraryEntry = await isar.collection<LocalLibraryEntry>().filter()
+        .mangaIdEqualTo(manga.mangaId)
+        .sourceIdEqualTo(manga.sourceId)
+        .findFirst();
+
+    if (libraryEntry != null) {
+      libraryEntry.lastReadAt = now;
+      await isar.writeTxn(() async {
+        await isar.collection<LocalLibraryEntry>().put(libraryEntry);
+      });
+    }
+
+    // 4. Sync with Backend
+    if (syncManager != null) {
+      final payload = {
+        'mangaId': manga.mangaId,
+        'sourceId': manga.sourceId,
+        'chapterId': chapterId,
+        'pageNumber': pageIndex,
+        'lastReadAt': now.toIso8601String(),
+      };
+
+      final connectivity = await Connectivity().checkConnectivity();
+      if (token != null && !connectivity.contains(ConnectivityResult.none)) {
+        try {
+          await libraryApi.syncHistory(
+            token: token,
+            mangaId: manga.mangaId,
+            sourceId: manga.sourceId,
+            chapterId: chapterId,
+            pageNumber: pageIndex,
+            lastReadAt: now,
+          );
+        } catch (e) {
+          // If direct sync fails, queue it
+          await syncManager!.addToQueue('UPDATE_HISTORY', payload);
+        }
+      } else {
+        await syncManager!.addToQueue('UPDATE_HISTORY', payload);
+      }
+    }
+  }
+
 
   Future<LocalManga?> getMangaDetails(String sourceId, String mangaId) async {
     final connectivity = await Connectivity().checkConnectivity();
@@ -62,8 +154,8 @@ class MangaRepository {
 
     if (manga.thumbnailUrl != null && (existing?.thumbnailUrl != manga.thumbnailUrl || existing?.thumbnailLocalPath == null)) {
       final localPath = await fileService.downloadFile(
-        manga.thumbnailUrl,
-        'thumbnails/${manga.sourceId}/${manga.id}.jpg'
+          manga.thumbnailUrl,
+          'thumbnails/${manga.sourceId}/${manga.id}.jpg'
       );
       if (localPath != null) {
         local.thumbnailLocalPath = localPath;
@@ -127,8 +219,8 @@ class MangaRepository {
     // 2. Download images
     for (var page in pages) {
       final localPath = await fileService.downloadFile(
-        page.imageUrl,
-        'downloads/$sourceId/$mangaId/$chapterId/page${page.index.toString().padLeft(3, '0')}.jpg'
+          page.imageUrl,
+          'downloads/$sourceId/$mangaId/$chapterId/page${page.index.toString().padLeft(3, '0')}.jpg'
       );
       if (localPath != null) {
         final lp = await isar.collection<LocalPage>().filter().chapterIdEqualTo(chapterId).indexEqualTo(page.index).findFirst();

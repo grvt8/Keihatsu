@@ -9,7 +9,7 @@ class SyncManager {
   final Isar isar;
   final LibraryApi libraryApi;
   final String? Function() getToken;
-  
+
   Timer? _syncTimer;
   bool _isProcessing = false;
 
@@ -69,7 +69,7 @@ class SyncManager {
           await isar.writeTxn(() => isar.collection<SyncOperation>().put(op));
         } else {
           // Break to maintain FIFO order and handle dependencies
-          break; 
+          break;
         }
       }
     } finally {
@@ -79,7 +79,7 @@ class SyncManager {
 
   Future<bool> _executeOperation(SyncOperation op, String token) async {
     final Map<String, dynamic> payload = json.decode(op.payload);
-    
+
     try {
       switch (op.type) {
         case 'ADD_LIBRARY':
@@ -87,7 +87,7 @@ class SyncManager {
           if (response.statusCode == 200 || response.statusCode == 201) {
             final data = json.decode(response.body);
             final String serverId = data['id'];
-            
+
             await isar.writeTxn(() async {
               final entry = await isar.collection<LocalLibraryEntry>().filter()
                   .mangaIdEqualTo(payload['mangaId'])
@@ -107,7 +107,7 @@ class SyncManager {
           if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 409) {
             final data = json.decode(response.body);
             final String? serverId = data['id'];
-            
+
             await isar.writeTxn(() async {
               final cat = await isar.collection<LocalCategory>().get(payload['localId']);
               if (cat != null) {
@@ -134,7 +134,7 @@ class SyncManager {
               .mangaIdEqualTo(mangaId)
               .sourceIdEqualTo(sourceId)
               .findFirst();
-          
+
           if (serverCategoryId == null || entry?.serverId == null) {
             // Dependency not met yet (ADD_LIBRARY or CREATE_CATEGORY hasn't finished)
             return false;
@@ -158,6 +158,17 @@ class SyncManager {
         case 'UPDATE_PREFERENCES':
           final response = await libraryApi.updatePreferences(token, payload);
           return response.statusCode == 200 || response.statusCode == 204;
+
+        case 'UPDATE_HISTORY':
+          final response = await libraryApi.syncHistory(
+            token: token,
+            mangaId: payload['mangaId'],
+            sourceId: payload['sourceId'],
+            chapterId: payload['chapterId'],
+            pageNumber: payload['pageNumber'],
+            lastReadAt: DateTime.parse(payload['lastReadAt']),
+          );
+          return response.statusCode == 200 || response.statusCode == 201;
       }
     } catch (e) {
       // Log error
@@ -172,7 +183,7 @@ class SyncManager {
 
   Future<void> _updateLocalServerId<T>(
       {required QueryBuilder<T, T, QAfterFilterCondition> Function(QueryBuilder<T, T, QFilterCondition> q) filter,
-      required String serverId}) async {
+        required String serverId}) async {
     await isar.writeTxn(() async {
       final item = await filter(isar.collection<T>().filter()).findFirst();
       if (item != null) {
