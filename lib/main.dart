@@ -73,6 +73,7 @@ void main() async {
     api: sourcesApi,
     fileService: fileService,
     libraryApi: libraryApi,
+    syncManager: syncManager,
   );
   final libraryRepo = LibraryRepository(
     isar: isar,
