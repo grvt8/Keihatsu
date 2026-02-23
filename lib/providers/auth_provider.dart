@@ -9,11 +9,12 @@ import '../services/api_constants.dart';
 
 class AuthProvider with ChangeNotifier {
   static const String _webClientId = '887783028868-hgp7fi78npk9otdkk6hil8ot74asaj83.apps.googleusercontent.com';
-  
+
   final AuthApi _authApi = AuthApi(
     baseUrl: ApiConstants.baseUrl,
   );
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final Future<void> Function()? onLogout;
 
   User? _user;
   String? _token;
@@ -27,7 +28,7 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _token != null;
 
-  AuthProvider() {
+  AuthProvider({this.onLogout}) {
     _init();
   }
 
@@ -146,6 +147,11 @@ class AuthProvider with ChangeNotifier {
     try {
       await _googleSignIn.signOut();
     } catch (_) {}
+
+    if (onLogout != null) {
+      await onLogout!();
+    }
+
     _user = null;
     _token = null;
     _preferences = null;

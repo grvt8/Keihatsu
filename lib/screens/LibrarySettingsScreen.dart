@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../theme_provider.dart';
 import '../components/CustomBackButton.dart';
@@ -50,12 +49,12 @@ class LibrarySettingsScreen extends StatelessWidget {
             )
           else
             ...offlineLibrary.categories.map((category) => _buildCategoryTile(
-                  context,
-                  category: category,
-                  textColor: textColor,
-                  brandColor: brandColor,
-                  offlineLibrary: offlineLibrary,
-                )),
+              context,
+              category: category,
+              textColor: textColor,
+              brandColor: brandColor,
+              offlineLibrary: offlineLibrary,
+            )),
           const SizedBox(height: 20),
           ElevatedButton.icon(
             onPressed: () => _showAddCategoryDialog(context, offlineLibrary, brandColor, bgColor, textColor),
@@ -85,12 +84,12 @@ class LibrarySettingsScreen extends StatelessWidget {
   }
 
   Widget _buildCategoryTile(
-    BuildContext context, {
-    required LocalCategory category,
-    required Color textColor,
-    required Color brandColor,
-    required OfflineLibraryProvider offlineLibrary,
-  }) {
+      BuildContext context, {
+        required LocalCategory category,
+        required Color textColor,
+        required Color brandColor,
+        required OfflineLibraryProvider offlineLibrary,
+      }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
@@ -108,11 +107,11 @@ class LibrarySettingsScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: Icon(PhosphorIcons.pencilLine(), color: textColor.withOpacity(0.6), size: 20),
+              icon: Icon(Icons.edit_rounded, color: textColor.withOpacity(0.6), size: 20),
               onPressed: () => _showEditCategoryDialog(context, category, offlineLibrary, brandColor, textColor),
             ),
             IconButton(
-              icon: Icon(PhosphorIcons.trash(), color: Colors.redAccent.withOpacity(0.8), size: 20),
+              icon: Icon(Icons.delete_rounded, color: Colors.redAccent.withOpacity(0.8), size: 20),
               onPressed: () => _showDeleteConfirmDialog(context, category, offlineLibrary, textColor),
             ),
           ],
@@ -143,7 +142,7 @@ class LibrarySettingsScreen extends StatelessWidget {
           TextButton(
             onPressed: () async {
               if (controller.text.trim().isNotEmpty) {
-                await offlineLibrary.libraryRepo.createCategory(controller.text.trim());
+                await offlineLibrary.createCategory(controller.text.trim());
                 if (context.mounted) Navigator.pop(context);
               }
             },
@@ -174,7 +173,7 @@ class LibrarySettingsScreen extends StatelessWidget {
           TextButton(
             onPressed: () async {
               if (controller.text.trim().isNotEmpty) {
-                await offlineLibrary.libraryRepo.updateCategory(category.serverId ?? '', controller.text.trim());
+                await offlineLibrary.updateCategory(category.id, controller.text.trim());
                 if (context.mounted) Navigator.pop(context);
               }
             },
@@ -196,9 +195,7 @@ class LibrarySettingsScreen extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
           TextButton(
             onPressed: () async {
-              if (category.serverId != null) {
-                await offlineLibrary.libraryRepo.deleteCategory(category.serverId!);
-              }
+              await offlineLibrary.deleteCategory(category.id);
               if (context.mounted) Navigator.pop(context);
             },
             child: const Text("Delete", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),

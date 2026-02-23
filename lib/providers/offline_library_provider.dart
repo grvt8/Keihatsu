@@ -46,6 +46,7 @@ class OfflineLibraryProvider with ChangeNotifier {
 
   List<LocalLibraryEntry> _library = [];
   List<LocalCategory> _categories = [];
+  List<LocalCategoryAssignment> _categoryAssignments = [];
   bool _isLoading = false;
   LibraryFilterState _filterState = LibraryFilterState();
 
@@ -62,18 +63,23 @@ class OfflineLibraryProvider with ChangeNotifier {
       _library = entries;
       notifyListeners();
     });
-    _loadCategories();
+
+    libraryRepo.watchCategoryAssignments().listen((assignments) {
+      _categoryAssignments = assignments;
+      notifyListeners();
+    });
+
+    libraryRepo.watchCategories().listen((categories) {
+      _categories = categories;
+      notifyListeners();
+    });
   }
 
   List<LocalLibraryEntry> get library => _library;
   List<LocalCategory> get categories => _categories;
+  List<LocalCategoryAssignment> get categoryAssignments => _categoryAssignments;
   bool get isLoading => _isLoading;
   LibraryFilterState get filterState => _filterState;
-
-  Future<void> _loadCategories() async {
-    _categories = await libraryRepo.getCategories();
-    notifyListeners();
-  }
 
   void updateFilters(LibraryFilterState newState) {
     _filterState = newState;
@@ -83,10 +89,10 @@ class OfflineLibraryProvider with ChangeNotifier {
   Future<void> refresh(bool force) async {
     final token = getToken();
     if (token == null) return;
-    
+
     _isLoading = true;
     notifyListeners();
-    
+
     await libraryRepo.refreshLibrary(
       token: token,
       filterDownloaded: _filterState.filterDownloaded,
@@ -98,8 +104,7 @@ class OfflineLibraryProvider with ChangeNotifier {
       order: _filterState.order,
       search: _filterState.search,
     );
-    await _loadCategories();
-    
+
     _isLoading = false;
     notifyListeners();
   }
@@ -108,8 +113,10 @@ class OfflineLibraryProvider with ChangeNotifier {
     final token = getToken();
     if (token == null) return;
 
-    final inLibrary = _library.any((e) => e.mangaId == manga.id && e.sourceId == manga.sourceId);
-    
+    final inLibrary = _library.any(
+          (e) => e.mangaId == manga.id && e.sourceId == manga.sourceId,
+    );
+
     if (inLibrary) {
       await libraryRepo.removeFromLibrary(token, manga.id, manga.sourceId);
     } else {
@@ -123,15 +130,84 @@ class OfflineLibraryProvider with ChangeNotifier {
     await libraryRepo.updateLibraryEntry(token, mangaId, updates);
   }
 
+  Future<void> toggleCategoryAssignment(
+      String mangaId,
+      String sourceId,
+      int localCategoryId,
+      ) async {
+    await libraryRepo.toggleCategoryAssignment(
+      mangaId,
+      sourceId,
+      localCategoryId,
+    );
+  }
+
   bool isInLibrary(String mangaId, String sourceId) {
     return _library.any((e) => e.mangaId == mangaId && e.sourceId == sourceId);
+  }
+
+  bool isMangaInCategory(String mangaId, String sourceId, int localCategoryId) {
+    return _categoryAssignments.any(
+          (a) =>
+      a.mangaId == mangaId &&
+          a.sourceId == sourceId &&
+          a.localCategoryId == localCategoryId,
+    );
+  }
+
+  // --- Category operations ---
+
+  List<LocalLibraryEntry> getLibraryForCategory(String categoryName) {
+    if (categoryName == "Default") {
+      // Default = Items with NO category assignments
+      return _library.where((entry) {
+        return !_categoryAssignments.any(
+              (assignment) =>
+          assignment.mangaId == entry.mangaId &&
+              assignment.sourceId == entry.sourceId,
+        );
+      }).toList();
+    } else {
+      // Find the category ID
+      final category = _categories.firstWhere(
+            (c) => c.name == categoryName,
+        orElse: () => LocalCategory()..id = -1,
+      );
+
+      if (category.id == -1) return [];
+
+      return _library.where((entry) {
+        return _categoryAssignments.any(
+              (assignment) =>
+          assignment.mangaId == entry.mangaId &&
+              assignment.sourceId == entry.sourceId &&
+              assignment.localCategoryId == category.id,
+        );
+      }).toList();
+    }
+  }
+
+  Future<void> createCategory(String name) async {
+    await libraryRepo.createCategory(name);
+  }
+
+  Future<void> updateCategory(int id, String name) async {
+    await libraryRepo.updateCategory(id, name);
+  }
+
+  Future<void> deleteCategory(int id) async {
+    await libraryRepo.deleteCategory(id);
   }
 
   // Chapter Download logic
   final Set<String> _downloadingIds = {};
   Set<String> get downloadingIds => _downloadingIds;
 
-  Future<void> downloadChapter(String sourceId, String mangaId, String chapterId) async {
+  Future<void> downloadChapter(
+      String sourceId,
+      String mangaId,
+      String chapterId,
+      ) async {
     final token = getToken();
     if (token == null) return;
 

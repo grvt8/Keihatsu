@@ -37,20 +37,17 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final dir = await getApplicationDocumentsDirectory();
-  final isar = await Isar.open(
-    [
-      LocalSourceSchema,
-      LocalMangaSchema,
-      LocalChapterSchema,
-      LocalPageSchema,
-      LocalLibraryEntrySchema,
-      LocalCategorySchema,
-      LocalCategoryAssignmentSchema,
-      SyncOperationSchema,
-      LocalUserPreferencesSchema,
-    ],
-    directory: dir.path,
-  );
+  final isar = await Isar.open([
+    LocalSourceSchema,
+    LocalMangaSchema,
+    LocalChapterSchema,
+    LocalPageSchema,
+    LocalLibraryEntrySchema,
+    LocalCategorySchema,
+    LocalCategoryAssignmentSchema,
+    SyncOperationSchema,
+    LocalUserPreferencesSchema,
+  ], directory: dir.path);
 
   final fileService = FileService();
   final sourcesApi = SourcesApi();
@@ -66,16 +63,41 @@ void main() async {
     getToken: getToken,
   );
 
-  final sourcesRepo = SourcesRepository(isar: isar, api: sourcesApi, fileService: fileService);
-  final mangaRepo = MangaRepository(isar: isar, api: sourcesApi, fileService: fileService, libraryApi: libraryApi);
-  final libraryRepo = LibraryRepository(isar: isar, api: libraryApi, syncManager: syncManager);
-  final userRepo = UserRepository(isar: isar, api: authApi, fileService: fileService);
+  final sourcesRepo = SourcesRepository(
+    isar: isar,
+    api: sourcesApi,
+    fileService: fileService,
+  );
+  final mangaRepo = MangaRepository(
+    isar: isar,
+    api: sourcesApi,
+    fileService: fileService,
+    libraryApi: libraryApi,
+  );
+  final libraryRepo = LibraryRepository(
+    isar: isar,
+    api: libraryApi,
+    syncManager: syncManager,
+  );
+  final userRepo = UserRepository(
+    isar: isar,
+    api: authApi,
+    fileService: fileService,
+  );
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(
+            onLogout: () async {
+              await isar.writeTxn(() async {
+                await isar.clear();
+              });
+            },
+          ),
+        ),
         // Repositories
         Provider.value(value: sourcesRepo),
         Provider.value(value: mangaRepo),
@@ -86,7 +108,8 @@ void main() async {
           create: (context) => OfflineLibraryProvider(
             libraryRepo: libraryRepo,
             mangaRepo: mangaRepo,
-            getToken: () => Provider.of<AuthProvider>(context, listen: false).token,
+            getToken: () =>
+            Provider.of<AuthProvider>(context, listen: false).token,
           ),
           update: (context, auth, previous) => previous!,
         ),
@@ -123,17 +146,18 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         primaryColor: themeProvider.brandColor,
-        scaffoldBackgroundColor: themeProvider.pureBlackDarkMode ? Colors.black : null,
+        scaffoldBackgroundColor: themeProvider.pureBlackDarkMode
+            ? Colors.black
+            : null,
         colorScheme: ColorScheme.fromSeed(
           seedColor: themeProvider.brandColor,
           primary: themeProvider.brandColor,
           brightness: Brightness.dark,
           surface: themeProvider.pureBlackDarkMode ? Colors.black : null,
         ),
-        textTheme: GoogleFonts.getTextTheme('Delius').apply(
-          bodyColor: Colors.white,
-          displayColor: Colors.white,
-        ),
+        textTheme: GoogleFonts.getTextTheme(
+          'Delius',
+        ).apply(bodyColor: Colors.white, displayColor: Colors.white),
         useMaterial3: true,
       ),
       initialRoute: authProvider.isAuthenticated ? '/home' : '/onboarding',
