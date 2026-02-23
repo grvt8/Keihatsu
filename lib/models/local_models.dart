@@ -45,7 +45,11 @@ class LocalManga {
 class LocalChapter {
   Id id = Isar.autoIncrement;
 
-  @Index(unique: true, replace: true, composite: [CompositeIndex('mangaId'), CompositeIndex('sourceId')])
+  @Index(
+    unique: true,
+    replace: true,
+    composite: [CompositeIndex('mangaId'), CompositeIndex('sourceId')],
+  )
   late String chapterId;
   late String mangaId;
   late String sourceId;
@@ -58,6 +62,8 @@ class LocalChapter {
   bool downloaded = false;
   DateTime? lastReadAt;
   int? lastPageRead;
+  bool isBookmarked = false;
+  bool isRead = false;
 }
 
 @collection
@@ -76,7 +82,7 @@ class LocalPage {
 class LocalLibraryEntry {
   Id id = Isar.autoIncrement;
 
-  @Index(unique: true)
+  @Index()
   String? serverId;
 
   @Index(unique: true, replace: true, composite: [CompositeIndex('sourceId')])
@@ -87,7 +93,7 @@ class LocalLibraryEntry {
   bool isCompleted = false;
   bool isUnread = true;
   bool isStarted = false;
-  
+
   int downloadedCount = 0;
   int unreadCount = 0;
   int totalChapters = 0;

@@ -97,12 +97,20 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
           ? chapter.id
           : (chapter as LocalChapter).chapterId;
 
+      final isRead = _pages.isNotEmpty && pageIndex >= _pages.length - 1;
+
       await repo.updateReadingProgress(
         manga: _localManga!,
         chapterId: chapterId,
         pageIndex: pageIndex,
         token: auth.token,
+        isRead: isRead,
       );
+
+      // Update local object state to reflect change immediately in UI if needed
+      if (chapter is LocalChapter && isRead) {
+        chapter.isRead = true;
+      }
     } catch (e) {
       print("Error saving progress: $e");
     }
@@ -378,10 +386,36 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                   children: [
                     IconButton(
                       icon: Icon(
-                        PhosphorIcons.bookmarkSimple(),
-                        color: Colors.white,
+                        (currentChapter is LocalChapter &&
+                            currentChapter.isBookmarked)
+                            ? PhosphorIcons.bookmarkSimple(
+                          PhosphorIconsStyle.fill,
+                        )
+                            : PhosphorIcons.bookmarkSimple(),
+                        color:
+                        (currentChapter is LocalChapter &&
+                            currentChapter.isBookmarked)
+                            ? Colors.green
+                            : Colors.white,
                       ),
-                      onPressed: () {},
+                      onPressed: () async {
+                        if (currentChapter is LocalChapter) {
+                          final repo = Provider.of<MangaRepository>(
+                            context,
+                            listen: false,
+                          );
+                          final auth = Provider.of<AuthProvider>(
+                            context,
+                            listen: false,
+                          );
+                          await repo.toggleChapterBookmark(
+                            currentChapter,
+                            !currentChapter.isBookmarked,
+                            token: auth.token,
+                          );
+                          setState(() {});
+                        }
+                      },
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),

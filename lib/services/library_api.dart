@@ -25,21 +25,30 @@ class LibraryApi {
     String? search,
   }) async {
     final queryParams = {
-      if (filterDownloaded != null) 'filter_downloaded': filterDownloaded.toString(),
+      if (filterDownloaded != null)
+        'filter_downloaded': filterDownloaded.toString(),
       if (filterUnread != null) 'filter_unread': filterUnread.toString(),
       if (filterStarted != null) 'filter_started': filterStarted.toString(),
-      if (filterBookmarked != null) 'filter_bookmarked': filterBookmarked.toString(),
-      if (filterCompleted != null) 'filter_completed': filterCompleted.toString(),
+      if (filterBookmarked != null)
+        'filter_bookmarked': filterBookmarked.toString(),
+      if (filterCompleted != null)
+        'filter_completed': filterCompleted.toString(),
       if (sortBy != null) 'sort_by': sortBy,
       if (order != null) 'order': order,
       if (search != null) 'search': search,
     };
 
-    final uri = Uri.parse('$baseUrl/user/library').replace(queryParameters: queryParams);
+    final uri = Uri.parse(
+      '$baseUrl/user/library',
+    ).replace(queryParameters: queryParams);
     return await http.get(uri, headers: _headers(token));
   }
 
-  Future<http.Response> addMangaToLibrary(String token, Map<String, dynamic> mangaData, {List<String>? categories}) async {
+  Future<http.Response> addMangaToLibrary(
+      String token,
+      Map<String, dynamic> mangaData, {
+        List<String>? categories,
+      }) async {
     // Note: Spec doesn't include categories in POST body, but we keep the parameter for compatibility.
     // If categories are needed, they should be set via assignMangaToCategory after this call.
     return await http.post(
@@ -49,7 +58,11 @@ class LibraryApi {
     );
   }
 
-  Future<http.Response> updateLibraryEntry(String token, String id, Map<String, dynamic> updateData) async {
+  Future<http.Response> updateLibraryEntry(
+      String token,
+      String id,
+      Map<String, dynamic> updateData,
+      ) async {
     return await http.put(
       Uri.parse('$baseUrl/user/library/$id'),
       headers: _headers(token),
@@ -58,19 +71,26 @@ class LibraryApi {
   }
 
   // Alias for backward compatibility
-  Future<http.Response> deleteMangaFromLibrary(String token, String id) => deleteLibraryEntry(token, id);
+  Future<http.Response> deleteMangaFromLibrary(String token, String id) =>
+      deleteLibraryEntry(token, id);
 
   Future<http.Response> deleteLibraryEntry(String token, String id) async {
-    return await http.delete(Uri.parse('$baseUrl/user/library/$id'), headers: _headers(token));
+    return await http.delete(
+      Uri.parse('$baseUrl/user/library/$id'),
+      headers: _headers(token),
+    );
   }
 
   // --- Categories Endpoints ---
 
-  Future<http.Response> getCategories(String token, {bool includeCount = false}) async {
-    final queryParams = {
-      if (includeCount) 'include_count': 'true',
-    };
-    final uri = Uri.parse('$baseUrl/user/categories').replace(queryParameters: queryParams);
+  Future<http.Response> getCategories(
+      String token, {
+        bool includeCount = false,
+      }) async {
+    final queryParams = {if (includeCount) 'include_count': 'true'};
+    final uri = Uri.parse(
+      '$baseUrl/user/categories',
+    ).replace(queryParameters: queryParams);
     return await http.get(uri, headers: _headers(token));
   }
 
@@ -82,7 +102,11 @@ class LibraryApi {
     );
   }
 
-  Future<http.Response> updateCategory(String token, String id, String name) async {
+  Future<http.Response> updateCategory(
+      String token,
+      String id,
+      String name,
+      ) async {
     return await http.put(
       Uri.parse('$baseUrl/user/categories/$id'),
       headers: _headers(token),
@@ -97,7 +121,11 @@ class LibraryApi {
     );
   }
 
-  Future<http.Response> assignMangaToCategory(String token, String mangaId, String categoryId) async {
+  Future<http.Response> assignMangaToCategory(
+      String token,
+      String mangaId,
+      String categoryId,
+      ) async {
     return await http.post(
       Uri.parse('$baseUrl/manga/$mangaId/category/$categoryId'),
       headers: _headers(token),
@@ -113,7 +141,10 @@ class LibraryApi {
     );
   }
 
-  Future<http.Response> updatePreferences(String token, Map<String, dynamic> preferences) async {
+  Future<http.Response> updatePreferences(
+      String token,
+      Map<String, dynamic> preferences,
+      ) async {
     return await http.put(
       Uri.parse('$baseUrl/user/preferences'),
       headers: _headers(token),
@@ -147,6 +178,8 @@ class LibraryApi {
     required String chapterId,
     required int pageNumber,
     required DateTime lastReadAt,
+    bool? isBookmarked,
+    bool? isRead,
   }) async {
     return await http.post(
       Uri.parse('$baseUrl/history/sync'),
@@ -157,15 +190,20 @@ class LibraryApi {
         'chapterId': chapterId,
         'pageNumber': pageNumber,
         'lastReadAt': lastReadAt.toIso8601String(),
+        if (isBookmarked != null) 'isBookmarked': isBookmarked,
+        if (isRead != null) 'isRead': isRead,
       }),
     );
   }
 
-  Future<http.Response> getHistory(String token, {int page = 1, int limit = 50}) async {
-    final uri = Uri.parse('$baseUrl/history').replace(queryParameters: {
-      'page': page.toString(),
-      'limit': limit.toString(),
-    });
+  Future<http.Response> getHistory(
+      String token, {
+        int page = 1,
+        int limit = 50,
+      }) async {
+    final uri = Uri.parse('$baseUrl/history').replace(
+      queryParameters: {'page': page.toString(), 'limit': limit.toString()},
+    );
     return await http.get(uri, headers: _headers(token));
   }
 
