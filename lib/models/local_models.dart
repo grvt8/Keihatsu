@@ -161,3 +161,30 @@ class LocalUserPreferences {
 
   late String sourcePreferencesJson; // Store as JSON string for simplicity
 }
+
+@collection
+class DownloadQueueItem {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true, replace: true)
+  late String chapterId;
+
+  @Index()
+  late String mangaId;
+
+  @Index()
+  late String sourceId;
+
+  late String chapterName;
+  late double chapterNumber;
+  late String mangaTitle;
+  String? mangaThumbnail;
+  late String extensionName;
+
+  // 0: Queued, 1: Downloading, 2: Completed, 3: Failed, 4: Paused
+  int status = 0;
+  double progress = 0.0;
+  int priority = 0;
+  DateTime dateAdded = DateTime.now();
+  String? error;
+}

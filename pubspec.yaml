@@ -28,6 +28,7 @@ dependencies:
   connectivity_plus: ^6.1.1
   path: ^1.9.0
   dio: ^5.7.0
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

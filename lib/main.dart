@@ -8,6 +8,7 @@ import 'theme_provider.dart';
 import 'providers/library_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/offline_library_provider.dart';
+import 'providers/download_provider.dart';
 
 import 'models/local_models.dart';
 import 'services/sources_api.dart';
@@ -47,6 +48,7 @@ void main() async {
     LocalCategoryAssignmentSchema,
     SyncOperationSchema,
     LocalUserPreferencesSchema,
+    DownloadQueueItemSchema,
   ], directory: dir.path);
 
   final fileService = FileService();
@@ -108,6 +110,15 @@ void main() async {
         ChangeNotifierProxyProvider<AuthProvider, OfflineLibraryProvider>(
           create: (context) => OfflineLibraryProvider(
             libraryRepo: libraryRepo,
+            mangaRepo: mangaRepo,
+            getToken: () =>
+            Provider.of<AuthProvider>(context, listen: false).token,
+          ),
+          update: (context, auth, previous) => previous!,
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, DownloadProvider>(
+          create: (context) => DownloadProvider(
+            isar: isar,
             mangaRepo: mangaRepo,
             getToken: () =>
             Provider.of<AuthProvider>(context, listen: false).token,
