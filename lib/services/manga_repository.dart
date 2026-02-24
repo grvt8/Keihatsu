@@ -229,8 +229,16 @@ class MangaRepository {
       String token,
       String sourceId,
       String mangaId,
-      String chapterId,
-      ) async {
+      String chapterId, {
+        Function(double)? onProgress,
+        bool Function()? isCancelled,
+      }) async {
+    // 0. Request permission first
+    final hasPermission = await fileService.requestStoragePermission();
+    if (!hasPermission) {
+      throw Exception('Storage permission denied');
+    }
+
     final pages = await api.getPages(sourceId, chapterId);
 
     // 1. Save page records
@@ -245,11 +253,20 @@ class MangaRepository {
     });
 
     // 2. Download images
-    for (var page in pages) {
+    for (var i = 0; i < pages.length; i++) {
+      if (isCancelled?.call() == true) {
+        throw Exception('Download cancelled');
+      }
+
+      final page = pages[i];
+      // Sanitize mangaId to prevent extra path segments
+      final safeMangaId = mangaId.replaceAll('/', '_');
+
       final localPath = await fileService.downloadFile(
         page.imageUrl,
-        'downloads/$sourceId/$mangaId/$chapterId/page${page.index.toString().padLeft(3, '0')}.jpg',
+        'downloads/$sourceId/$safeMangaId/$chapterId/page${page.index.toString().padLeft(3, '0')}.jpg',
       );
+
       if (localPath != null) {
         final lp = await isar
             .collection<LocalPage>()
@@ -262,6 +279,8 @@ class MangaRepository {
           await isar.writeTxn(() => isar.collection<LocalPage>().put(lp));
         }
       }
+
+      onProgress?.call((i + 1) / pages.length);
     }
 
     // 3. Mark as downloaded

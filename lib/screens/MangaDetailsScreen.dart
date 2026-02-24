@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:keihatsu/components/CustomBackButton.dart';
+import 'package:keihatsu/providers/download_provider.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -777,11 +778,18 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
     final repo = Provider.of<MangaRepository>(context, listen: false);
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final offlineLibrary = Provider.of<OfflineLibraryProvider>(context);
+    final downloadProvider = Provider.of<DownloadProvider>(context);
     final dateStr = DateFormat(
       'MM/dd/yy',
     ).format(DateTime.fromMillisecondsSinceEpoch(chapter.dateUpload));
-    final isDownloading = offlineLibrary.downloadingIds.contains(
-      chapter.chapterId,
+    final isDownloading = downloadProvider.queue.any(
+          (i) => i.chapterId == chapter.chapterId && i.status == 1,
+    );
+
+    // Check if in queue (status 0: Queued, 4: Paused)
+    final isQueued = downloadProvider.queue.any(
+          (i) =>
+      i.chapterId == chapter.chapterId && (i.status == 0 || i.status == 4),
     );
 
     final isRead = chapter.isRead;
@@ -875,15 +883,26 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
               : Icon(
             chapter.downloaded
                 ? Icons.check_circle
+                : isQueued
+                ? PhosphorIcons.clock()
                 : PhosphorIcons.downloadSimple(),
-            color: chapter.downloaded ? Colors.green : Colors.grey,
+            color: chapter.downloaded
+                ? Colors.green
+                : isQueued
+                ? Colors.orange
+                : Colors.grey,
           ),
-          onPressed: (isDownloading || chapter.downloaded)
+          onPressed: (isDownloading || chapter.downloaded || isQueued)
               ? null
-              : () => offlineLibrary.downloadChapter(
-            chapter.sourceId,
+              : () => downloadProvider.addToQueue(
             chapter.mangaId,
+            chapter.sourceId,
             chapter.chapterId,
+            widget.manga.title,
+            chapter.name,
+            chapter.chapterNumber,
+            widget.manga.sourceId,
+            widget.manga.thumbnailUrl,
           ),
         ),
       ),

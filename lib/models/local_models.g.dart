@@ -14633,3 +14633,2591 @@ extension LocalUserPreferencesQueryProperty on QueryBuilder<
     });
   }
 }
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetDownloadQueueItemCollection on Isar {
+  IsarCollection<DownloadQueueItem> get downloadQueueItems => this.collection();
+}
+
+const DownloadQueueItemSchema = CollectionSchema(
+  name: r'DownloadQueueItem',
+  id: 6005256729328480976,
+  properties: {
+    r'chapterId': PropertySchema(
+      id: 0,
+      name: r'chapterId',
+      type: IsarType.string,
+    ),
+    r'chapterName': PropertySchema(
+      id: 1,
+      name: r'chapterName',
+      type: IsarType.string,
+    ),
+    r'chapterNumber': PropertySchema(
+      id: 2,
+      name: r'chapterNumber',
+      type: IsarType.double,
+    ),
+    r'dateAdded': PropertySchema(
+      id: 3,
+      name: r'dateAdded',
+      type: IsarType.dateTime,
+    ),
+    r'error': PropertySchema(
+      id: 4,
+      name: r'error',
+      type: IsarType.string,
+    ),
+    r'extensionName': PropertySchema(
+      id: 5,
+      name: r'extensionName',
+      type: IsarType.string,
+    ),
+    r'mangaId': PropertySchema(
+      id: 6,
+      name: r'mangaId',
+      type: IsarType.string,
+    ),
+    r'mangaThumbnail': PropertySchema(
+      id: 7,
+      name: r'mangaThumbnail',
+      type: IsarType.string,
+    ),
+    r'mangaTitle': PropertySchema(
+      id: 8,
+      name: r'mangaTitle',
+      type: IsarType.string,
+    ),
+    r'priority': PropertySchema(
+      id: 9,
+      name: r'priority',
+      type: IsarType.long,
+    ),
+    r'progress': PropertySchema(
+      id: 10,
+      name: r'progress',
+      type: IsarType.double,
+    ),
+    r'sourceId': PropertySchema(
+      id: 11,
+      name: r'sourceId',
+      type: IsarType.string,
+    ),
+    r'status': PropertySchema(
+      id: 12,
+      name: r'status',
+      type: IsarType.long,
+    )
+  },
+  estimateSize: _downloadQueueItemEstimateSize,
+  serialize: _downloadQueueItemSerialize,
+  deserialize: _downloadQueueItemDeserialize,
+  deserializeProp: _downloadQueueItemDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'chapterId': IndexSchema(
+      id: -1917949875430644359,
+      name: r'chapterId',
+      unique: true,
+      replace: true,
+      properties: [
+        IndexPropertySchema(
+          name: r'chapterId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'mangaId': IndexSchema(
+      id: 7466570075891278896,
+      name: r'mangaId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'mangaId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'sourceId': IndexSchema(
+      id: 2155220942429093580,
+      name: r'sourceId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'sourceId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    )
+  },
+  links: {},
+  embeddedSchemas: {},
+  getId: _downloadQueueItemGetId,
+  getLinks: _downloadQueueItemGetLinks,
+  attach: _downloadQueueItemAttach,
+  version: '3.1.0+1',
+);
+
+int _downloadQueueItemEstimateSize(
+  DownloadQueueItem object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.chapterId.length * 3;
+  bytesCount += 3 + object.chapterName.length * 3;
+  {
+    final value = object.error;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  bytesCount += 3 + object.extensionName.length * 3;
+  bytesCount += 3 + object.mangaId.length * 3;
+  {
+    final value = object.mangaThumbnail;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  bytesCount += 3 + object.mangaTitle.length * 3;
+  bytesCount += 3 + object.sourceId.length * 3;
+  return bytesCount;
+}
+
+void _downloadQueueItemSerialize(
+  DownloadQueueItem object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeString(offsets[0], object.chapterId);
+  writer.writeString(offsets[1], object.chapterName);
+  writer.writeDouble(offsets[2], object.chapterNumber);
+  writer.writeDateTime(offsets[3], object.dateAdded);
+  writer.writeString(offsets[4], object.error);
+  writer.writeString(offsets[5], object.extensionName);
+  writer.writeString(offsets[6], object.mangaId);
+  writer.writeString(offsets[7], object.mangaThumbnail);
+  writer.writeString(offsets[8], object.mangaTitle);
+  writer.writeLong(offsets[9], object.priority);
+  writer.writeDouble(offsets[10], object.progress);
+  writer.writeString(offsets[11], object.sourceId);
+  writer.writeLong(offsets[12], object.status);
+}
+
+DownloadQueueItem _downloadQueueItemDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = DownloadQueueItem();
+  object.chapterId = reader.readString(offsets[0]);
+  object.chapterName = reader.readString(offsets[1]);
+  object.chapterNumber = reader.readDouble(offsets[2]);
+  object.dateAdded = reader.readDateTime(offsets[3]);
+  object.error = reader.readStringOrNull(offsets[4]);
+  object.extensionName = reader.readString(offsets[5]);
+  object.id = id;
+  object.mangaId = reader.readString(offsets[6]);
+  object.mangaThumbnail = reader.readStringOrNull(offsets[7]);
+  object.mangaTitle = reader.readString(offsets[8]);
+  object.priority = reader.readLong(offsets[9]);
+  object.progress = reader.readDouble(offsets[10]);
+  object.sourceId = reader.readString(offsets[11]);
+  object.status = reader.readLong(offsets[12]);
+  return object;
+}
+
+P _downloadQueueItemDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readString(offset)) as P;
+    case 1:
+      return (reader.readString(offset)) as P;
+    case 2:
+      return (reader.readDouble(offset)) as P;
+    case 3:
+      return (reader.readDateTime(offset)) as P;
+    case 4:
+      return (reader.readStringOrNull(offset)) as P;
+    case 5:
+      return (reader.readString(offset)) as P;
+    case 6:
+      return (reader.readString(offset)) as P;
+    case 7:
+      return (reader.readStringOrNull(offset)) as P;
+    case 8:
+      return (reader.readString(offset)) as P;
+    case 9:
+      return (reader.readLong(offset)) as P;
+    case 10:
+      return (reader.readDouble(offset)) as P;
+    case 11:
+      return (reader.readString(offset)) as P;
+    case 12:
+      return (reader.readLong(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _downloadQueueItemGetId(DownloadQueueItem object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _downloadQueueItemGetLinks(
+    DownloadQueueItem object) {
+  return [];
+}
+
+void _downloadQueueItemAttach(
+    IsarCollection<dynamic> col, Id id, DownloadQueueItem object) {
+  object.id = id;
+}
+
+extension DownloadQueueItemByIndex on IsarCollection<DownloadQueueItem> {
+  Future<DownloadQueueItem?> getByChapterId(String chapterId) {
+    return getByIndex(r'chapterId', [chapterId]);
+  }
+
+  DownloadQueueItem? getByChapterIdSync(String chapterId) {
+    return getByIndexSync(r'chapterId', [chapterId]);
+  }
+
+  Future<bool> deleteByChapterId(String chapterId) {
+    return deleteByIndex(r'chapterId', [chapterId]);
+  }
+
+  bool deleteByChapterIdSync(String chapterId) {
+    return deleteByIndexSync(r'chapterId', [chapterId]);
+  }
+
+  Future<List<DownloadQueueItem?>> getAllByChapterId(
+      List<String> chapterIdValues) {
+    final values = chapterIdValues.map((e) => [e]).toList();
+    return getAllByIndex(r'chapterId', values);
+  }
+
+  List<DownloadQueueItem?> getAllByChapterIdSync(List<String> chapterIdValues) {
+    final values = chapterIdValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'chapterId', values);
+  }
+
+  Future<int> deleteAllByChapterId(List<String> chapterIdValues) {
+    final values = chapterIdValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'chapterId', values);
+  }
+
+  int deleteAllByChapterIdSync(List<String> chapterIdValues) {
+    final values = chapterIdValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'chapterId', values);
+  }
+
+  Future<Id> putByChapterId(DownloadQueueItem object) {
+    return putByIndex(r'chapterId', object);
+  }
+
+  Id putByChapterIdSync(DownloadQueueItem object, {bool saveLinks = true}) {
+    return putByIndexSync(r'chapterId', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByChapterId(List<DownloadQueueItem> objects) {
+    return putAllByIndex(r'chapterId', objects);
+  }
+
+  List<Id> putAllByChapterIdSync(List<DownloadQueueItem> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'chapterId', objects, saveLinks: saveLinks);
+  }
+}
+
+extension DownloadQueueItemQueryWhereSort
+    on QueryBuilder<DownloadQueueItem, DownloadQueueItem, QWhere> {
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+}
+
+extension DownloadQueueItemQueryWhere
+    on QueryBuilder<DownloadQueueItem, DownloadQueueItem, QWhereClause> {
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterWhereClause>
+      idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterWhereClause>
+      idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterWhereClause>
+      idGreaterThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterWhereClause>
+      idLessThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterWhereClause>
+      idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterWhereClause>
+      chapterIdEqualTo(String chapterId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'chapterId',
+        value: [chapterId],
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterWhereClause>
+      chapterIdNotEqualTo(String chapterId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapterId',
+              lower: [],
+              upper: [chapterId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapterId',
+              lower: [chapterId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapterId',
+              lower: [chapterId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapterId',
+              lower: [],
+              upper: [chapterId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterWhereClause>
+      mangaIdEqualTo(String mangaId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'mangaId',
+        value: [mangaId],
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterWhereClause>
+      mangaIdNotEqualTo(String mangaId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'mangaId',
+              lower: [],
+              upper: [mangaId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'mangaId',
+              lower: [mangaId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'mangaId',
+              lower: [mangaId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'mangaId',
+              lower: [],
+              upper: [mangaId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterWhereClause>
+      sourceIdEqualTo(String sourceId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'sourceId',
+        value: [sourceId],
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterWhereClause>
+      sourceIdNotEqualTo(String sourceId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'sourceId',
+              lower: [],
+              upper: [sourceId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'sourceId',
+              lower: [sourceId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'sourceId',
+              lower: [sourceId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'sourceId',
+              lower: [],
+              upper: [sourceId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+}
+
+extension DownloadQueueItemQueryFilter
+    on QueryBuilder<DownloadQueueItem, DownloadQueueItem, QFilterCondition> {
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'chapterId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'chapterId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'chapterId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'chapterId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'chapterId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'chapterId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'chapterId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'chapterId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'chapterId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'chapterId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterNameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'chapterName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterNameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'chapterName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterNameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'chapterName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterNameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'chapterName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'chapterName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'chapterName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterNameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'chapterName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterNameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'chapterName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'chapterName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'chapterName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterNumberEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'chapterNumber',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterNumberGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'chapterNumber',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterNumberLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'chapterNumber',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      chapterNumberBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'chapterNumber',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      dateAddedEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dateAdded',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      dateAddedGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'dateAdded',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      dateAddedLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'dateAdded',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      dateAddedBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'dateAdded',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      errorIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'error',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      errorIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'error',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      errorEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'error',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      errorGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'error',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      errorLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'error',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      errorBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'error',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      errorStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'error',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      errorEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'error',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      errorContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'error',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      errorMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'error',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      errorIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'error',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      errorIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'error',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      extensionNameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'extensionName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      extensionNameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'extensionName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      extensionNameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'extensionName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      extensionNameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'extensionName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      extensionNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'extensionName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      extensionNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'extensionName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      extensionNameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'extensionName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      extensionNameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'extensionName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      extensionNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'extensionName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      extensionNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'extensionName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mangaId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'mangaId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'mangaId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'mangaId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'mangaId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'mangaId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'mangaId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'mangaId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mangaId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'mangaId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaThumbnailIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'mangaThumbnail',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaThumbnailIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'mangaThumbnail',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaThumbnailEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mangaThumbnail',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaThumbnailGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'mangaThumbnail',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaThumbnailLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'mangaThumbnail',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaThumbnailBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'mangaThumbnail',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaThumbnailStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'mangaThumbnail',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaThumbnailEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'mangaThumbnail',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaThumbnailContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'mangaThumbnail',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaThumbnailMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'mangaThumbnail',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaThumbnailIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mangaThumbnail',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaThumbnailIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'mangaThumbnail',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaTitleEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mangaTitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaTitleGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'mangaTitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaTitleLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'mangaTitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaTitleBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'mangaTitle',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaTitleStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'mangaTitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaTitleEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'mangaTitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaTitleContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'mangaTitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaTitleMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'mangaTitle',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaTitleIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mangaTitle',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      mangaTitleIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'mangaTitle',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      priorityEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'priority',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      priorityGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'priority',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      priorityLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'priority',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      priorityBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'priority',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      progressEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'progress',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      progressGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'progress',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      progressLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'progress',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      progressBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'progress',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      sourceIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sourceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      sourceIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'sourceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      sourceIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'sourceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      sourceIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'sourceId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      sourceIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'sourceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      sourceIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'sourceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      sourceIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'sourceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      sourceIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'sourceId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      sourceIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sourceId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      sourceIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'sourceId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      statusEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'status',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      statusGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'status',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      statusLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'status',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterFilterCondition>
+      statusBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'status',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension DownloadQueueItemQueryObject
+    on QueryBuilder<DownloadQueueItem, DownloadQueueItem, QFilterCondition> {}
+
+extension DownloadQueueItemQueryLinks
+    on QueryBuilder<DownloadQueueItem, DownloadQueueItem, QFilterCondition> {}
+
+extension DownloadQueueItemQuerySortBy
+    on QueryBuilder<DownloadQueueItem, DownloadQueueItem, QSortBy> {
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByChapterId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByChapterIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByChapterName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByChapterNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByChapterNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterNumber', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByChapterNumberDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterNumber', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByDateAdded() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dateAdded', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByDateAddedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dateAdded', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByError() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'error', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByErrorDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'error', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByExtensionName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'extensionName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByExtensionNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'extensionName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByMangaId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mangaId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByMangaIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mangaId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByMangaThumbnail() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mangaThumbnail', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByMangaThumbnailDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mangaThumbnail', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByMangaTitle() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mangaTitle', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByMangaTitleDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mangaTitle', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByPriority() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'priority', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByPriorityDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'priority', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByProgress() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'progress', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByProgressDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'progress', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortBySourceId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortBySourceIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'status', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      sortByStatusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'status', Sort.desc);
+    });
+  }
+}
+
+extension DownloadQueueItemQuerySortThenBy
+    on QueryBuilder<DownloadQueueItem, DownloadQueueItem, QSortThenBy> {
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByChapterId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByChapterIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByChapterName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByChapterNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByChapterNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterNumber', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByChapterNumberDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterNumber', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByDateAdded() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dateAdded', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByDateAddedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dateAdded', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByError() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'error', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByErrorDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'error', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByExtensionName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'extensionName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByExtensionNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'extensionName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByMangaId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mangaId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByMangaIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mangaId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByMangaThumbnail() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mangaThumbnail', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByMangaThumbnailDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mangaThumbnail', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByMangaTitle() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mangaTitle', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByMangaTitleDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mangaTitle', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByPriority() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'priority', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByPriorityDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'priority', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByProgress() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'progress', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByProgressDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'progress', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenBySourceId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenBySourceIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'status', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QAfterSortBy>
+      thenByStatusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'status', Sort.desc);
+    });
+  }
+}
+
+extension DownloadQueueItemQueryWhereDistinct
+    on QueryBuilder<DownloadQueueItem, DownloadQueueItem, QDistinct> {
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QDistinct>
+      distinctByChapterId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'chapterId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QDistinct>
+      distinctByChapterName({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'chapterName', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QDistinct>
+      distinctByChapterNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'chapterNumber');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QDistinct>
+      distinctByDateAdded() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'dateAdded');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QDistinct> distinctByError(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'error', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QDistinct>
+      distinctByExtensionName({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'extensionName',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QDistinct>
+      distinctByMangaId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'mangaId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QDistinct>
+      distinctByMangaThumbnail({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'mangaThumbnail',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QDistinct>
+      distinctByMangaTitle({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'mangaTitle', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QDistinct>
+      distinctByPriority() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'priority');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QDistinct>
+      distinctByProgress() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'progress');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QDistinct>
+      distinctBySourceId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'sourceId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DownloadQueueItem, QDistinct>
+      distinctByStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'status');
+    });
+  }
+}
+
+extension DownloadQueueItemQueryProperty
+    on QueryBuilder<DownloadQueueItem, DownloadQueueItem, QQueryProperty> {
+  QueryBuilder<DownloadQueueItem, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, String, QQueryOperations>
+      chapterIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'chapterId');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, String, QQueryOperations>
+      chapterNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'chapterName');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, double, QQueryOperations>
+      chapterNumberProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'chapterNumber');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, DateTime, QQueryOperations>
+      dateAddedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'dateAdded');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, String?, QQueryOperations> errorProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'error');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, String, QQueryOperations>
+      extensionNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'extensionName');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, String, QQueryOperations> mangaIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'mangaId');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, String?, QQueryOperations>
+      mangaThumbnailProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'mangaThumbnail');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, String, QQueryOperations>
+      mangaTitleProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'mangaTitle');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, int, QQueryOperations> priorityProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'priority');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, double, QQueryOperations> progressProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'progress');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, String, QQueryOperations> sourceIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'sourceId');
+    });
+  }
+
+  QueryBuilder<DownloadQueueItem, int, QQueryOperations> statusProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'status');
+    });
+  }
+}
