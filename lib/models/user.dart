@@ -14,6 +14,7 @@ class User {
   final dynamic readingStats;
   final int achievementCount;
   final int points;
+  final UserStats? stats;
 
   User({
     required this.id,
@@ -31,6 +32,7 @@ class User {
     this.readingStats,
     this.achievementCount = 0,
     this.points = 0,
+    this.stats,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -50,6 +52,7 @@ class User {
       readingStats: json['readingStats'],
       achievementCount: json['achievementCount'] ?? 0,
       points: json['points'] ?? 0,
+      stats: json['stats'] != null ? UserStats.fromJson(json['stats']) : null,
     );
   }
 
@@ -69,6 +72,43 @@ class User {
       'isProfilePublic': isProfilePublic,
       'readingStats': readingStats,
       'achievementCount': achievementCount,
+      'points': points,
+      'stats': stats?.toJson(),
+    };
+  }
+}
+
+class UserStats {
+  final int libraryCount;
+  final int readingTimeMinutes;
+  final int chaptersReadToday;
+  final int commentsToday;
+  final int points;
+
+  UserStats({
+    required this.libraryCount,
+    required this.readingTimeMinutes,
+    required this.chaptersReadToday,
+    required this.commentsToday,
+    required this.points,
+  });
+
+  factory UserStats.fromJson(Map<String, dynamic> json) {
+    return UserStats(
+      libraryCount: json['libraryCount'] ?? 0,
+      readingTimeMinutes: json['readingTimeMinutes'] ?? 0,
+      chaptersReadToday: json['chaptersReadToday'] ?? 0,
+      commentsToday: json['commentsToday'] ?? 0,
+      points: json['points'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'libraryCount': libraryCount,
+      'readingTimeMinutes': readingTimeMinutes,
+      'chaptersReadToday': chaptersReadToday,
+      'commentsToday': commentsToday,
       'points': points,
     };
   }

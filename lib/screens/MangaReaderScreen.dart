@@ -430,9 +430,16 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                           context: context,
                           isScrollControlled: true,
                           backgroundColor: Colors.transparent,
-                          builder: (context) => CommentsBottomSheet(
-                            scrollController: _scrollController,
-                            currentChapterIndex: _currentChapterIndex,
+                          builder: (context) => DraggableScrollableSheet(
+                            initialChildSize: 0.6,
+                            minChildSize: 0.4,
+                            maxChildSize: 0.95,
+                            builder: (context, scrollController) {
+                              return CommentsBottomSheet(
+                                scrollController: scrollController,
+                                currentChapterIndex: _currentChapterIndex,
+                              );
+                            },
                           ),
                         );
                       },

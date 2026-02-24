@@ -50,6 +50,32 @@ class AuthProvider with ChangeNotifier {
     if (_token != null) {
       try {
         _user = await _authApi.getMe(_token!);
+        // Fetch stats separately if they aren't included in getMe or if you want fresh stats
+        try {
+          final stats = await _authApi.getUserStats(_token!);
+          // Update the user object with new stats
+          _user = User(
+            id: _user!.id,
+            email: _user!.email,
+            googleId: _user!.googleId,
+            avatarUrl: _user!.avatarUrl,
+            bannerUrl: _user!.bannerUrl,
+            username: _user!.username,
+            bio: _user!.bio,
+            createdAt: _user!.createdAt,
+            updatedAt: _user!.updatedAt,
+            lastLoginAt: _user!.lastLoginAt,
+            isOnboarded: _user!.isOnboarded,
+            isProfilePublic: _user!.isProfilePublic,
+            readingStats: _user!.readingStats,
+            achievementCount: _user!.achievementCount,
+            points: _user!.points,
+            stats: stats,
+          );
+        } catch (e) {
+          debugPrint("Failed to load user stats: $e");
+        }
+
         await fetchPreferences();
         notifyListeners();
       } catch (e) {
