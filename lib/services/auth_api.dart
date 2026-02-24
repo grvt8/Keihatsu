@@ -14,7 +14,7 @@ class AuthApi {
   Future<AuthResponse> loginWithGoogle(String idToken) async {
     try {
       print('Attempting login at: $baseUrl/auth/google');
-      
+
       final response = await http.post(
         Uri.parse('$baseUrl/auth/google'),
         headers: {'Content-Type': 'application/json'},
@@ -49,6 +49,21 @@ class AuthApi {
       return User.fromJson(json.decode(response.body));
     } else {
       throw Exception('Failed to fetch user profile');
+    }
+  }
+
+  Future<UserStats> getUserStats(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/user/profile/stats'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return UserStats.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to fetch user stats');
     }
   }
 

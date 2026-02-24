@@ -14,12 +14,17 @@ class CommentsBottomSheet extends StatelessWidget {
     required this.currentChapterIndex,
   });
 
-  void _showUserProfile(BuildContext context, String username, String userImage) {
+  void _showUserProfile(
+      BuildContext context,
+      String username,
+      String userImage,
+      ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => UserProfileSheet(username: username, userImage: userImage),
+      builder: (context) =>
+          UserProfileSheet(username: username, userImage: userImage),
     );
   }
 
@@ -36,16 +41,20 @@ class CommentsBottomSheet extends StatelessWidget {
         color: bgColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
       ),
-      child: Column(
+      child: ListView(
+        controller: scrollController,
+        padding: EdgeInsets.zero,
         children: [
           // Drag Handle
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            width: 45,
-            height: 5,
-            decoration: BoxDecoration(
-              color: textColor.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 45,
+              height: 5,
+              decoration: BoxDecoration(
+                color: textColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
           // Navigation & Meta Header
@@ -56,33 +65,59 @@ class CommentsBottomSheet extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildNavButton(context, PhosphorIcons.caretLeft(), "Episode ${currentChapterIndex + 262}"),
-                    _buildNavButton(context, PhosphorIcons.caretRight(), "Episode ${currentChapterIndex + 264}", isRight: true),
+                    _buildNavButton(
+                      context,
+                      PhosphorIcons.caretLeft(),
+                      "Episode ${currentChapterIndex + 262}",
+                    ),
+                    _buildNavButton(
+                      context,
+                      PhosphorIcons.caretRight(),
+                      "Episode ${currentChapterIndex + 264}",
+                      isRight: true,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 15),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Icon(PhosphorIcons.house(), size: 22, color: textColor.withOpacity(0.7)),
+                    Icon(
+                      PhosphorIcons.house(),
+                      size: 22,
+                      color: textColor.withOpacity(0.7),
+                    ),
                     const SizedBox(width: 20),
-                    Icon(PhosphorIcons.info(), size: 22, color: textColor.withOpacity(0.7)),
+                    Icon(
+                      PhosphorIcons.info(),
+                      size: 22,
+                      color: textColor.withOpacity(0.7),
+                    ),
                     const SizedBox(width: 20),
-                    Icon(PhosphorIcons.shareNetwork(), size: 22, color: textColor.withOpacity(0.7)),
+                    Icon(
+                      PhosphorIcons.shareNetwork(),
+                      size: 22,
+                      color: textColor.withOpacity(0.7),
+                    ),
                   ],
                 ),
               ],
             ),
           ),
           const Divider(height: 30, thickness: 0.5),
-          Expanded(
-            child: ListView(
-              controller: scrollController,
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+
+          // Content Area
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   "Comments on Episode ${currentChapterIndex + 263}",
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
                 ),
                 const SizedBox(height: 25),
                 // Premium Comment Input
@@ -99,7 +134,9 @@ class CommentsBottomSheet extends StatelessWidget {
                         style: TextStyle(color: textColor),
                         decoration: InputDecoration(
                           hintText: "Your comment...",
-                          hintStyle: TextStyle(color: textColor.withOpacity(0.3)),
+                          hintStyle: TextStyle(
+                            color: textColor.withOpacity(0.3),
+                          ),
                           border: InputBorder.none,
                         ),
                         maxLines: 2,
@@ -108,15 +145,29 @@ class CommentsBottomSheet extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Icon(PhosphorIcons.gif(), color: textColor.withOpacity(0.4), size: 22),
+                          Icon(
+                            PhosphorIcons.gif(),
+                            color: textColor.withOpacity(0.4),
+                            size: 22,
+                          ),
                           const SizedBox(width: 18),
-                          Icon(PhosphorIcons.paperclip(), color: textColor.withOpacity(0.4), size: 22),
+                          Icon(
+                            PhosphorIcons.paperclip(),
+                            color: textColor.withOpacity(0.4),
+                            size: 22,
+                          ),
                           const SizedBox(width: 18),
                           GestureDetector(
                             child: CircleAvatar(
                               backgroundColor: brandColor,
                               radius: 20,
-                              child: Icon(PhosphorIcons.paperPlaneRight(PhosphorIconsStyle.fill), color: Colors.white, size: 20),
+                              child: Icon(
+                                PhosphorIcons.paperPlaneRight(
+                                  PhosphorIconsStyle.fill,
+                                ),
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ),
                           ),
                         ],
@@ -171,7 +222,8 @@ class CommentsBottomSheet extends StatelessWidget {
                   user: "insomnia",
                   userImage: "images/user4.jpeg",
                   time: "2 weeks ago",
-                  text: "This chapter was absolute fire! The art style keeps getting better.",
+                  text:
+                  "This chapter was absolute fire! The art style keeps getting better.",
                   likes: "128",
                 ),
               ],
@@ -182,8 +234,15 @@ class CommentsBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildNavButton(BuildContext context, PhosphorIconData icon, String label, {bool isRight = false}) {
-    final textColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87;
+  Widget _buildNavButton(
+      BuildContext context,
+      PhosphorIconData icon,
+      String label, {
+        bool isRight = false,
+      }) {
+    final textColor = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black87;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -194,7 +253,10 @@ class CommentsBottomSheet extends StatelessWidget {
         children: [
           if (!isRight) Icon(icon, size: 18),
           if (!isRight) const SizedBox(width: 8),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          ),
           if (isRight) const SizedBox(width: 8),
           if (isRight) Icon(icon, size: 18),
         ],
@@ -212,28 +274,42 @@ class CommentsBottomSheet extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (isSelected) Icon(PhosphorIcons.crown(PhosphorIconsStyle.fill), size: 16, color: brandColor),
+          if (isSelected)
+            Icon(
+              PhosphorIcons.crown(PhosphorIconsStyle.fill),
+              size: 16,
+              color: brandColor,
+            ),
           if (isSelected) const SizedBox(width: 8),
-          Text(label, style: TextStyle(color: isSelected ? brandColor : Colors.black54, fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? brandColor : Colors.black54,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildCommentThread(
-    BuildContext context, {
-    required String user,
-    required String userImage,
-    required String time,
-    required String text,
-    required String likes,
-    String? image,
-    bool isReply = false,
-    String? replyTo,
-    List<Widget>? replies,
-  }) {
+      BuildContext context, {
+        required String user,
+        required String userImage,
+        required String time,
+        required String text,
+        required String likes,
+        String? image,
+        bool isReply = false,
+        String? replyTo,
+        List<Widget>? replies,
+      }) {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    final textColor = themeProvider.themeMode == ThemeMode.dark ? Colors.white : Colors.black87;
+    final textColor = themeProvider.themeMode == ThemeMode.dark
+        ? Colors.white
+        : Colors.black87;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,11 +337,26 @@ class CommentsBottomSheet extends StatelessWidget {
                     onTap: () => _showUserProfile(context, user, userImage),
                     child: Row(
                       children: [
-                        CircleAvatar(radius: 14, backgroundImage: AssetImage(userImage)),
+                        CircleAvatar(
+                          radius: 14,
+                          backgroundImage: AssetImage(userImage),
+                        ),
                         const SizedBox(width: 12),
-                        Text(user, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text(
+                          user,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
                         const SizedBox(width: 10),
-                        Text(time, style: TextStyle(color: textColor.withOpacity(0.4), fontSize: 12)),
+                        Text(
+                          time,
+                          style: TextStyle(
+                            color: textColor.withOpacity(0.4),
+                            fontSize: 12,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -281,31 +372,86 @@ class CommentsBottomSheet extends StatelessWidget {
                             padding: const EdgeInsets.only(bottom: 6),
                             child: Row(
                               children: [
-                                Icon(PhosphorIcons.arrowBendUpRight(), size: 14, color: textColor.withOpacity(0.4)),
+                                Icon(
+                                  PhosphorIcons.arrowBendUpRight(),
+                                  size: 14,
+                                  color: textColor.withOpacity(0.4),
+                                ),
                                 const SizedBox(width: 6),
-                                Text("Replying to @$replyTo", style: TextStyle(color: textColor.withOpacity(0.4), fontSize: 12, fontStyle: FontStyle.italic)),
+                                Text(
+                                  "Replying to @$replyTo",
+                                  style: TextStyle(
+                                    color: textColor.withOpacity(0.4),
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                        Text(text, style: const TextStyle(fontSize: 15, height: 1.4)),
+                        Text(
+                          text,
+                          style: const TextStyle(fontSize: 15, height: 1.4),
+                        ),
                         if (image != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 12),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(15),
-                              child: Image.asset(image, height: 180, width: 120, fit: BoxFit.cover),
+                              child: Image.asset(
+                                image,
+                                height: 180,
+                                width: 120,
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                         // Actions
                         Row(
                           children: [
-                            IconButton(icon: Icon(PhosphorIcons.arrowFatLinesUp(PhosphorIconsStyle.bold), size: 20, color: textColor.withOpacity(0.6)), onPressed: () {}),
-                            Text(likes, style: TextStyle(fontSize: 13, color: textColor.withOpacity(0.6), fontWeight: FontWeight.bold)),
-                            IconButton(icon: Icon(PhosphorIcons.arrowFatLineDown(PhosphorIconsStyle.bold), size: 20, color: textColor.withOpacity(0.6)), onPressed: () {}),
+                            IconButton(
+                              icon: Icon(
+                                PhosphorIcons.arrowFatLinesUp(
+                                  PhosphorIconsStyle.bold,
+                                ),
+                                size: 20,
+                                color: textColor.withOpacity(0.6),
+                              ),
+                              onPressed: () {},
+                            ),
+                            Text(
+                              likes,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: textColor.withOpacity(0.6),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                PhosphorIcons.arrowFatLineDown(
+                                  PhosphorIconsStyle.bold,
+                                ),
+                                size: 20,
+                                color: textColor.withOpacity(0.6),
+                              ),
+                              onPressed: () {},
+                            ),
                             const SizedBox(width: 10),
-                            Text("Reply", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textColor.withOpacity(0.6))),
+                            Text(
+                              "Reply",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: textColor.withOpacity(0.6),
+                              ),
+                            ),
                             const Spacer(),
-                            Icon(PhosphorIcons.dotsThreeVertical(), size: 20, color: textColor.withOpacity(0.4)),
+                            Icon(
+                              PhosphorIcons.dotsThreeVertical(),
+                              size: 20,
+                              color: textColor.withOpacity(0.4),
+                            ),
                           ],
                         ),
                       ],
