@@ -180,6 +180,7 @@ class LibraryApi {
     required DateTime lastReadAt,
     bool? isBookmarked,
     bool? isRead,
+    int? readingTimeMs,
   }) async {
     return await http.post(
       Uri.parse('$baseUrl/history/sync'),
@@ -192,6 +193,7 @@ class LibraryApi {
         'lastReadAt': lastReadAt.toIso8601String(),
         if (isBookmarked != null) 'isBookmarked': isBookmarked,
         if (isRead != null) 'isRead': isRead,
+        if (readingTimeMs != null) 'readingTimeMs': readingTimeMs,
       }),
     );
   }

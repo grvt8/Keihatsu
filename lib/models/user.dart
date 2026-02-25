@@ -80,25 +80,25 @@ class User {
 
 class UserStats {
   final int libraryCount;
-  final int readingTimeMinutes;
-  final int chaptersReadToday;
-  final int commentsToday;
+  final int totalReadingTimeMinutes;
+  final int mangasReadToday;
+  final int commentsCount;
   final int points;
 
   UserStats({
     required this.libraryCount,
-    required this.readingTimeMinutes,
-    required this.chaptersReadToday,
-    required this.commentsToday,
+    required this.totalReadingTimeMinutes,
+    required this.mangasReadToday,
+    required this.commentsCount,
     required this.points,
   });
 
   factory UserStats.fromJson(Map<String, dynamic> json) {
     return UserStats(
       libraryCount: json['libraryCount'] ?? 0,
-      readingTimeMinutes: json['readingTimeMinutes'] ?? 0,
-      chaptersReadToday: json['chaptersReadToday'] ?? 0,
-      commentsToday: json['commentsToday'] ?? 0,
+      totalReadingTimeMinutes: json['totalReadingTimeMinutes'] ?? 0,
+      mangasReadToday: json['mangasReadToday'] ?? 0,
+      commentsCount: json['commentsCount'] ?? 0,
       points: json['points'] ?? 0,
     );
   }
@@ -106,9 +106,9 @@ class UserStats {
   Map<String, dynamic> toJson() {
     return {
       'libraryCount': libraryCount,
-      'readingTimeMinutes': readingTimeMinutes,
-      'chaptersReadToday': chaptersReadToday,
-      'commentsToday': commentsToday,
+      'totalReadingTimeMinutes': totalReadingTimeMinutes,
+      'mangasReadToday': mangasReadToday,
+      'commentsCount': commentsCount,
       'points': points,
     };
   }

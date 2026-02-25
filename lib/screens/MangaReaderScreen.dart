@@ -9,6 +9,7 @@ import '../models/chapter.dart';
 import '../models/local_models.dart';
 import '../services/manga_repository.dart';
 import '../providers/auth_provider.dart'; // Added
+import '../providers/comments_provider.dart'; // Added
 import '../components/Comments.dart';
 
 class MangaReaderScreen extends StatefulWidget {
@@ -34,14 +35,17 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
   bool _isLoading = true;
   List<dynamic> _pages = []; // List<ReaderPage> or List<LocalPage>
   final ScrollController _scrollController = ScrollController();
+  int _currentPageIndex = 0;
 
   // History tracking
   Timer? _debounceTimer;
+  final Stopwatch _readingTimer = Stopwatch();
   LocalManga? _localManga;
 
   @override
   void initState() {
     super.initState();
+    _readingTimer.start();
     _currentChapterIndex = widget.initialChapterIndex;
     _loadLocalManga();
     _loadPages();
@@ -66,6 +70,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
   @override
   void dispose() {
     _debounceTimer?.cancel();
+    _saveProgress(_currentPageIndex);
     _scrollController.dispose();
     super.dispose();
   }
@@ -99,12 +104,16 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
 
       final isRead = _pages.isNotEmpty && pageIndex >= _pages.length - 1;
 
+      final readingTimeMs = _readingTimer.elapsedMilliseconds;
+      _readingTimer.reset();
+
       await repo.updateReadingProgress(
         manga: _localManga!,
         chapterId: chapterId,
         pageIndex: pageIndex,
         token: auth.token,
         isRead: isRead,
+        readingTimeMs: readingTimeMs,
       );
 
       // Update local object state to reflect change immediately in UI if needed
@@ -435,9 +444,20 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                             minChildSize: 0.4,
                             maxChildSize: 0.95,
                             builder: (context, scrollController) {
-                              return CommentsBottomSheet(
-                                scrollController: scrollController,
-                                currentChapterIndex: _currentChapterIndex,
+                              final currentChapter =
+                              widget.chapters[_currentChapterIndex];
+                              final chapterId = currentChapter is Chapter
+                                  ? currentChapter.id
+                                  : (currentChapter as LocalChapter).chapterId;
+
+                              return ChangeNotifierProvider(
+                                create: (_) => CommentsProvider(),
+                                child: CommentsBottomSheet(
+                                  scrollController: scrollController,
+                                  currentChapterIndex: _currentChapterIndex,
+                                  mangaId: widget.manga.id,
+                                  chapterId: chapterId,
+                                ),
                               );
                             },
                           ),

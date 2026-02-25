@@ -62,469 +62,480 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 160,
-            pinned: true,
-            backgroundColor: bgColor,
-            elevation: 0,
-            title: _showTitle
-                ? Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundImage: user?.avatarUrl != null
-                      ? NetworkImage(user!.avatarUrl!)
-                      : const AssetImage('images/avatar.jpeg')
-                  as ImageProvider,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    user?.username ?? "",
-                    style: GoogleFonts.denkOne(
-                      textStyle: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                _buildTopIcons(brandColor, isScrolled: true),
-              ],
-            )
-                : null,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                clipBehavior: Clip.none,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await authProvider.refreshUserStats();
+        },
+        child: CustomScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 160,
+              pinned: true,
+              backgroundColor: bgColor,
+              elevation: 0,
+              title: _showTitle
+                  ? Row(
                 children: [
-                  Container(
-                    height: 140,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image:
-                        user?.bannerUrl != null &&
-                            user!.bannerUrl!.isNotEmpty
-                            ? NetworkImage(user.bannerUrl!)
-                            : const AssetImage('images/profileBg.jpeg')
-                        as ImageProvider,
-                        fit: BoxFit.cover,
-                        colorFilter: ColorFilter.mode(
-                          Colors.black.withOpacity(0.4),
-                          BlendMode.darken,
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundImage: user?.avatarUrl != null
+                        ? NetworkImage(user!.avatarUrl!)
+                        : const AssetImage('images/avatar.jpeg')
+                    as ImageProvider,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      user?.username ?? "",
+                      style: GoogleFonts.denkOne(
+                        textStyle: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
                         ),
-                        onError: (exception, stackTrace) {
-                          debugPrint('Error loading banner image: $exception');
-                        },
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (!_showTitle)
-                    SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 5,
-                        ),
-                        child: Align(
-                          alignment: Alignment.topRight,
-                          child: _buildTopIcons(brandColor),
+                  _buildTopIcons(brandColor, isScrolled: true),
+                ],
+              )
+                  : null,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      height: 140,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image:
+                          user?.bannerUrl != null &&
+                              user!.bannerUrl!.isNotEmpty
+                              ? NetworkImage(user.bannerUrl!)
+                              : const AssetImage('images/profileBg.jpeg')
+                          as ImageProvider,
+                          fit: BoxFit.cover,
+                          colorFilter: ColorFilter.mode(
+                            Colors.black.withOpacity(0.4),
+                            BlendMode.darken,
+                          ),
+                          onError: (exception, stackTrace) {
+                            debugPrint(
+                              'Error loading banner image: $exception',
+                            );
+                          },
                         ),
                       ),
                     ),
-                  Positioned(
-                    bottom: 10,
-                    left: 20,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: bgColor,
-                        borderRadius: BorderRadius.circular(25),
+                    if (!_showTitle)
+                      SafeArea(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 5,
+                          ),
+                          child: Align(
+                            alignment: Alignment.topRight,
+                            child: _buildTopIcons(brandColor),
+                          ),
+                        ),
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: user?.avatarUrl != null
-                            ? Image.network(
-                          user!.avatarUrl!,
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
-                          errorBuilder: (c, e, s) => Image.asset(
+                    Positioned(
+                      bottom: 10,
+                      left: 20,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: user?.avatarUrl != null
+                              ? Image.network(
+                            user!.avatarUrl!,
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                            errorBuilder: (c, e, s) => Image.asset(
+                              'images/avatar.jpeg',
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                              : Image.asset(
                             'images/avatar.jpeg',
                             width: 100,
                             height: 100,
                             fit: BoxFit.cover,
                           ),
-                        )
-                            : Image.asset(
-                          'images/avatar.jpeg',
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: Transform.translate(
-              offset: const Offset(0, 10),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (authProvider.isAuthenticated) ...[
-                                Row(
-                                  children: [
-                                    Text(
-                                      user?.username ?? "",
-                                      style: GoogleFonts.hennyPenny(
-                                        textStyle: TextStyle(
-                                          fontSize: 32,
-                                          fontWeight: FontWeight.bold,
-                                          color: textColor,
+            SliverToBoxAdapter(
+              child: Transform.translate(
+                offset: const Offset(0, 10),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (authProvider.isAuthenticated) ...[
+                                  Row(
+                                    children: [
+                                      Text(
+                                        user?.username ?? "",
+                                        style: GoogleFonts.hennyPenny(
+                                          textStyle: TextStyle(
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.bold,
+                                            color: textColor,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                            const EditProfileScreen(),
-                                          ),
-                                        );
-                                      },
-                                      child: Icon(
-                                        Icons.edit_rounded,
-                                        size: 20,
-                                        color: textColor.withOpacity(0.6),
+                                      const SizedBox(width: 10),
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                              const EditProfileScreen(),
+                                            ),
+                                          );
+                                        },
+                                        child: Icon(
+                                          Icons.edit_rounded,
+                                          size: 20,
+                                          color: textColor.withOpacity(0.6),
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                Text(
-                                  user?.bio ?? "No bio available",
-                                  style: TextStyle(
-                                    color: textColor.withOpacity(0.6),
-                                    fontSize: 16,
+                                    ],
                                   ),
-                                ),
-                                const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      PhosphorIcons.calendarDots(),
-                                      size: 18,
-                                      color: textColor.withOpacity(0.4),
+                                  Text(
+                                    user?.bio ?? "No bio available",
+                                    style: TextStyle(
+                                      color: textColor.withOpacity(0.6),
+                                      fontSize: 16,
                                     ),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      user?.createdAt != null
-                                          ? "Member since ${user!.createdAt!.year}"
-                                          : "",
-                                      style: TextStyle(
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        PhosphorIcons.calendarDots(),
+                                        size: 18,
                                         color: textColor.withOpacity(0.4),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        user?.createdAt != null
+                                            ? "Member since ${user!.createdAt!.year}"
+                                            : "",
+                                        style: TextStyle(
+                                          color: textColor.withOpacity(0.4),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ] else ...[
+                                  const SizedBox(height: 10),
+                                  _buildGoogleSignUpButton(
+                                    authProvider,
+                                    brandColor,
+                                    textColor,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: brandColor.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Icon(
+                              PhosphorIcons.shareNetwork(),
+                              color: textColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildStatItem(
+                              user?.stats?.libraryCount.toString() ?? "0",
+                              "in Library",
+                              textColor,
+                            ),
+                            _buildDivider(textColor),
+                            _buildStatItem(
+                              _formatReadingTime(
+                                user?.stats?.totalReadingTimeMinutes ?? 0,
+                              ),
+                              "reading",
+                              textColor,
+                            ),
+                            _buildDivider(textColor),
+                            _buildStatItem(
+                              user?.stats?.mangasReadToday.toString() ?? "0",
+                              "mangas read",
+                              textColor,
+                            ),
+                            _buildDivider(textColor),
+                            _buildStatItem(
+                              user?.stats?.commentsCount.toString() ?? "0",
+                              "comments",
+                              textColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildImageBadge(
+                              'images/badge1.png',
+                              "Night Owl",
+                              textColor,
+                            ),
+                            _buildImageBadge(
+                              'images/badge2.png',
+                              "Touch Grass",
+                              textColor,
+                            ),
+                            _buildImageBadge(
+                              'images/badge3.png',
+                              "Offline Samurai",
+                              textColor,
+                            ),
+                            _buildImageBadge(
+                              'images/badge4.png',
+                              "Keyboard Warrior",
+                              textColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        children: [
+                          _buildSingleTile(
+                            "Download Queue",
+                            PhosphorIcons.cloudArrowDown(),
+                            cardColor,
+                            textColor,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                  const DownloadQueueScreen(),
                                 ),
-                              ] else ...[
-                                const SizedBox(height: 10),
-                                _buildGoogleSignUpButton(
-                                  authProvider,
-                                  brandColor,
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: cardColor,
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: Column(
+                              children: [
+                                _buildGroupTile(
+                                  "Settings",
+                                  PhosphorIcons.gear(),
+                                  true,
+                                      () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                        const SettingsScreen(),
+                                      ),
+                                    );
+                                  },
+                                  textColor,
+                                ),
+                                _buildGroupTile(
+                                  "Inbox",
+                                  PhosphorIcons.mailbox(),
+                                  true,
+                                      () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                        const InboxScreen(),
+                                      ),
+                                    );
+                                  },
+                                  textColor,
+                                ),
+                                _buildGroupTile(
+                                  "Stats",
+                                  PhosphorIcons.chartLineUp(),
+                                  false,
+                                      () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                        const StatsScreen(),
+                                      ),
+                                    );
+                                  },
                                   textColor,
                                 ),
                               ],
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: brandColor.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Icon(
-                            PhosphorIcons.shareNetwork(),
-                            color: textColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildStatItem(
-                            user?.stats?.libraryCount.toString() ?? "0",
-                            "in Library",
-                            textColor,
-                          ),
-                          _buildDivider(textColor),
-                          _buildStatItem(
-                            _formatReadingTime(
-                              user?.stats?.readingTimeMinutes ?? 0,
                             ),
-                            "reading",
-                            textColor,
                           ),
-                          _buildDivider(textColor),
-                          _buildStatItem(
-                            user?.stats?.chaptersReadToday.toString() ?? "0",
-                            "chapters read",
-                            textColor,
-                          ),
-                          _buildDivider(textColor),
-                          _buildStatItem(
-                            user?.stats?.commentsToday.toString() ?? "0",
-                            "comments",
-                            textColor,
+                          const SizedBox(height: 20),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: cardColor,
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: Column(
+                              children: [
+                                _buildSwitchTile(
+                                  "Dark Mode",
+                                  PhosphorIcons.sun(),
+                                  themeProvider.pureBlackDarkMode,
+                                      (val) {
+                                    themeProvider.setPureBlackDarkMode(val);
+                                  },
+                                  textColor,
+                                ),
+                                _buildGroupTile(
+                                  "Help & Support",
+                                  PhosphorIcons.question(),
+                                  true,
+                                      () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                        const HelpAndSupportScreen(),
+                                      ),
+                                    );
+                                  },
+                                  textColor,
+                                ),
+                                _buildGroupTile(
+                                  "Donate",
+                                  PhosphorIcons.tipJar(),
+                                  true,
+                                      () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                        const DonateScreen(),
+                                      ),
+                                    );
+                                  },
+                                  textColor,
+                                ),
+                                _buildGroupTile(
+                                  "About",
+                                  PhosphorIcons.info(),
+                                  false,
+                                      () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                        const AboutScreen(),
+                                      ),
+                                    );
+                                  },
+                                  textColor,
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildImageBadge(
-                            'images/badge1.png',
-                            "Night Owl",
-                            textColor,
-                          ),
-                          _buildImageBadge(
-                            'images/badge2.png',
-                            "Touch Grass",
-                            textColor,
-                          ),
-                          _buildImageBadge(
-                            'images/badge3.png',
-                            "Offline Samurai",
-                            textColor,
-                          ),
-                          _buildImageBadge(
-                            'images/badge4.png',
-                            "Keyboard Warrior",
-                            textColor,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        _buildSingleTile(
-                          "Download Queue",
-                          PhosphorIcons.cloudArrowDown(),
-                          cardColor,
-                          textColor,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                const DownloadQueueScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          child: Column(
-                            children: [
-                              _buildGroupTile(
-                                "Settings",
-                                Icons.settings_rounded,
-                                true,
-                                    () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                      const SettingsScreen(),
-                                    ),
-                                  );
-                                },
-                                textColor,
-                              ),
-                              _buildGroupTile(
-                                "Inbox",
-                                PhosphorIcons.mailbox(),
-                                true,
-                                    () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const InboxScreen(),
-                                    ),
-                                  );
-                                },
-                                textColor,
-                              ),
-                              _buildGroupTile(
-                                "Stats",
-                                PhosphorIcons.chartLineUp(),
-                                false,
-                                    () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const StatsScreen(),
-                                    ),
-                                  );
-                                },
-                                textColor,
-                              ),
-                            ],
+                    const SizedBox(height: 30),
+                    if (authProvider.isAuthenticated)
+                      TextButton(
+                        onPressed: () async {
+                          await authProvider.logout();
+                          if (context.mounted) {
+                            Navigator.pushReplacementNamed(context, '/login');
+                          }
+                        },
+                        child: const Text(
+                          "Log Out",
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(25),
+                      )
+                    else
+                      TextButton(
+                        onPressed: () => Navigator.pushNamed(context, '/login'),
+                        child: Text(
+                          "Log In",
+                          style: TextStyle(
+                            color: brandColor,
+                            fontWeight: FontWeight.bold,
                           ),
-                          child: Column(
-                            children: [
-                              _buildSwitchTile(
-                                "Dark Mode",
-                                PhosphorIcons.sun(),
-                                themeProvider.pureBlackDarkMode,
-                                    (val) {
-                                  themeProvider.setPureBlackDarkMode(val);
-                                },
-                                textColor,
-                              ),
-                              _buildGroupTile(
-                                "Help & Support",
-                                PhosphorIcons.question(),
-                                true,
-                                    () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                      const HelpAndSupportScreen(),
-                                    ),
-                                  );
-                                },
-                                textColor,
-                              ),
-                              _buildGroupTile(
-                                "Donate",
-                                PhosphorIcons.tipJar(),
-                                true,
-                                    () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                      const DonateScreen(),
-                                    ),
-                                  );
-                                },
-                                textColor,
-                              ),
-                              _buildGroupTile(
-                                "About",
-                                PhosphorIcons.info(),
-                                false,
-                                    () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const AboutScreen(),
-                                    ),
-                                  );
-                                },
-                                textColor,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  if (authProvider.isAuthenticated)
-                    TextButton(
-                      onPressed: () async {
-                        await authProvider.logout();
-                        if (context.mounted) {
-                          Navigator.pushReplacementNamed(context, '/login');
-                        }
-                      },
-                      child: const Text(
-                        "Log Out",
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    )
-                  else
-                    TextButton(
-                      onPressed: () => Navigator.pushNamed(context, '/login'),
-                      child: Text(
-                        "Log In",
-                        style: TextStyle(
-                          color: brandColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 80),
-                ],
+                    const SizedBox(height: 80),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: MainNavigationBar(
         currentIndex: _currentIndex,
@@ -576,7 +587,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               MaterialPageRoute(builder: (context) => const SettingsScreen()),
             );
           },
-          icon: Icon(PhosphorIcons.gear(), color: iconColor, size: 28),
+          icon: Icon(Icons.settings_rounded, color: iconColor, size: 28),
         ),
       ],
     );

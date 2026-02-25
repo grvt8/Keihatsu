@@ -152,7 +152,14 @@ class LibraryDisplaySettingsSheet extends StatelessWidget {
                   activeColor: brandColor,
                   onChanged: (val) {
                     if (val != null) {
-                      provider.updateFilters(state.copyWith(sortBy: val));
+                      // Set default order based on sort type
+                      String newOrder = state.order;
+                      if (val == 'alphabetical') {
+                        newOrder = 'asc';
+                      } else {
+                        newOrder = 'desc';
+                      }
+                      provider.updateFilters(state.copyWith(sortBy: val, order: newOrder));
                     }
                   },
                 ),

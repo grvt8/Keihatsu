@@ -17,8 +17,29 @@ class UserRepository {
     required this.fileService,
   });
 
-  Future<LocalUserPreferences?> getPreferences() async {
-    return await isar.collection<LocalUserPreferences>().where().findFirst();
+  Future<UserPreferences?> getPreferences() async {
+    final local = await isar.collection<LocalUserPreferences>().where().findFirst();
+    if (local == null) return null;
+
+    final Map<String, dynamic> sourcePrefsJson = local.sourcePreferencesJson.isNotEmpty
+        ? json.decode(local.sourcePreferencesJson)
+        : {};
+
+    final Map<String, SourcePreference> sourcePrefs = sourcePrefsJson.map(
+            (k, v) => MapEntry(k, SourcePreference.fromJson(v))
+    );
+
+    return UserPreferences(
+      libraryDisplayStyle: local.libraryDisplayStyle,
+      libraryItemsPerRow: local.libraryItemsPerRow,
+      overlayShowDownloaded: local.overlayShowDownloaded,
+      overlayShowUnread: local.overlayShowUnread,
+      overlayShowLanguage: local.overlayShowLanguage,
+      tabsShowCategories: local.tabsShowCategories,
+      tabsShowItemCount: local.tabsShowItemCount,
+      categoriesDisplayMode: local.categoriesDisplayMode,
+      sourcePreferences: sourcePrefs,
+    );
   }
 
   Future<void> refreshPreferences(String token) async {
@@ -27,15 +48,16 @@ class UserRepository {
 
     try {
       final prefsData = await api.getPreferences(token);
-      await _savePreferencesLocally(prefsData);
+      await savePreferencesLocally(prefsData);
     } catch (e) {
       print('Error refreshing preferences: $e');
     }
   }
 
-  Future<void> _savePreferencesLocally(UserPreferences prefsData) async {
-    final localPrefs = await getPreferences() ?? LocalUserPreferences();
-    
+  Future<void> savePreferencesLocally(UserPreferences prefsData) async {
+    final localPrefs = await isar.collection<LocalUserPreferences>().where().findFirst() ?? LocalUserPreferences();
+
+    localPrefs.libraryDisplayStyle = prefsData.libraryDisplayStyle;
     localPrefs.categoriesDisplayMode = prefsData.categoriesDisplayMode;
     localPrefs.libraryItemsPerRow = prefsData.libraryItemsPerRow;
     localPrefs.overlayShowDownloaded = prefsData.overlayShowDownloaded;
@@ -44,18 +66,19 @@ class UserRepository {
     localPrefs.tabsShowCategories = prefsData.tabsShowCategories;
     localPrefs.tabsShowItemCount = prefsData.tabsShowItemCount;
     localPrefs.sourcePreferencesJson = json.encode(
-      prefsData.sourcePreferences.map((k, v) => MapEntry(k, v.toJson()))
+        prefsData.sourcePreferences.map((k, v) => MapEntry(k, v.toJson()))
     );
-    
+
     await isar.writeTxn(() => isar.collection<LocalUserPreferences>().put(localPrefs));
   }
 
   Future<void> updatePreferences(String token, Map<String, dynamic> updates) async {
     try {
       final updatedPrefs = await api.updatePreferences(token, updates);
-      await _savePreferencesLocally(updatedPrefs);
+      await savePreferencesLocally(updatedPrefs);
     } catch (e) {
       print('Error updating preferences: $e');
+      rethrow;
     }
   }
 
@@ -63,12 +86,13 @@ class UserRepository {
     final prefs = await getPreferences();
     if (prefs == null) return;
 
-    Map<String, dynamic> sourcePrefs = json.decode(prefs.sourcePreferencesJson);
-    final current = sourcePrefs[sourceId] ?? {'enabled': true, 'pinned': false};
-    
+    final current = prefs.sourcePreferences[sourceId];
+    final currentEnabled = current?.enabled ?? true;
+    final currentPinned = current?.pinned ?? false;
+
     final newSourcePref = {
-      'enabled': enabled ?? current['enabled'],
-      'pinned': pinned ?? current['pinned'],
+      'enabled': enabled ?? currentEnabled,
+      'pinned': pinned ?? currentPinned,
     };
 
     await updatePreferences(token, {

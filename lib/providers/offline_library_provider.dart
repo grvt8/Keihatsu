@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/local_models.dart';
 import '../models/manga.dart';
 import '../services/library_repository.dart';
@@ -11,7 +12,7 @@ class LibraryFilterState {
   bool filterBookmarked = false;
   bool filterCompleted = false;
   String? search;
-  String sortBy = 'date_added';
+  String sortBy = 'last_read';
   String order = 'desc';
 
   LibraryFilterState();
@@ -73,6 +74,19 @@ class OfflineLibraryProvider with ChangeNotifier {
       _categories = categories;
       notifyListeners();
     });
+
+    _loadSortPreferences();
+  }
+
+  Future<void> _loadSortPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    final sortBy = prefs.getString('library_sort_by') ?? 'last_read';
+    final order = prefs.getString('library_sort_order') ?? 'desc';
+
+    _filterState.sortBy = sortBy;
+    _filterState.order = order;
+    notifyListeners();
+    refresh(true);
   }
 
   List<LocalLibraryEntry> get library => _library;
@@ -83,7 +97,15 @@ class OfflineLibraryProvider with ChangeNotifier {
 
   void updateFilters(LibraryFilterState newState) {
     _filterState = newState;
+    _saveSortPreferences(newState.sortBy, newState.order);
+    notifyListeners();
     refresh(true);
+  }
+
+  Future<void> _saveSortPreferences(String sortBy, String order) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('library_sort_by', sortBy);
+    await prefs.setString('library_sort_order', order);
   }
 
   Future<void> refresh(bool force) async {
@@ -158,9 +180,11 @@ class OfflineLibraryProvider with ChangeNotifier {
   // --- Category operations ---
 
   List<LocalLibraryEntry> getLibraryForCategory(String categoryName) {
+    List<LocalLibraryEntry> filtered;
+
     if (categoryName == "Default") {
       // Default = Items with NO category assignments
-      return _library.where((entry) {
+      filtered = _library.where((entry) {
         return !_categoryAssignments.any(
               (assignment) =>
           assignment.mangaId == entry.mangaId &&
@@ -176,7 +200,7 @@ class OfflineLibraryProvider with ChangeNotifier {
 
       if (category.id == -1) return [];
 
-      return _library.where((entry) {
+      filtered = _library.where((entry) {
         return _categoryAssignments.any(
               (assignment) =>
           assignment.mangaId == entry.mangaId &&
@@ -185,6 +209,79 @@ class OfflineLibraryProvider with ChangeNotifier {
         );
       }).toList();
     }
+
+    // Apply local filters
+    if (_filterState.filterDownloaded) {
+      filtered = filtered.where((e) => e.downloadedCount > 0).toList();
+    }
+    if (_filterState.filterUnread) {
+      filtered = filtered.where((e) => e.unreadCount > 0).toList();
+    }
+    if (_filterState.filterStarted) {
+      filtered = filtered.where((e) => e.isStarted).toList();
+    }
+    if (_filterState.filterBookmarked) {
+      filtered = filtered.where((e) => e.isBookmarked).toList();
+    }
+    if (_filterState.filterCompleted) {
+      filtered = filtered.where((e) => e.isCompleted).toList();
+    }
+    if (_filterState.search != null && _filterState.search!.isNotEmpty) {
+      final query = _filterState.search!.toLowerCase();
+      filtered = filtered
+          .where(
+            (e) =>
+        e.title.toLowerCase().contains(query) ||
+            (e.author?.toLowerCase().contains(query) ?? false),
+      )
+          .toList();
+    }
+
+    return _sortEntries(filtered);
+  }
+
+  List<LocalLibraryEntry> _sortEntries(List<LocalLibraryEntry> entries) {
+    if (entries.isEmpty) return entries;
+
+    final isAsc = _filterState.order == 'asc';
+    final sortBy = _filterState.sortBy;
+
+    entries.sort((a, b) {
+      int cmp = 0;
+      switch (sortBy) {
+        case 'alphabetical':
+          cmp = a.title.toLowerCase().compareTo(b.title.toLowerCase());
+          break;
+        case 'last_read':
+          final aDate = a.lastReadAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bDate = b.lastReadAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          cmp = aDate.compareTo(bDate);
+          break;
+        case 'last_updated':
+          final aDate =
+              a.lastUpdatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bDate =
+              b.lastUpdatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          cmp = aDate.compareTo(bDate);
+          break;
+        case 'unread_count':
+          cmp = a.unreadCount.compareTo(b.unreadCount);
+          break;
+        case 'total_chapters':
+          cmp = a.totalChapters.compareTo(b.totalChapters);
+          break;
+        case 'date_added':
+          final aDate = a.dateAddedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bDate = b.dateAddedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          cmp = aDate.compareTo(bDate);
+          break;
+        default:
+          cmp = 0;
+      }
+      return isAsc ? cmp : -cmp;
+    });
+
+    return entries;
   }
 
   Future<void> createCategory(String name) async {

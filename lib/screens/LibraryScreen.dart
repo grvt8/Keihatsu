@@ -315,41 +315,84 @@ class _LibraryScreenState extends State<LibraryScreen>
   }
 
   Widget _buildBadgeRow(LocalLibraryEntry entry, dynamic prefs) {
+    // Badges are not mutually exclusive - they can stack
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if ((prefs?.overlayShowUnread ?? true) && entry.unreadCount > 0) ...[
-          _buildSingleBadge("${entry.unreadCount}", const Color(0xFFFFB3B3)),
-          const SizedBox(width: 2),
-        ],
+        // 1. Downloaded Badge
         if ((prefs?.overlayShowDownloaded ?? true) &&
             entry.downloadedCount > 0) ...[
           _buildSingleBadge(
             "${entry.downloadedCount}",
-            const Color(0xFF8DE19C),
+            const Color(0xFF8DE19C), // Light Green
+            textColor: Colors.black,
+            icon: Icons.download_rounded,
           ),
-          const SizedBox(width: 2),
+          const SizedBox(width: 4),
+        ],
+
+        // 2. Unread Badge
+        if ((prefs?.overlayShowUnread ?? true) && entry.unreadCount > 0) ...[
+          _buildSingleBadge(
+            "${entry.unreadCount}",
+            const Color(0xFF6B9EFF), // Blue
+            textColor: Colors.white,
+          ),
+          const SizedBox(width: 4),
+        ],
+
+        // 3. Language Badge (Optional but good for completeness)
+        if ((prefs?.overlayShowLanguage ?? true) &&
+            entry.language != null &&
+            entry.language!.isNotEmpty) ...[
+          _buildSingleBadge(
+            entry.language!.toUpperCase(),
+            const Color(0xFF333333), // Dark Gray
+            textColor: Colors.white,
+          ),
         ],
       ],
     );
   }
 
-  Widget _buildSingleBadge(String text, Color color) {
+  Widget _buildSingleBadge(
+      String text,
+      Color color, {
+        Color textColor = Colors.black,
+        IconData? icon,
+      }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        text,
-        style: GoogleFonts.denkOne(
-          textStyle: const TextStyle(
-            color: Colors.black,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
+        borderRadius: BorderRadius.circular(4),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
           ),
-        ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 10, color: textColor),
+            const SizedBox(width: 2),
+          ],
+          Text(
+            text,
+            style: GoogleFonts.roboto(
+              textStyle: TextStyle(
+                color: textColor,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                height: 1.0,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -5,15 +5,24 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import '../theme_provider.dart';
 import 'UserProfileSheet.dart';
 import '../providers/auth_provider.dart';
+import '../providers/comments_provider.dart';
+import '../models/comment.dart';
+
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class CommentsBottomSheet extends StatefulWidget {
   final ScrollController scrollController;
   final int currentChapterIndex;
+  final String mangaId;
+  final String chapterId;
 
   const CommentsBottomSheet({
     super.key,
     required this.scrollController,
     required this.currentChapterIndex,
+    required this.mangaId,
+    required this.chapterId,
   });
 
   @override
@@ -23,6 +32,8 @@ class CommentsBottomSheet extends StatefulWidget {
 class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   final FocusNode _focusNode = FocusNode();
   final TextEditingController _commentController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+  List<XFile> _selectedImages = [];
   bool _isFocused = false;
   bool _isOnline = true;
 
@@ -37,6 +48,15 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     _checkConnectivity();
     Connectivity().onConnectivityChanged.listen((result) {
       _updateConnectionStatus(result);
+    });
+
+    // Fetch comments
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      Provider.of<CommentsProvider>(
+        context,
+        listen: false,
+      ).fetchComments(widget.mangaId, widget.chapterId, auth.token);
     });
   }
 
@@ -67,6 +87,54 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     );
   }
 
+  Future<void> _pickImage() async {
+    final List<XFile> images = await _picker.pickMultiImage();
+    if (images.isNotEmpty) {
+      setState(() {
+        _selectedImages.addAll(images);
+      });
+      // Ensure focus to show expanded state
+      if (!_isFocused) {
+        _focusNode.requestFocus();
+      }
+    }
+  }
+
+  Future<void> _handlePostComment() async {
+    if (_commentController.text.trim().isEmpty && _selectedImages.isEmpty)
+      return;
+
+    final content = _commentController.text;
+    final images = List<String>.from(_selectedImages.map((e) => e.path));
+
+    _commentController.clear();
+    setState(() {
+      _selectedImages = [];
+    });
+    _focusNode.unfocus();
+
+    try {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final commentsProvider = Provider.of<CommentsProvider>(
+        context,
+        listen: false,
+      );
+      await commentsProvider.postComment(
+        widget.mangaId,
+        widget.chapterId,
+        content,
+        auth.token!,
+        imagePaths: images,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Failed to post comment: $e")));
+      }
+    }
+  }
+
   @override
   void dispose() {
     _focusNode.dispose();
@@ -74,10 +142,27 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     super.dispose();
   }
 
+  String _formatTime(DateTime time) {
+    final now = DateTime.now();
+    final difference = now.difference(time);
+    if (difference.inDays > 30) {
+      return '${(difference.inDays / 30).floor()} months ago';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays} days ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} hours ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} minutes ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
+    final commentsProvider = Provider.of<CommentsProvider>(context);
     final user = authProvider.user;
 
     final brandColor = themeProvider.brandColor;
@@ -92,156 +177,161 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
       userAvatar = const AssetImage("images/user3.jpeg");
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      child: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              controller: widget.scrollController,
-              padding: EdgeInsets.zero,
-              children: [
-                // Drag Handle
-                Center(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 12),
-                    width: 45,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: textColor.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(10),
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                controller: widget.scrollController,
+                padding: EdgeInsets.zero,
+                children: [
+                  // Drag Handle
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      width: 45,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: textColor.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
-                ),
-                // Navigation & Meta Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 5,
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildNavButton(
-                            context,
-                            PhosphorIcons.caretLeft(),
-                            "Episode ${widget.currentChapterIndex + 262}",
-                          ),
-                          _buildNavButton(
-                            context,
-                            PhosphorIcons.caretRight(),
-                            "Episode ${widget.currentChapterIndex + 264}",
-                            isRight: true,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 15),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Icon(
-                            PhosphorIcons.house(),
-                            size: 22,
-                            color: textColor.withOpacity(0.7),
-                          ),
-                          const SizedBox(width: 20),
-                          Icon(
-                            PhosphorIcons.info(),
-                            size: 22,
-                            color: textColor.withOpacity(0.7),
-                          ),
-                          const SizedBox(width: 20),
-                          Icon(
-                            PhosphorIcons.shareNetwork(),
-                            size: 22,
-                            color: textColor.withOpacity(0.7),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 30, thickness: 0.5),
-
-                // Content Area
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Comments on Episode ${widget.currentChapterIndex + 263}",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
+                  // Navigation & Meta Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 5,
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildNavButton(
+                              context,
+                              PhosphorIcons.caretLeft(),
+                              "Episode ${widget.currentChapterIndex + 262}",
+                            ),
+                            _buildNavButton(
+                              context,
+                              PhosphorIcons.caretRight(),
+                              "Episode ${widget.currentChapterIndex + 264}",
+                              isRight: true,
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 25),
-                      // Sorting Filters
-                      Row(
-                        children: [
-                          _buildFilterChip("Top", true, brandColor),
-                          const SizedBox(width: 12),
-                          _buildFilterChip("New", false, brandColor),
-                        ],
-                      ),
-                      const SizedBox(height: 30),
-                      // Refined Threaded Comment List
-                      _buildCommentThread(
-                        context,
-                        user: "Natalie",
-                        userImage: "images/user2.jpeg",
-                        time: "1 month ago",
-                        text: "Bro really pulled out the strap 🤣",
-                        likes: "52",
-                        image: "images/orb.jpeg",
-                        replies: [
-                          _buildCommentThread(
-                            context,
-                            user: "Raikage",
-                            userImage: "images/user1.jpeg",
-                            time: "1 month ago",
-                            text: "His hiding it",
-                            likes: "8",
-                            isReply: true,
-                          ),
-                          _buildCommentThread(
-                            context,
-                            user: "Kivye",
-                            userImage: "images/user5.jpg",
-                            time: "1 month ago",
-                            text: "Yeah but why tho",
-                            likes: "4",
-                            isReply: true,
-                            replyTo: "Raikage",
-                          ),
-                        ],
-                        collapsedCount: 10,
-                      ),
-                      const SizedBox(height: 25),
-                      _buildCommentThread(
-                        context,
-                        user: "insomnia",
-                        userImage: "images/user4.jpeg",
-                        time: "2 weeks ago",
-                        text:
-                        "This chapter was absolute fire! The art style keeps getting better.",
-                        likes: "128",
-                      ),
-                    ],
+                        const SizedBox(height: 15),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Icon(
+                              PhosphorIcons.house(),
+                              size: 22,
+                              color: textColor.withOpacity(0.7),
+                            ),
+                            const SizedBox(width: 20),
+                            Icon(
+                              PhosphorIcons.info(),
+                              size: 22,
+                              color: textColor.withOpacity(0.7),
+                            ),
+                            const SizedBox(width: 20),
+                            Icon(
+                              PhosphorIcons.shareNetwork(),
+                              size: 22,
+                              color: textColor.withOpacity(0.7),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  const Divider(height: 30, thickness: 0.5),
+
+                  // Content Area
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Comments on Episode ${widget.currentChapterIndex + 263}",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                        const SizedBox(height: 25),
+                        // Sorting Filters
+                        Row(
+                          children: [
+                            _buildFilterChip("Top", true, brandColor),
+                            const SizedBox(width: 12),
+                            _buildFilterChip("New", false, brandColor),
+                          ],
+                        ),
+                        const SizedBox(height: 30),
+                        // Threaded Comment List
+                        if (commentsProvider.isLoading)
+                          const Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        else if (commentsProvider.error != null)
+                          Center(child: Text(commentsProvider.error!))
+                        else if (commentsProvider.comments.isEmpty)
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const SizedBox(height: 40),
+                                  Icon(
+                                    PhosphorIcons.chatTeardropDots(
+                                      PhosphorIconsStyle.fill,
+                                    ),
+                                    size: 64,
+                                    color: textColor.withOpacity(0.2),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    "Be the first to comment",
+                                    style: TextStyle(
+                                      color: textColor.withOpacity(0.6),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            ...commentsProvider.comments.map(
+                                  (comment) =>
+                                  _buildCommentThread(context, comment: comment),
+                            ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          // Input Area
-          _buildInputArea(context, bgColor, textColor, userAvatar, brandColor),
-        ],
+            // Input Area
+            _buildInputArea(
+              context,
+              bgColor,
+              textColor,
+              userAvatar,
+              brandColor,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -280,78 +370,6 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
       );
     }
 
-    if (_isFocused) {
-      // Expanded/Focused State
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: bgColor,
-          border: Border(top: BorderSide(color: textColor.withOpacity(0.1))),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(radius: 18, backgroundImage: userAvatar),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      constraints: const BoxConstraints(maxHeight: 120),
-                      child: TextField(
-                        focusNode: _focusNode,
-                        controller: _commentController,
-                        maxLines: null,
-                        style: TextStyle(color: textColor),
-                        decoration: InputDecoration(
-                          hintText: "Add comment...",
-                          hintStyle: TextStyle(
-                            color: textColor.withOpacity(0.5),
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _buildActionIcon(PhosphorIcons.image(), textColor),
-                  const SizedBox(width: 20),
-                  _buildActionIcon(PhosphorIcons.smiley(), textColor),
-                  const SizedBox(width: 20),
-                  _buildActionIcon(PhosphorIcons.at(), textColor),
-                  const SizedBox(width: 20),
-                  _buildActionIcon(PhosphorIcons.gift(), textColor),
-                  const Spacer(),
-                  Container(
-                    width: 35,
-                    height: 35,
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent.shade400, // Brand-like color
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      PhosphorIcons.arrowUp(PhosphorIconsStyle.bold),
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // Default Unfocused State
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -360,52 +378,138 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
       ),
       child: SafeArea(
         top: false,
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            CircleAvatar(radius: 18, backgroundImage: userAvatar),
-            const SizedBox(width: 12),
-            Expanded(
-              child: GestureDetector(
-                onTap: () => _focusNode.requestFocus(),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  height: 45,
-                  decoration: BoxDecoration(
-                    color: textColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          "Add comment...",
-                          style: TextStyle(color: textColor.withOpacity(0.5)),
-                        ),
+            Row(
+              crossAxisAlignment: _isFocused
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.center,
+              children: [
+                CircleAvatar(radius: 18, backgroundImage: userAvatar),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    decoration: !_isFocused
+                        ? BoxDecoration(
+                      color: textColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(24),
+                    )
+                        : null,
+                    constraints: _isFocused
+                        ? const BoxConstraints(maxHeight: 120)
+                        : const BoxConstraints(minHeight: 45),
+                    child: TextField(
+                      focusNode: _focusNode,
+                      controller: _commentController,
+                      maxLines: null,
+                      style: TextStyle(color: textColor),
+                      decoration: InputDecoration(
+                        hintText: "Add comments...",
+                        hintStyle: TextStyle(color: textColor.withOpacity(0.5)),
+                        border: InputBorder.none,
+                        contentPadding: !_isFocused
+                            ? const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        )
+                            : EdgeInsets.zero,
+                        isDense: true,
+                        suffixIcon: !_isFocused
+                            ? GestureDetector(
+                          onTap: _pickImage,
+                          child: Icon(
+                            PhosphorIcons.image(),
+                            color: textColor.withOpacity(0.6),
+                            size: 24,
+                          ),
+                        )
+                            : null,
                       ),
-                      _buildActionIcon(
-                        PhosphorIcons.image(),
-                        textColor,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      _buildActionIcon(
-                        PhosphorIcons.smiley(),
-                        textColor,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      _buildActionIcon(PhosphorIcons.at(), textColor, size: 20),
-                      const SizedBox(width: 12),
-                      _buildActionIcon(
-                        PhosphorIcons.gift(),
-                        textColor,
-                        size: 20,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
+            if (_isFocused) ...[
+              const SizedBox(height: 12),
+              if (_selectedImages.isNotEmpty)
+                Container(
+                  height: 100,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _selectedImages.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.file(
+                                File(_selectedImages[index].path),
+                                height: 100,
+                                width: 100,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedImages.removeAt(index);
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: _buildActionIcon(PhosphorIcons.image(), textColor),
+                  ),
+                  const SizedBox(width: 20),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: _handlePostComment,
+                    child: Container(
+                      width: 35,
+                      height: 35,
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.shade400, // Brand-like color
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        PhosphorIcons.arrowUp(PhosphorIconsStyle.bold),
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -478,21 +582,32 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
 
   Widget _buildCommentThread(
       BuildContext context, {
-        required String user,
-        required String userImage,
-        required String time,
-        required String text,
-        required String likes,
-        String? image,
+        required Comment comment,
         bool isReply = false,
-        String? replyTo,
-        List<Widget>? replies,
-        int? collapsedCount,
       }) {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final commentsProvider = Provider.of<CommentsProvider>(
+      context,
+      listen: false,
+    );
+
     final textColor = themeProvider.themeMode == ThemeMode.dark
         ? Colors.white
         : Colors.black87;
+
+    final user = comment.user?.username ?? "Unknown";
+    final userImage = comment.user?.avatarUrl ?? "images/user3.jpeg";
+    final time = _formatTime(comment.createdAt);
+    final text = comment.content;
+    final likes = comment.upvotes.toString();
+
+    // Check if user voted
+    final userVote = comment.votes?.isNotEmpty == true
+        ? comment.votes!.first.type
+        : null;
+    final isLiked = userVote == 'UPVOTE';
+    final isDisliked = userVote == 'DOWNVOTE';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -522,7 +637,9 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                       children: [
                         CircleAvatar(
                           radius: 14,
-                          backgroundImage: AssetImage(userImage),
+                          backgroundImage: userImage.startsWith('http')
+                              ? NetworkImage(userImage)
+                              : AssetImage(userImage) as ImageProvider,
                         ),
                         const SizedBox(width: 12),
                         Text(
@@ -550,42 +667,32 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (replyTo != null)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  PhosphorIcons.arrowBendUpRight(),
-                                  size: 14,
-                                  color: textColor.withOpacity(0.4),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  "Replying to @$replyTo",
-                                  style: TextStyle(
-                                    color: textColor.withOpacity(0.4),
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         Text(
                           text,
                           style: const TextStyle(fontSize: 15, height: 1.4),
                         ),
-                        if (image != null)
+                        if (comment.images.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 12),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(15),
-                              child: Image.asset(
-                                image,
-                                height: 180,
-                                width: 120,
-                                fit: BoxFit.cover,
+                            child: SizedBox(
+                              height: 180,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: comment.images.length,
+                                itemBuilder: (context, index) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(15),
+                                      child: Image.network(
+                                        comment.images[index],
+                                        height: 180,
+                                        width: 120,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ),
@@ -594,31 +701,65 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                           children: [
                             IconButton(
                               icon: Icon(
-                                PhosphorIcons.arrowFatLinesUp(
+                                isLiked
+                                    ? PhosphorIcons.arrowFatLinesUp(
+                                  PhosphorIconsStyle.fill,
+                                )
+                                    : PhosphorIcons.arrowFatLinesUp(
                                   PhosphorIconsStyle.bold,
                                 ),
                                 size: 20,
-                                color: textColor.withOpacity(0.6),
+                                color: isLiked
+                                    ? Colors.orange
+                                    : textColor.withOpacity(0.6),
                               ),
-                              onPressed: () {},
+                              onPressed: () {
+                                if (auth.token != null) {
+                                  commentsProvider.voteComment(
+                                    comment.id,
+                                    'UPVOTE',
+                                    auth.token!,
+                                    widget.mangaId,
+                                    widget.chapterId,
+                                  );
+                                }
+                              },
                             ),
                             Text(
                               likes,
                               style: TextStyle(
                                 fontSize: 13,
-                                color: textColor.withOpacity(0.6),
+                                color: isLiked
+                                    ? Colors.orange
+                                    : textColor.withOpacity(0.6),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             IconButton(
                               icon: Icon(
-                                PhosphorIcons.arrowFatLineDown(
+                                isDisliked
+                                    ? PhosphorIcons.arrowFatLineDown(
+                                  PhosphorIconsStyle.fill,
+                                )
+                                    : PhosphorIcons.arrowFatLineDown(
                                   PhosphorIconsStyle.bold,
                                 ),
                                 size: 20,
-                                color: textColor.withOpacity(0.6),
+                                color: isDisliked
+                                    ? Colors.blue
+                                    : textColor.withOpacity(0.6),
                               ),
-                              onPressed: () {},
+                              onPressed: () {
+                                if (auth.token != null) {
+                                  commentsProvider.voteComment(
+                                    comment.id,
+                                    'DOWNVOTE',
+                                    auth.token!,
+                                    widget.mangaId,
+                                    widget.chapterId,
+                                  );
+                                }
+                              },
                             ),
                             const SizedBox(width: 10),
                             Text(
@@ -638,7 +779,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                           ],
                         ),
                         // Collapsed Replies Indicator
-                        if (collapsedCount != null && collapsedCount > 0)
+                        if (comment.replies.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 8, bottom: 8),
                             child: Row(
@@ -650,7 +791,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                                 ),
                                 const SizedBox(width: 10),
                                 Text(
-                                  "View $collapsedCount replies",
+                                  "View ${comment.replies.length} replies",
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
@@ -670,7 +811,14 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                     ),
                   ),
                   // Render Sub-replies recursively
-                  if (replies != null) ...replies,
+                  if (comment.replies.isNotEmpty)
+                    ...comment.replies.map(
+                          (reply) => _buildCommentThread(
+                        context,
+                        comment: reply,
+                        isReply: true,
+                      ),
+                    ),
                 ],
               ),
             ),
