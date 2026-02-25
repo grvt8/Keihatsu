@@ -6,6 +6,7 @@ import '../components/MainNavigationBar.dart';
 import '../models/manga.dart';
 import '../services/sources_api.dart';
 import '../theme_provider.dart';
+import '../providers/offline_library_provider.dart';
 import 'MangaDetailsScreen.dart';
 import 'SearchScreen.dart';
 
@@ -28,24 +29,35 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _popularMangaFuture = _sourcesApi.getMangaList(_defaultSourceId, 'popular').then((page) => page.mangas);
-    _latestMangaFuture = _sourcesApi.getMangaList(_defaultSourceId, 'latest').then((page) => page.mangas);
+    _popularMangaFuture = _sourcesApi
+        .getMangaList(_defaultSourceId, 'popular')
+        .then((page) => page.mangas);
+    _latestMangaFuture = _sourcesApi
+        .getMangaList(_defaultSourceId, 'latest')
+        .then((page) => page.mangas);
   }
 
   Future<void> _refreshData() async {
     setState(() {
-      _popularMangaFuture = _sourcesApi.getMangaList(_defaultSourceId, 'popular').then((page) => page.mangas);
-      _latestMangaFuture = _sourcesApi.getMangaList(_defaultSourceId, 'latest').then((page) => page.mangas);
+      _popularMangaFuture = _sourcesApi
+          .getMangaList(_defaultSourceId, 'popular')
+          .then((page) => page.mangas);
+      _latestMangaFuture = _sourcesApi
+          .getMangaList(_defaultSourceId, 'latest')
+          .then((page) => page.mangas);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final offlineLibrary = Provider.of<OfflineLibraryProvider>(context);
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
-    final Color cardColor = isDarkMode ? Colors.white10 : Colors.white.withOpacity(0.5);
+    final Color cardColor = isDarkMode
+        ? Colors.white10
+        : Colors.white.withOpacity(0.5);
     final Color textColor = isDarkMode ? Colors.white : Colors.black87;
 
     return Scaffold(
@@ -57,7 +69,11 @@ class _HomePageState extends State<HomePage> {
         title: Text(
           'Keihatsu',
           style: GoogleFonts.hennyPenny(
-            textStyle: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 24),
+            textStyle: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ),
           ),
         ),
         actions: [
@@ -70,7 +86,10 @@ class _HomePageState extends State<HomePage> {
             },
             icon: Icon(Icons.search_rounded, color: textColor),
           ),
-          IconButton(onPressed: () {}, icon: Icon(Icons.notifications, color: textColor)),
+          IconButton(
+            onPressed: () {},
+            icon: Icon(Icons.notifications, color: textColor),
+          ),
         ],
       ),
       body: RefreshIndicator(
@@ -82,22 +101,50 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Popular Now Section
-              _buildSectionHeader("Popular Now", textColor, onSeeMore: () {
-                Navigator.pushReplacementNamed(context, '/library');
-              }),
-              _buildFutureMangaList(_popularMangaFuture, brandColor, textColor, cardColor, height: 220),
+              _buildSectionHeader(
+                "Popular Now",
+                textColor,
+                onSeeMore: () {
+                  Navigator.pushReplacementNamed(context, '/library');
+                },
+              ),
+              _buildFutureMangaList(
+                _popularMangaFuture,
+                brandColor,
+                textColor,
+                cardColor,
+                offlineLibrary,
+                height: 220,
+              ),
 
               const SizedBox(height: 30),
 
               // Latest Updates Section
               _buildSectionHeader("Latest Updates", textColor),
-              _buildFutureMangaList(_latestMangaFuture, brandColor, textColor, cardColor, height: 200, compact: true),
+              _buildFutureMangaList(
+                _latestMangaFuture,
+                brandColor,
+                textColor,
+                cardColor,
+                offlineLibrary,
+                height: 200,
+                compact: true,
+              ),
 
               const SizedBox(height: 30),
 
               // Recommendations (Using Popular for now)
               _buildSectionHeader("You might like", textColor),
-              _buildFutureMangaList(_popularMangaFuture, brandColor, textColor, cardColor, height: 200, compact: true, skip: 5),
+              _buildFutureMangaList(
+                _popularMangaFuture,
+                brandColor,
+                textColor,
+                cardColor,
+                offlineLibrary,
+                height: 200,
+                compact: true,
+                skip: 5,
+              ),
 
               const SizedBox(height: 100), // Space for navigation bar
             ],
@@ -111,7 +158,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildFutureMangaList(Future<List<Manga>> future, Color brandColor, Color textColor, Color cardColor, {required double height, bool compact = false, int skip = 0}) {
+  Widget _buildFutureMangaList(
+      Future<List<Manga>> future,
+      Color brandColor,
+      Color textColor,
+      Color cardColor,
+      OfflineLibraryProvider offlineLibrary, {
+        required double height,
+        bool compact = false,
+        int skip = 0,
+      }) {
     return FutureBuilder<List<Manga>>(
       future: future,
       builder: (context, snapshot) {
@@ -123,7 +179,9 @@ class _HomePageState extends State<HomePage> {
         } else if (snapshot.hasError) {
           return SizedBox(
             height: height,
-            child: Center(child: Icon(PhosphorIcons.warningCircle(), color: Colors.red)),
+            child: Center(
+              child: Icon(PhosphorIcons.warningCircle(), color: Colors.red),
+            ),
           );
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return SizedBox(
@@ -141,7 +199,15 @@ class _HomePageState extends State<HomePage> {
             itemCount: mangas.length,
             itemBuilder: (context, index) {
               final manga = mangas[index];
-              return _buildMangaCard(context, manga, brandColor, textColor, cardColor, compact: compact);
+              return _buildMangaCard(
+                context,
+                manga,
+                brandColor,
+                textColor,
+                cardColor,
+                offlineLibrary,
+                compact: compact,
+              );
             },
           ),
         );
@@ -149,7 +215,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSectionHeader(String title, Color textColor, {VoidCallback? onSeeMore}) {
+  Widget _buildSectionHeader(
+      String title,
+      Color textColor, {
+        VoidCallback? onSeeMore,
+      }) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 15),
       child: Row(
@@ -158,27 +228,51 @@ class _HomePageState extends State<HomePage> {
           Text(
             title,
             style: GoogleFonts.hennyPenny(
-              textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
+              textStyle: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
             ),
           ),
           if (onSeeMore != null)
             IconButton(
               onPressed: onSeeMore,
-              icon: Icon(PhosphorIcons.arrowRight(), color: textColor.withOpacity(0.6), size: 20),
+              icon: Icon(
+                PhosphorIcons.arrowRight(),
+                color: textColor.withOpacity(0.6),
+                size: 20,
+              ),
             )
           else
-            Icon(PhosphorIcons.caretRight(), color: textColor.withOpacity(0.4), size: 18),
+            Icon(
+              PhosphorIcons.caretRight(),
+              color: textColor.withOpacity(0.4),
+              size: 18,
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildMangaCard(BuildContext context, Manga manga, Color brandColor, Color textColor, Color cardColor, {bool compact = false}) {
+  Widget _buildMangaCard(
+      BuildContext context,
+      Manga manga,
+      Color brandColor,
+      Color textColor,
+      Color cardColor,
+      OfflineLibraryProvider offlineLibrary, {
+        bool compact = false,
+      }) {
+    final isInLibrary = offlineLibrary.isInLibrary(manga.id, manga.sourceId);
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MangaDetailsScreen(manga: manga)),
+          MaterialPageRoute(
+            builder: (context) => MangaDetailsScreen(manga: manga),
+          ),
         );
       },
       child: Container(
@@ -203,20 +297,45 @@ class _HomePageState extends State<HomePage> {
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: Colors.grey[800],
-                        child: const Icon(Icons.broken_image, color: Colors.white54),
+                        child: const Icon(
+                          Icons.broken_image,
+                          color: Colors.white54,
+                        ),
                       ),
                     ),
                     if (!compact)
                       Positioned(
-                        bottom: 0, left: 0, right: 0,
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
                         child: Container(
                           height: 40,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.8),
+                              ],
                             ),
+                          ),
+                        ),
+                      ),
+                    if (isInLibrary)
+                      Positioned(
+                        top: 5,
+                        right: 5,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: brandColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            PhosphorIcons.bookBookmark(PhosphorIconsStyle.fill),
+                            color: Colors.white,
+                            size: 14,
                           ),
                         ),
                       ),
@@ -231,14 +350,22 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Text(
                     manga.title,
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textColor),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (!compact)
                     Text(
                       manga.status ?? "Latest",
-                      style: TextStyle(fontSize: 11, color: brandColor, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: brandColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                 ],
               ),

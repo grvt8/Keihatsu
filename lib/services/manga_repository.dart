@@ -29,6 +29,7 @@ class MangaRepository {
     required int pageIndex,
     String? token, // Auth token for syncing
     bool? isRead,
+    int? readingTimeMs,
   }) async {
     final now = DateTime.now();
 
@@ -83,6 +84,13 @@ class MangaRepository {
         .findFirst();
 
     if (libraryEntry != null) {
+      if (isRead != null) {
+        if (isRead) {
+          if (libraryEntry.unreadCount > 0) libraryEntry.unreadCount -= 1;
+        } else {
+          libraryEntry.unreadCount += 1;
+        }
+      }
       libraryEntry.lastReadAt = now;
       await isar.writeTxn(() async {
         await isar.collection<LocalLibraryEntry>().put(libraryEntry);
@@ -98,6 +106,7 @@ class MangaRepository {
         'pageNumber': pageIndex,
         'lastReadAt': now.toIso8601String(),
         if (isRead != null) 'isRead': isRead,
+        if (readingTimeMs != null) 'readingTimeMs': readingTimeMs,
       };
 
       final connectivity = await Connectivity().checkConnectivity();
@@ -111,6 +120,7 @@ class MangaRepository {
             pageNumber: pageIndex,
             lastReadAt: now,
             isRead: isRead,
+            readingTimeMs: readingTimeMs,
           );
         } catch (e) {
           // If direct sync fails, queue it
@@ -294,6 +304,21 @@ class MangaRepository {
     if (chapter != null) {
       chapter.downloaded = true;
       await isar.writeTxn(() => isar.collection<LocalChapter>().put(chapter));
+
+      // Update LibraryEntry downloaded count
+      final libraryEntry = await isar
+          .collection<LocalLibraryEntry>()
+          .filter()
+          .mangaIdEqualTo(mangaId)
+          .sourceIdEqualTo(sourceId)
+          .findFirst();
+
+      if (libraryEntry != null) {
+        libraryEntry.downloadedCount += 1;
+        await isar.writeTxn(
+              () => isar.collection<LocalLibraryEntry>().put(libraryEntry),
+        );
+      }
     }
 
     // 4. Notify server (optional but requested)

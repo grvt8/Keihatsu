@@ -182,6 +182,26 @@ class LibraryRepository {
       Manga manga, {
         List<String>? categories,
       }) async {
+    // We try to get total chapters if possible from local or basic info
+    // However, manga object passed here might be minimal.
+    // Ideally, we fetch details first or rely on next refresh.
+    // For now, we set unreadCount to 0, but it should be updated on next refresh/detail fetch.
+    // Requirement says: "For newly added manga, initialize the unread count to equal the total number of chapters available."
+    // Since we might not have chapter list yet, we'll try to use existing local data if any.
+
+    int totalChapters = 0;
+    // Try to find if we have chapters locally
+    final chapterCount = await isar
+        .collection<LocalChapter>()
+        .filter()
+        .sourceIdEqualTo(manga.sourceId)
+        .mangaIdEqualTo(manga.id)
+        .count();
+
+    if (chapterCount > 0) {
+      totalChapters = chapterCount;
+    }
+
     final entry = LocalLibraryEntry()
       ..mangaId = manga.id
       ..sourceId = manga.sourceId
@@ -190,7 +210,9 @@ class LibraryRepository {
       ..author = manga.author
       ..language = manga.lang
       ..isBookmarked = true
-      ..dateAddedAt = DateTime.now();
+      ..dateAddedAt = DateTime.now()
+      ..unreadCount = totalChapters // Initialize with available count
+      ..totalChapters = totalChapters;
 
     await isar.writeTxn(() async {
       await isar.collection<LocalLibraryEntry>().put(entry);

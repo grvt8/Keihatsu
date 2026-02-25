@@ -7,13 +7,15 @@ import '../models/user_preferences.dart';
 import '../services/auth_api.dart';
 import '../services/api_constants.dart';
 
-class AuthProvider with ChangeNotifier {
-  static const String _webClientId = '887783028868-hgp7fi78npk9otdkk6hil8ot74asaj83.apps.googleusercontent.com';
+import '../services/user_repository.dart';
 
-  final AuthApi _authApi = AuthApi(
-    baseUrl: ApiConstants.baseUrl,
-  );
+class AuthProvider with ChangeNotifier {
+  static const String _webClientId =
+      '887783028868-hgp7fi78npk9otdkk6hil8ot74asaj83.apps.googleusercontent.com';
+
+  final AuthApi _authApi = AuthApi(baseUrl: ApiConstants.baseUrl);
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final UserRepository userRepository;
   final Future<void> Function()? onLogout;
 
   User? _user;
@@ -28,15 +30,13 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _token != null;
 
-  AuthProvider({this.onLogout}) {
+  AuthProvider({this.onLogout, required this.userRepository}) {
     _init();
   }
 
   Future<void> _init() async {
     try {
-      await _googleSignIn.initialize(
-        serverClientId: _webClientId,
-      );
+      await _googleSignIn.initialize(serverClientId: _webClientId);
       _isInitialized = true;
     } catch (e) {
       debugPrint("GoogleSignIn initialization failed: $e");
@@ -86,31 +86,123 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchPreferences() async {
-    if (_token == null) return;
+  Future<void> refreshUserStats() async {
+    if (_token == null || _user == null) return;
     try {
-      _preferences = await _authApi.getPreferences(_token!);
+      final stats = await _authApi.getUserStats(_token!);
+      _user = User(
+        id: _user!.id,
+        email: _user!.email,
+        googleId: _user!.googleId,
+        avatarUrl: _user!.avatarUrl,
+        bannerUrl: _user!.bannerUrl,
+        username: _user!.username,
+        bio: _user!.bio,
+        createdAt: _user!.createdAt,
+        updatedAt: _user!.updatedAt,
+        lastLoginAt: _user!.lastLoginAt,
+        isOnboarded: _user!.isOnboarded,
+        isProfilePublic: _user!.isProfilePublic,
+        readingStats: _user!.readingStats,
+        achievementCount: _user!.achievementCount,
+        points: _user!.points,
+        stats: stats,
+      );
       notifyListeners();
     } catch (e) {
-      debugPrint("Error fetching preferences: $e");
-    }
-  }
-
-  Future<void> updatePreferences(Map<String, dynamic> updates) async {
-    if (_token == null) return;
-    try {
-      _preferences = await _authApi.updatePreferences(_token!, updates);
-      notifyListeners();
-    } catch (e) {
-      debugPrint("Error updating preferences: $e");
+      debugPrint("Failed to refresh user stats: $e");
       rethrow;
     }
   }
 
-  Future<void> updateSourcePreference(String sourceId, {bool? enabled, bool? pinned}) async {
+  Future<void> fetchPreferences() async {
+    // 1. Try to load from local storage first (fast)
+    try {
+      final localPrefs = await userRepository.getPreferences();
+      if (localPrefs != null) {
+        _preferences = localPrefs;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint("Error loading local preferences: $e");
+    }
+
+    // 2. Refresh from API if token exists
+    if (_token != null) {
+      try {
+        await userRepository.refreshPreferences(_token!);
+        // Reload from local (since refreshPreferences saves to local)
+        final updatedPrefs = await userRepository.getPreferences();
+        if (updatedPrefs != null) {
+          _preferences = updatedPrefs;
+          notifyListeners();
+        }
+      } catch (e) {
+        debugPrint("Error fetching preferences: $e");
+      }
+    }
+  }
+
+  Future<void> updatePreferences(Map<String, dynamic> updates) async {
+    if (_preferences == null) return;
+
+    // Optimistic update
+    final oldPreferences = _preferences;
+
+    // Handle source preferences merging if present
+    Map<String, SourcePreference>? newSourcePreferences;
+    if (updates.containsKey('source_preferences')) {
+      final sourceUpdates =
+      updates['source_preferences'] as Map<String, dynamic>;
+      newSourcePreferences = Map.from(_preferences!.sourcePreferences);
+      sourceUpdates.forEach((key, value) {
+        if (value is Map<String, dynamic>) {
+          newSourcePreferences![key] = SourcePreference.fromJson(value);
+        }
+      });
+    }
+
+    _preferences = _preferences!.copyWith(
+      libraryDisplayStyle: updates['library_display_style'],
+      libraryItemsPerRow: updates['library_items_per_row'],
+      overlayShowDownloaded: updates['overlay_show_downloaded'],
+      overlayShowUnread: updates['overlay_show_unread'],
+      overlayShowLanguage: updates['overlay_show_language'],
+      tabsShowCategories: updates['tabs_show_categories'],
+      tabsShowItemCount: updates['tabs_show_item_count'],
+      categoriesDisplayMode: updates['categories_display_mode'],
+      sourcePreferences: newSourcePreferences,
+    );
+    notifyListeners();
+
+    // Save to local storage immediately
+    await userRepository.savePreferencesLocally(_preferences!);
+
+    if (_token != null) {
+      try {
+        await userRepository.updatePreferences(_token!, updates);
+      } catch (e) {
+        debugPrint("Error updating preferences: $e");
+        _preferences = oldPreferences;
+        // Revert local storage
+        if (oldPreferences != null) {
+          await userRepository.savePreferencesLocally(oldPreferences);
+        }
+        notifyListeners();
+        rethrow;
+      }
+    }
+  }
+
+  Future<void> updateSourcePreference(
+      String sourceId, {
+        bool? enabled,
+        bool? pinned,
+      }) async {
     if (_token == null || _preferences == null) return;
 
-    final currentPrefs = _preferences!.sourcePreferences[sourceId] ?? SourcePreference();
+    final currentPrefs =
+        _preferences!.sourcePreferences[sourceId] ?? SourcePreference();
     final newPrefs = SourcePreference(
       enabled: enabled ?? currentPrefs.enabled,
       pinned: pinned ?? currentPrefs.pinned,
@@ -118,9 +210,7 @@ class AuthProvider with ChangeNotifier {
 
     try {
       await updatePreferences({
-        'source_preferences': {
-          sourceId: newPrefs.toJson(),
-        }
+        'source_preferences': {sourceId: newPrefs.toJson()},
       });
     } catch (e) {
       rethrow;
@@ -137,7 +227,8 @@ class AuthProvider with ChangeNotifier {
         _isInitialized = true;
       }
 
-      final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
+      final GoogleSignInAccount? googleUser = await _googleSignIn
+          .authenticate();
       if (googleUser == null) {
         _isLoading = false;
         notifyListeners();
@@ -148,7 +239,9 @@ class AuthProvider with ChangeNotifier {
       final String? idToken = googleAuth.idToken;
 
       if (idToken == null) {
-        throw Exception('Google returned a null ID Token. Check your SHA-1 fingerprint in Google Cloud Console.');
+        throw Exception(
+          'Google returned a null ID Token. Check your SHA-1 fingerprint in Google Cloud Console.',
+        );
       }
 
       final authResponse = await _authApi.loginWithGoogle(idToken);

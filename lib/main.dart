@@ -94,6 +94,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(
           create: (_) => AuthProvider(
+            userRepository: userRepo,
             onLogout: () async {
               await isar.writeTxn(() async {
                 await isar.clear();
