@@ -37,6 +37,11 @@ import 'screens/SettingsScreen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  final themeProvider = ThemeProvider();
+  // Wait for the theme to load from preferences before running the app
+  // This prevents the flicker from white to the saved theme
+  await themeProvider.loadFromPrefs();
+
   final dir = await getApplicationDocumentsDirectory();
   final isar = await Isar.open([
     LocalSourceSchema,
@@ -91,7 +96,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider(
           create: (_) => AuthProvider(
             userRepository: userRepo,
