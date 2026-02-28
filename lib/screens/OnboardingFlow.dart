@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../theme_provider.dart';
 import 'LoginScreen.dart';
 
-
 class OnboardingFlow extends StatefulWidget {
   const OnboardingFlow({super.key});
 
@@ -18,20 +17,21 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   final List<Map<String, String>> _pages = [
     {
-      "image": "images/onboarding1.jpg",
-      "title": "Welcome to Keihatsu",
-      "subtitle": "Your all-in-one hub for pet parenting, vet care, and shelter support.",
+      "image": "images/onboarding1.png",
+      "title": "Multi-Extension Search",
+      "subtitle":
+          "Search for mangas and manwhas from multiple sources in one place.",
     },
     {
-      "image": "images/onboarding2.jpg",
-      "title": "Smarter Pet Health",
-      "subtitle": "Track medical records, vaccinations, and appointments effortlessly.",
+      "image": "images/onboarding2.png",
+      "title": "Read Anywhere",
+      "subtitle": "Download chapters to read offline, anytime, anywhere.",
     },
     {
-      "image": "images/onboarding3.jpg",
-      "title": "Easy Appointments & Adoption",
-      "subtitle": "Book vet visits instantly and simplify pet adoptions with ease.",
-    }
+      "image": "images/onboarding3.png",
+      "title": "Join the Community",
+      "subtitle": "Discuss chapters, track progress, and share with friends.",
+    },
   ];
 
   @override
@@ -72,10 +72,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                   },
                   child: const Text(
                     "Skip",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.black87),
                   ),
                 ),
               ),
@@ -85,7 +82,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 children: [
                   PageView.builder(
                     controller: _pageController,
-                    onPageChanged: (index) => setState(() => _currentPage = index),
+                    onPageChanged: (index) =>
+                        setState(() => _currentPage = index),
                     itemCount: _pages.length,
                     itemBuilder: (context, index) => _buildContent(index),
                   ),
@@ -99,7 +97,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: List.generate(
                             _pages.length,
-                                (i) => _buildDot(i == _currentPage, brandColor),
+                            (i) => _buildDot(i == _currentPage, brandColor),
                           ),
                         ),
                         const SizedBox(height: 32),
@@ -107,7 +105,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                           width: double.infinity,
                           height: 60,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24.0,
+                            ),
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: brandColor,
@@ -116,13 +116,20 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                                 ),
                               ),
                               onPressed: () async {
-                                final isLast = _currentPage == _pages.length - 1;
+                                final isLast =
+                                    _currentPage == _pages.length - 1;
                                 if (isLast) {
-                                  final prefs = await SharedPreferences.getInstance();
-                                  await prefs.setBool('hasSeenOnboarding', true);
+                                  final prefs =
+                                      await SharedPreferences.getInstance();
+                                  await prefs.setBool(
+                                    'hasSeenOnboarding',
+                                    true,
+                                  );
                                   Navigator.pushReplacement(
                                     context,
-                                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                    MaterialPageRoute(
+                                      builder: (_) => const LoginScreen(),
+                                    ),
                                   );
                                 } else {
                                   _pageController.nextPage(
@@ -132,7 +139,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                                 }
                               },
                               child: Text(
-                                _currentPage == _pages.length - 1 ? "Get Started" : "Next",
+                                _currentPage == _pages.length - 1
+                                    ? "Get Started"
+                                    : "Next",
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
@@ -164,7 +173,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         children: [
           SizedBox(
             height: 300,
-            child: Image.asset(page["image"]!, fit: BoxFit.contain),
+            child: Image.asset(page["image"]!, fit: BoxFit.fitHeight),
           ),
           const SizedBox(height: 40),
           Text(

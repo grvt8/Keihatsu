@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
-import 'package:provider/provider.dart';
-import '../theme_provider.dart';
 
 class Onboarding extends StatefulWidget {
   const Onboarding({super.key});
@@ -25,10 +23,8 @@ class _OnboardingState extends State<Onboarding> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    
     return Scaffold(
-      backgroundColor: themeProvider.brandColor,
+      backgroundColor: Colors.black,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -40,11 +36,11 @@ class _OnboardingState extends State<Onboarding> {
             Text(
               'Keihatsu',
               style: GoogleFonts.hennyPenny(
-                textStyle: TextStyle(
+                textStyle: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
-                  color: themeProvider.bgColor,
+                  color: Colors.white,
                 ),
               ),
             ),
