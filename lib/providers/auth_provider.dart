@@ -244,11 +244,16 @@ class AuthProvider with ChangeNotifier {
         );
       }
 
-      final authResponse = await _authApi.loginWithGoogle(idToken);
+      final prefs = await SharedPreferences.getInstance();
+      final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding');
+
+      final authResponse = await _authApi.loginWithGoogle(
+        idToken,
+        isOnboarded: hasSeenOnboarding,
+      );
       _user = authResponse.user;
       _token = authResponse.accessToken;
 
-      final prefs = await SharedPreferences.getInstance();
       await prefs.setString('accessToken', _token!);
 
       await fetchPreferences();
