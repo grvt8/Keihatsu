@@ -439,4 +439,15 @@ class DownloadProvider with ChangeNotifier {
       _processQueue();
     }
   }
+
+  Future<void> deleteChapters(List<LocalChapter> chapters) async {
+    for (var chapter in chapters) {
+      await mangaRepo.deleteDownloadedChapter(
+        chapter.sourceId,
+        chapter.mangaId,
+        chapter.chapterId,
+      );
+    }
+    notifyListeners();
+  }
 }

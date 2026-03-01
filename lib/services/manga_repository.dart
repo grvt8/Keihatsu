@@ -424,4 +424,44 @@ class MangaRepository {
       }
     }
   }
+
+  Future<void> deleteDownloadedChapter(
+      String sourceId,
+      String mangaId,
+      String chapterId,
+      ) async {
+    // 1. Delete files
+    await fileService.deleteChapter(sourceId, mangaId, chapterId);
+
+    // 2. Update Isar
+    final chapter = await isar
+        .collection<LocalChapter>()
+        .filter()
+        .sourceIdEqualTo(sourceId)
+        .mangaIdEqualTo(mangaId)
+        .chapterIdEqualTo(chapterId)
+        .findFirst();
+
+    if (chapter != null) {
+      chapter.downloaded = false;
+      await isar.writeTxn(() => isar.collection<LocalChapter>().put(chapter));
+
+      // 3. Update LibraryEntry count
+      final libraryEntry = await isar
+          .collection<LocalLibraryEntry>()
+          .filter()
+          .mangaIdEqualTo(mangaId)
+          .sourceIdEqualTo(sourceId)
+          .findFirst();
+
+      if (libraryEntry != null) {
+        if (libraryEntry.downloadedCount > 0) {
+          libraryEntry.downloadedCount -= 1;
+          await isar.writeTxn(
+                () => isar.collection<LocalLibraryEntry>().put(libraryEntry),
+          );
+        }
+      }
+    }
+  }
 }

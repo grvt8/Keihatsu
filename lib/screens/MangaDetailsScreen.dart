@@ -30,6 +30,7 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
   bool _showTitle = false;
   late Future<LocalManga?> _mangaDetailsFuture;
   late Future<List<LocalChapter>> _chaptersFuture;
+  List<LocalChapter>? _cachedChapters;
   late Future<List<Manga>> _recommendedMangaFuture;
   bool _showAllChapters = false;
   late AnimationController _arrowController;
@@ -51,7 +52,11 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
       widget.manga.sourceId,
       widget.manga.id,
     );
-    _chaptersFuture = repo.getChapters(widget.manga.sourceId, widget.manga.id);
+    _chaptersFuture = repo.getChapters(widget.manga.sourceId, widget.manga.id)
+        .then((chapters) {
+      _cachedChapters = chapters;
+      return chapters;
+    });
     _recommendedMangaFuture = repo.api
         .getMangaList(widget.manga.sourceId, 'popular')
         .then((p) => p.mangas);
@@ -166,6 +171,99 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
           },
         );
       },
+    );
+  }
+
+  void _showDeleteDownloadsSheet(BuildContext context, String initialChapterId) {
+    if (_cachedChapters == null) return;
+
+    final downloaded = _cachedChapters!.where((c) => c.downloaded).toList();
+    if (downloaded.isEmpty) return;
+
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final brandColor = themeProvider.brandColor;
+    final bgColor = themeProvider.effectiveBgColor;
+    final textColor = themeProvider.isDarkMode ? Colors.white : Colors.black87;
+
+    Set<String> selectedIds = {initialChapterId};
+
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: bgColor,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        ),
+        builder: (context) {
+          return StatefulBuilder(
+              builder: (context, setModalState) {
+                return Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Delete Downloads",
+                            style: GoogleFonts.denkOne(fontSize: 20, color: textColor),
+                          ),
+                          TextButton(
+                            onPressed: selectedIds.isEmpty ? null : () async {
+                              final toDelete = downloaded.where((c) => selectedIds.contains(c.chapterId)).toList();
+                              final downloadProvider = Provider.of<DownloadProvider>(context, listen: false);
+                              await downloadProvider.deleteChapters(toDelete);
+
+                              // Update local cache
+                              for (var c in toDelete) {
+                                c.downloaded = false;
+                              }
+
+                              Navigator.pop(context);
+                              setState(() {}); // Refresh UI
+                            },
+                            child: Text(
+                                "Delete (${selectedIds.length})",
+                                style: TextStyle(
+                                    color: selectedIds.isEmpty ? Colors.grey : Colors.red,
+                                    fontWeight: FontWeight.bold
+                                )
+                            ),
+                          )
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+                      Flexible(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: downloaded.length,
+                          itemBuilder: (context, index) {
+                            final chapter = downloaded[index];
+                            final isSelected = selectedIds.contains(chapter.chapterId);
+                            return CheckboxListTile(
+                              title: Text(chapter.name, style: TextStyle(color: textColor)),
+                              value: isSelected,
+                              activeColor: brandColor,
+                              checkColor: Colors.white,
+                              side: BorderSide(color: textColor.withOpacity(0.5)),
+                              onChanged: (val) {
+                                setModalState(() {
+                                  if (val == true) selectedIds.add(chapter.chapterId);
+                                  else selectedIds.remove(chapter.chapterId);
+                                });
+                              },
+                              secondary: Icon(Icons.delete_outline, color: textColor.withOpacity(0.6)),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+          );
+        }
     );
   }
 
@@ -892,8 +990,10 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
                 ? Colors.orange
                 : Colors.grey,
           ),
-          onPressed: (isDownloading || chapter.downloaded || isQueued)
+          onPressed: (isDownloading || isQueued)
               ? null
+              : chapter.downloaded
+              ? () => _showDeleteDownloadsSheet(context, chapter.chapterId)
               : () => downloadProvider.addToQueue(
             chapter.mangaId,
             chapter.sourceId,
