@@ -14,6 +14,7 @@ import '../models/local_models.dart';
 import '../services/manga_repository.dart';
 
 import 'MangaDetailsScreen.dart';
+import 'MangaReaderScreen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -110,6 +111,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
         );
       },
     );
+  }
+
+  Future<LocalChapter?> _getLastReadChapter(LocalManga manga) async {
+    final isar = Provider.of<MangaRepository>(context, listen: false).isar;
+    return await isar
+        .collection<LocalChapter>()
+        .filter()
+        .sourceIdEqualTo(manga.sourceId)
+        .mangaIdEqualTo(manga.mangaId)
+        .sortByLastReadAtDesc()
+        .findFirst();
+  }
+
+  Future<List<LocalChapter>> _getAllChapters(LocalManga manga) async {
+    final repo = Provider.of<MangaRepository>(context, listen: false);
+    return await repo.getChapters(manga.sourceId, manga.mangaId);
   }
 
   @override
@@ -228,9 +245,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ? const Center(child: CircularProgressIndicator())
               : history.isEmpty
               ? Center(
-            child: Text(
-              "No reading history",
-              style: TextStyle(color: textColor.withOpacity(0.6)),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.history,
+                  size: 64,
+                  color: textColor.withOpacity(0.4),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "No reading history",
+                  style: TextStyle(
+                    color: textColor.withOpacity(0.6),
+                    fontSize: 16,
+                  ),
+                ),
+              ],
             ),
           )
               : ListView.builder(
@@ -263,11 +294,49 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     manga: manga,
                     isSelected: _selectedIds.contains(manga.id),
                     isSelectionMode: _isSelectionMode,
-                    onTap: () {
+                    onTap: () async {
                       if (_isSelectionMode) {
                         _toggleSelection(manga.id);
                       } else {
-                        // Convert LocalManga to Manga for navigation
+                        // 1. Get all chapters
+                        final chapters = await _getAllChapters(manga);
+
+                        // 2. Find last read chapter
+                        final lastReadChapter = await _getLastReadChapter(manga);
+
+                        if (lastReadChapter != null && chapters.isNotEmpty) {
+                          // 3. Find index of last read chapter in the full list
+                          // Note: chapters from repo are usually sorted by number descending
+                          final index = chapters.indexWhere((c) => c.chapterId == lastReadChapter.chapterId);
+
+                          if (index != -1) {
+                            // 4. Navigate directly to reader
+                            // Convert LocalManga to Manga for the reader
+                            final mangaObj = Manga(
+                              id: manga.mangaId,
+                              sourceId: manga.sourceId,
+                              title: manga.title,
+                              url: "",
+                              thumbnailUrl: manga.thumbnailUrl ?? "",
+                              description: manga.description ?? "",
+                              status: manga.status ?? "Unknown",
+                            );
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MangaReaderScreen(
+                                  manga: mangaObj,
+                                  chapters: chapters,
+                                  initialChapterIndex: index,
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                        }
+
+                        // Fallback to details screen if logic fails or no history found
                         final mangaObj = Manga(
                           id: manga.mangaId,
                           sourceId: manga.sourceId,

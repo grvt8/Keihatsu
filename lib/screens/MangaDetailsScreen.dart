@@ -640,11 +640,23 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
                                         onTap: () => setState(
                                               () => _showAllChapters = true,
                                         ),
-                                        child: Icon(
-                                          Icons
-                                              .keyboard_double_arrow_down_rounded,
-                                          color: brandColor,
-                                          size: 30,
+                                        child: AnimatedBuilder(
+                                          animation: _arrowController,
+                                          builder: (context, child) {
+                                            return Transform.translate(
+                                              offset: Offset(
+                                                0,
+                                                10 * _arrowController.value,
+                                              ),
+                                              child: child,
+                                            );
+                                          },
+                                          child: Icon(
+                                            Icons
+                                                .keyboard_double_arrow_down_rounded,
+                                            color: brandColor,
+                                            size: 30,
+                                          ),
                                         ),
                                       ),
                                   ],
