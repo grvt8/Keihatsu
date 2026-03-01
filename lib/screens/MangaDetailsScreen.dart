@@ -296,6 +296,41 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
     );
   }
 
+  // Determine which chapter to continue reading from
+  LocalChapter? _getContinueChapter(List<LocalChapter> chapters) {
+    if (chapters.isEmpty) return null;
+
+    // 1. Find the most recently read chapter
+    final readChapters = chapters.where((c) => c.lastReadAt != null).toList()
+      ..sort((a, b) => b.lastReadAt!.compareTo(a.lastReadAt!));
+
+    if (readChapters.isEmpty) {
+      // No history: Start from the first chapter (oldest)
+      // Assuming 'chapters' list is typically sorted by number descending (newest first).
+      // If we want to start at Ch 1, we take the last element.
+      // But let's verify sort. Usually repo returns sorted by number desc.
+      return chapters.last;
+    }
+
+    final lastRead = readChapters.first;
+
+    // 2. If unfinished, continue it
+    if (!lastRead.isRead) {
+      return lastRead;
+    }
+
+    // 3. If finished, find the next chapter (number > lastRead.number)
+    // We assume 'chapters' is sorted by number descending.
+    // So the "next" chapter (higher number) is at index - 1.
+    final index = chapters.indexOf(lastRead);
+    if (index > 0) {
+      return chapters[index - 1];
+    }
+
+    // If it was the latest chapter, just stay on it
+    return lastRead;
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -780,8 +815,21 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
                           future: _chaptersFuture,
                           builder: (context, snapshot) {
                             final chapters = snapshot.data;
+                            final hasChapters =
+                                chapters != null && chapters.isNotEmpty;
+
+                            LocalChapter? targetChapter;
+                            bool hasHistory = false;
+
+                            if (hasChapters) {
+                              targetChapter = _getContinueChapter(chapters!);
+                              hasHistory = chapters.any(
+                                    (c) => c.lastReadAt != null,
+                              );
+                            }
+
                             return GestureDetector(
-                              onTap: (chapters != null && chapters.isNotEmpty)
+                              onTap: (hasChapters && targetChapter != null)
                                   ? () {
                                 Navigator.push(
                                   context,
@@ -789,27 +837,26 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
                                     builder: (context) =>
                                         MangaReaderScreen(
                                           manga: widget.manga,
-                                          chapters: chapters,
-                                          initialChapterIndex:
-                                          chapters.length - 1,
+                                          chapters: chapters!,
+                                          initialChapterIndex: chapters
+                                              .indexOf(targetChapter!),
                                         ),
                                   ),
-                                );
+                                ).then((_) => setState(() {}));
                               }
                                   : null,
                               child: Container(
                                 height: 50,
                                 decoration: BoxDecoration(
-                                  color:
-                                  (chapters != null && chapters.isNotEmpty)
+                                  color: hasChapters
                                       ? Colors.grey.shade400
                                       : Colors.grey.shade800,
                                   borderRadius: BorderRadius.circular(15),
                                 ),
-                                child: const Center(
+                                child: Center(
                                   child: Text(
-                                    "Read now",
-                                    style: TextStyle(
+                                    hasHistory ? "Continue" : "Read now",
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
                                       color: Colors.black,
