@@ -150,8 +150,19 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
 
       // Try local first
       final localPages = await repo.getChapterPages(chapterId);
+      bool useLocal = false;
 
       if (localPages.isNotEmpty) {
+        // Verify files actually exist
+        if (localPages.first.imageLocalPath != null) {
+          final file = File(localPages.first.imageLocalPath!);
+          if (await file.exists()) {
+            useLocal = true;
+          }
+        }
+      }
+
+      if (useLocal) {
         setState(() {
           _pages = localPages;
           _isLoading = false;
@@ -259,7 +270,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
               left: 0,
               right: 0,
               child: Container(
-                color: brandColor.withOpacity(0.9),
+                color: Colors.black.withOpacity(0.9),
                 child: SafeArea(
                   bottom: false,
                   child: Padding(
@@ -314,7 +325,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
               left: 0,
               right: 0,
               child: Container(
-                color: brandColor.withOpacity(0.9),
+                color: Colors.black.withOpacity(0.9),
                 child: SafeArea(
                   top: false,
                   child: Padding(
