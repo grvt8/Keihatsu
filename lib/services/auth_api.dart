@@ -11,14 +11,19 @@ class AuthApi {
 
   AuthApi({this.baseUrl = ApiConstants.baseUrl});
 
-  Future<AuthResponse> loginWithGoogle(String idToken) async {
+  Future<AuthResponse> loginWithGoogle(String idToken, {bool? isOnboarded}) async {
     try {
       print('Attempting login at: $baseUrl/auth/google');
+
+      final body = {
+        'token': idToken,
+        if (isOnboarded != null) 'isOnboarded': isOnboarded,
+      };
 
       final response = await http.post(
         Uri.parse('$baseUrl/auth/google'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'token': idToken}),
+        body: json.encode(body),
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 201 || response.statusCode == 200) {
