@@ -146,11 +146,22 @@ class FileService {
     // Sanitize mangaId to match creation logic
     final safeMangaId = mangaId.replaceAll('/', '_');
 
-    final subPath = 'downloads/$sourceId/$safeMangaId/$chapterId';
-    final baseDir = await _getBaseDirectory(subPath);
-    final chapterDir = Directory(p.join(baseDir.path, subPath));
+    final chapterSubPath = 'downloads/$sourceId/$safeMangaId/$chapterId';
+    final baseDir = await _getBaseDirectory(chapterSubPath);
+    final chapterDir = Directory(p.join(baseDir.path, chapterSubPath));
+
     if (await chapterDir.exists()) {
       await chapterDir.delete(recursive: true);
+    }
+
+    // Check if manga folder is empty and delete if so
+    final mangaSubPath = 'downloads/$sourceId/$safeMangaId';
+    final mangaDir = Directory(p.join(baseDir.path, mangaSubPath));
+    if (await mangaDir.exists()) {
+      final entities = await mangaDir.list().toList();
+      if (entities.isEmpty) {
+        await mangaDir.delete();
+      }
     }
   }
 }
