@@ -433,7 +433,12 @@ class MangaRepository {
     // 1. Delete files
     await fileService.deleteChapter(sourceId, mangaId, chapterId);
 
-    // 2. Update Isar
+    // 2. Delete LocalPage entries
+    await isar.writeTxn(() async {
+      await isar.collection<LocalPage>().filter().chapterIdEqualTo(chapterId).deleteAll();
+    });
+
+    // 3. Update Isar
     final chapter = await isar
         .collection<LocalChapter>()
         .filter()
