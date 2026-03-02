@@ -12,7 +12,10 @@ class LoginScreen extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
     final brandColor = themeProvider.brandColor;
-    final bgColor = themeProvider.bgColor;
+    // Enforce white background and black text/icons for LoginScreen
+    const bgColor = Colors.white;
+    const textColor = Colors.black87;
+    const subTextColor = Colors.grey;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -30,7 +33,8 @@ class LoginScreen extends StatelessWidget {
                     height: 150,
                     width: 150,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Icon(Icons.menu_book, size: 100, color: brandColor),
+                    errorBuilder: (context, error, stackTrace) =>
+                        Icon(Icons.menu_book, size: 100, color: brandColor),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -39,16 +43,16 @@ class LoginScreen extends StatelessWidget {
                   style: GoogleFonts.hennyPenny(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: brandColor,
+                    color: textColor,
                   ),
                 ),
                 const Text(
                   "Log in to sync your library and continue your journey",
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                  style: TextStyle(color: subTextColor, fontSize: 14),
                 ),
                 const SizedBox(height: 50),
-                
+
                 // Google Sign In
                 if (authProvider.isLoading)
                   const CircularProgressIndicator()
@@ -58,7 +62,8 @@ class LoginScreen extends StatelessWidget {
                     height: 55,
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: brandColor),
+                        backgroundColor: Colors.black,
+                        side: BorderSide(color: Colors.black),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -72,7 +77,9 @@ class LoginScreen extends StatelessWidget {
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Login failed: ${e.toString()}')),
+                              SnackBar(
+                                content: Text('Login failed: ${e.toString()}'),
+                              ),
                             );
                           }
                         }
@@ -83,13 +90,18 @@ class LoginScreen extends StatelessWidget {
                           Image.asset(
                             'images/google.png',
                             height: 20,
-                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.login, size: 20),
+                            errorBuilder: (context, error, stackTrace) =>
+                            const Icon(
+                              Icons.login,
+                              size: 20,
+                              color: Colors.white,
+                            ),
                           ),
                           const SizedBox(width: 12),
-                          Text(
+                          const Text(
                             "Sign in with Google",
                             style: TextStyle(
-                              color: brandColor,
+                              color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -98,7 +110,7 @@ class LoginScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                
+
                 const SizedBox(height: 15),
 
                 // Skip for now
@@ -115,23 +127,21 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 30),
-                
+
                 GestureDetector(
-                  onTap: () => Navigator.pushReplacementNamed(context, '/register'),
+                  onTap: () =>
+                      Navigator.pushReplacementNamed(context, '/register'),
                   child: RichText(
                     text: TextSpan(
-                      style: TextStyle(
-                        color: themeProvider.isDarkMode ? Colors.white70 : Colors.black54,
-                        fontSize: 14
-                      ),
+                      style: const TextStyle(color: textColor, fontSize: 14),
                       children: [
-                        const TextSpan(text: "Don't have an account? "),
+                        const TextSpan(text: "Don't have an account? ", style: TextStyle(color: subTextColor)),
                         TextSpan(
                           text: "Register",
                           style: TextStyle(
-                            color: brandColor,
+                            color: textColor,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
