@@ -2,7 +2,7 @@ name: keihatsu
 description: "A manga + light novel reader built for offline freedom, and a seamless reading experience"
 publish_to: 'none'
 
-version: 1.0.0+2
+version: 1.1.0+3
 
 environment:
   sdk: ^3.8.1
@@ -37,7 +37,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-  
+
   # Code Generation
   build_runner: ^2.4.13
   isar_generator: ^3.1.0+1
@@ -47,7 +47,4 @@ flutter:
 
   assets:
     - images/
-    - manwhaChps/Chapter 263_ce4c77/
-    - manwhaChps/Chapter 264_214655/
-    - manwhaChps/Chapter 265_a70526/
     - lib/data/chapters.json
