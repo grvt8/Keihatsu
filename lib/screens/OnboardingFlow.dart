@@ -23,7 +23,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           "Search for mangas and manwhas from multiple sources in one place.",
     },
     {
-      "image": "images/g.png",
+      "image": "images/onboarding2.png",
       "title": "Read Anywhere",
       "subtitle": "Download chapters to read offline, anytime, anywhere.",
     },
