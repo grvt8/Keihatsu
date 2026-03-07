@@ -33,6 +33,7 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
   List<LocalChapter>? _cachedChapters;
   late Future<List<Manga>> _recommendedMangaFuture;
   bool _showAllChapters = false;
+  bool _showFullDescription = false;
   late AnimationController _arrowController;
   bool _filterDownloaded = false;
   bool _filterUnread = false;
@@ -775,7 +776,7 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
                                     const SizedBox(height: 4),
                                     _buildInfoRow(
                                       PhosphorIcons.clock(),
-                                      "${manga?.status ?? "Ongoing"} • ${widget.manga.sourceId}",
+                                      "${manga?.status ?? "Ongoing"} • ${widget.manga.sourceId.toUpperCase()}",
                                     ),
                                   ],
                                 ),
@@ -861,9 +862,29 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
                                     color: textColor.withOpacity(0.9),
                                     height: 1.4,
                                   ),
-                                  maxLines: 5,
-                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: _showFullDescription ? null : 5,
+                                  overflow: _showFullDescription
+                                      ? TextOverflow.visible
+                                      : TextOverflow.ellipsis,
                                 ),
+                                if ((manga?.description?.length ?? 0) >
+                                    100) // Simple heuristic
+                                  GestureDetector(
+                                    onTap: () => setState(
+                                          () => _showFullDescription =
+                                      !_showFullDescription,
+                                    ),
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: Icon(
+                                        _showFullDescription
+                                            ? Icons.keyboard_arrow_up_rounded
+                                            : Icons.keyboard_arrow_down_rounded,
+                                        color: brandColor,
+                                      ),
+                                    ),
+                                  ),
                               ],
                             ),
                           ),

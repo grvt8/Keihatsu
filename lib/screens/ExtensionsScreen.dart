@@ -33,6 +33,30 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
     });
   }
 
+  Widget _buildFallbackIcon(LocalSource source, Color brandColor) {
+    if (source.iconLocalPath != null) {
+      return Image.file(
+        File(source.iconLocalPath!),
+        fit: BoxFit.cover,
+        color: source.enabled ? null : Colors.grey,
+        colorBlendMode: source.enabled ? null : BlendMode.saturation,
+        errorBuilder: (context, error, stackTrace) =>
+            Icon(PhosphorIcons.puzzlePiece(), color: brandColor),
+      );
+    } else if (source.iconUrl != null) {
+      return Image.network(
+        source.iconUrl!,
+        fit: BoxFit.cover,
+        color: source.enabled ? null : Colors.grey,
+        colorBlendMode: source.enabled ? null : BlendMode.saturation,
+        errorBuilder: (context, error, stackTrace) =>
+            Icon(PhosphorIcons.puzzlePiece(), color: brandColor),
+      );
+    } else {
+      return Icon(PhosphorIcons.puzzlePiece(), color: brandColor);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -40,7 +64,9 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
     final bgColor = themeProvider.effectiveBgColor;
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
     final Color textColor = isDarkMode ? Colors.white : Colors.black87;
-    final Color cardColor = isDarkMode ? Colors.white10 : Colors.white.withOpacity(0.5);
+    final Color cardColor = isDarkMode
+        ? Colors.white10
+        : Colors.white.withOpacity(0.5);
     final repo = Provider.of<SourcesRepository>(context, listen: false);
 
     return Scaffold(
@@ -52,7 +78,11 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
         title: Text(
           'Extensions',
           style: GoogleFonts.hennyPenny(
-            textStyle: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 24),
+            textStyle: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ),
           ),
         ),
         actions: [
@@ -72,7 +102,11 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(PhosphorIcons.warningCircle(), size: 48, color: Colors.red),
+                  Icon(
+                    PhosphorIcons.warningCircle(),
+                    size: 48,
+                    color: Colors.red,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Failed to load extensions',
@@ -95,14 +129,20 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
           }
 
           final sources = snapshot.data!;
-          
+
           return ListView.separated(
             padding: const EdgeInsets.all(20),
             itemCount: sources.length,
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final source = sources[index];
-              return _buildSourceCard(source, brandColor, textColor, cardColor, repo);
+              return _buildSourceCard(
+                source,
+                brandColor,
+                textColor,
+                cardColor,
+                repo,
+              );
             },
           );
         },
@@ -114,7 +154,22 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
     );
   }
 
-  Widget _buildSourceCard(LocalSource source, Color brandColor, Color textColor, Color cardColor, SourcesRepository repo) {
+  Widget _buildSourceCard(
+      LocalSource source,
+      Color brandColor,
+      Color textColor,
+      Color cardColor,
+      SourcesRepository repo,
+      ) {
+    // Map of source IDs to local image assets
+    final Map<String, String> extensionImages = {
+      'atsumaru': 'images/extensions/atsumaru.png',
+      'manhuatop': 'images/extensions/manhuatop.jpeg',
+      'weebcentral': 'images/extensions/weebcentral.png',
+    };
+
+    final imagePath = extensionImages[source.sourceId.toLowerCase()];
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -132,16 +187,18 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: source.iconLocalPath != null
-                  ? Image.file(
-                      File(source.iconLocalPath!),
-                      fit: BoxFit.cover,
-                      color: source.enabled ? null : Colors.grey,
-                      colorBlendMode: source.enabled ? null : BlendMode.saturation,
-                      errorBuilder: (context, error, stackTrace) =>
-                          Icon(PhosphorIcons.puzzlePiece(), color: brandColor),
-                    )
-                  : Icon(PhosphorIcons.puzzlePiece(), color: brandColor),
+              child: imagePath != null
+                  ? Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                color: source.enabled ? null : Colors.grey,
+                colorBlendMode: source.enabled
+                    ? null
+                    : BlendMode.saturation,
+                errorBuilder: (context, error, stackTrace) =>
+                    _buildFallbackIcon(source, brandColor),
+              )
+                  : _buildFallbackIcon(source, brandColor),
             ),
           ),
           const SizedBox(width: 15),
@@ -154,14 +211,18 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: source.enabled ? textColor : textColor.withOpacity(0.4),
+                    color: source.enabled
+                        ? textColor
+                        : textColor.withOpacity(0.4),
                   ),
                 ),
                 Text(
                   '${source.lang.toUpperCase()} • ${source.baseUrl}',
                   style: TextStyle(
                     fontSize: 12,
-                    color: source.enabled ? textColor.withOpacity(0.6) : textColor.withOpacity(0.2),
+                    color: source.enabled
+                        ? textColor.withOpacity(0.6)
+                        : textColor.withOpacity(0.2),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -176,7 +237,9 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
               _loadSources();
             },
             icon: Icon(
-              source.pinned ? PhosphorIcons.pushPin(PhosphorIconsStyle.fill) : PhosphorIcons.pushPin(),
+              source.pinned
+                  ? PhosphorIcons.pushPin(PhosphorIconsStyle.fill)
+                  : PhosphorIcons.pushPin(),
               color: source.pinned ? brandColor : textColor.withOpacity(0.3),
               size: 20,
             ),

@@ -58,20 +58,14 @@ class _DownloadQueueScreenState extends State<DownloadQueueScreen> {
               IconButton(
                 icon: Icon(
                   provider.isGlobalPaused
-                      ? PhosphorIcons.play()
-                      : PhosphorIcons.pause(),
+                      ? Icons.play_arrow_rounded
+                      : Icons.pause_rounded,
                   color: textColor,
                 ),
                 onPressed: () {
                   provider.toggleGlobalPause();
                 },
                 tooltip: provider.isGlobalPaused ? 'Resume All' : 'Pause All',
-              ),
-              IconButton(
-                icon: Icon(PhosphorIcons.trash(), color: textColor),
-                onPressed: () {
-                  // TODO: Clear finished?
-                },
               ),
             ],
           ),
@@ -95,8 +89,8 @@ class _DownloadQueueScreenState extends State<DownloadQueueScreen> {
             backgroundColor: brandColor,
             child: Icon(
               provider.isGlobalPaused
-                  ? PhosphorIcons.play()
-                  : PhosphorIcons.pause(),
+                  ? Icons.play_arrow_rounded
+                  : Icons.pause_rounded,
               color: Colors.white,
             ),
           ),
@@ -160,7 +154,7 @@ class _DownloadQueueScreenState extends State<DownloadQueueScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                extensionName,
+                extensionName.toUpperCase(),
                 style: GoogleFonts.hennyPenny(
                   textStyle: TextStyle(
                     fontSize: 18,
@@ -382,8 +376,8 @@ class _DownloadQueueScreenState extends State<DownloadQueueScreen> {
                           IconButton(
                             icon: Icon(
                               chapter.status == 4
-                                  ? Icons.play_arrow
-                                  : Icons.pause,
+                                  ? Icons.play_arrow_rounded
+                                  : Icons.pause_rounded,
                               size: 20,
                               color: textColor.withOpacity(0.7),
                             ),

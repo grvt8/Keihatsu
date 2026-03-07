@@ -48,6 +48,7 @@ flutter:
 
   assets:
     - images/
+    - images/extensions/
     - lib/data/chapters.json
 
 flutter_launcher_icons:
