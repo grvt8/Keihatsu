@@ -129,6 +129,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
     setState(() {
       _isLoading = true;
       _pages = [];
+      _sliderValue = 1;
     });
 
     try {
@@ -385,12 +386,14 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                               child: SliderTheme(
                                 data: SliderTheme.of(context).copyWith(
                                   trackHeight: 6,
-                                  activeTrackColor: const Color(0xFF34D399),
+                                  activeTrackColor: brandColor,
                                   inactiveTrackColor: Colors.white.withOpacity(
                                     0.2,
                                   ),
-                                  thumbColor: const Color(0xFF34D399),
-                                  thumbShape: const VerticalBarThumbShape(),
+                                  thumbColor: brandColor,
+                                  thumbShape: VerticalBarThumbShape(
+                                    color: brandColor,
+                                  ),
                                   overlayShape: const RoundSliderOverlayShape(
                                     overlayRadius: 12,
                                   ),
