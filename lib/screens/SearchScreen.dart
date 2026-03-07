@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/manga.dart';
 import '../models/source.dart';
 import '../services/sources_api.dart';
@@ -25,11 +26,45 @@ class _SearchScreenState extends State<SearchScreen> {
   Map<String, List<Manga>> _results = {};
   Map<String, bool> _loadingSources = {};
   bool _hasSearched = false;
+  List<String> _searchHistory = [];
 
   @override
   void initState() {
     super.initState();
     _loadSources();
+    _loadSearchHistory();
+  }
+
+  Future<void> _loadSearchHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _searchHistory = prefs.getStringList('search_history') ?? [];
+      });
+    } catch (e) {
+      debugPrint('Error loading search history: $e');
+    }
+  }
+
+  Future<void> _addToHistory(String query) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      List<String> history = prefs.getStringList('search_history') ?? [];
+
+      history.remove(query);
+      history.insert(0, query);
+
+      if (history.length > 5) {
+        history = history.sublist(0, 5);
+      }
+
+      await prefs.setStringList('search_history', history);
+      setState(() {
+        _searchHistory = history;
+      });
+    } catch (e) {
+      debugPrint('Error saving search history: $e');
+    }
   }
 
   Future<void> _loadSources() async {
@@ -45,6 +80,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _performSearch(String query) {
     if (query.isEmpty) return;
+
+    _addToHistory(query);
 
     setState(() {
       _results = {};
@@ -113,7 +150,9 @@ class _SearchScreenState extends State<SearchScreen> {
         ],
       ),
       body: !_hasSearched
+          ? (_searchHistory.isEmpty
           ? _buildEmptyState(textColor)
+          : _buildHistoryList(textColor, brandColor))
           : ListView(
         padding: const EdgeInsets.symmetric(vertical: 10),
         children: [
@@ -147,6 +186,44 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildHistoryList(Color textColor, Color brandColor) {
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Text(
+            'Recent Searches',
+            style: GoogleFonts.hennyPenny(
+              textStyle: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: brandColor,
+              ),
+            ),
+          ),
+        ),
+        ..._searchHistory.map(
+              (query) => ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+            title: Text(
+              query,
+              style: TextStyle(color: textColor),
+            ),
+            trailing: Icon(
+              Icons.arrow_outward_rounded,
+              color: textColor.withOpacity(0.5),
+            ),
+            onTap: () {
+              _searchController.text = query;
+              _performSearch(query);
+            },
+          ),
+        ),
+      ],
     );
   }
 
