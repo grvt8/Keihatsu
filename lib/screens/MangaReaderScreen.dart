@@ -441,7 +441,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(24),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -509,6 +509,13 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                                   currentChapterIndex: _currentChapterIndex,
                                   mangaId: widget.manga.id,
                                   chapterId: chapterId,
+                                  chapters: widget.chapters,
+                                  onChapterChange: (index) {
+                                    setState(() {
+                                      _currentChapterIndex = index;
+                                    });
+                                    _loadPages();
+                                  },
                                 ),
                               );
                             },

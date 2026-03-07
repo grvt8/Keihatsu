@@ -1,3 +1,5 @@
+import 'package:keihatsu/models/chapter.dart';
+import 'package:keihatsu/models/local_models.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +18,8 @@ class CommentsBottomSheet extends StatefulWidget {
   final int currentChapterIndex;
   final String mangaId;
   final String chapterId;
+  final List<dynamic> chapters;
+  final Function(int) onChapterChange;
 
   const CommentsBottomSheet({
     super.key,
@@ -23,6 +27,8 @@ class CommentsBottomSheet extends StatefulWidget {
     required this.currentChapterIndex,
     required this.mangaId,
     required this.chapterId,
+    required this.chapters,
+    required this.onChapterChange,
   });
 
   @override
@@ -36,10 +42,12 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   List<XFile> _selectedImages = [];
   bool _isFocused = false;
   bool _isOnline = true;
+  late int _currentIndex;
 
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.currentChapterIndex;
     _focusNode.addListener(() {
       setState(() {
         _isFocused = _focusNode.hasFocus;
@@ -52,12 +60,41 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
 
     // Fetch comments
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final auth = Provider.of<AuthProvider>(context, listen: false);
-      Provider.of<CommentsProvider>(
-        context,
-        listen: false,
-      ).fetchComments(widget.mangaId, widget.chapterId, auth.token);
+      _fetchCommentsForCurrentChapter();
     });
+  }
+
+  void _fetchCommentsForCurrentChapter() {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final chapter = widget.chapters[_currentIndex];
+    final chapterId = chapter is Chapter
+        ? chapter.id
+        : (chapter as LocalChapter).chapterId;
+
+    Provider.of<CommentsProvider>(
+      context,
+      listen: false,
+    ).fetchComments(widget.mangaId, chapterId, auth.token);
+  }
+
+  void _goToNextChapter() {
+    if (_currentIndex > 0) {
+      setState(() {
+        _currentIndex--;
+      });
+      widget.onChapterChange(_currentIndex);
+      _fetchCommentsForCurrentChapter();
+    }
+  }
+
+  void _goToPreviousChapter() {
+    if (_currentIndex < widget.chapters.length - 1) {
+      setState(() {
+        _currentIndex++;
+      });
+      widget.onChapterChange(_currentIndex);
+      _fetchCommentsForCurrentChapter();
+    }
   }
 
   Future<void> _checkConnectivity() async {
@@ -119,11 +156,16 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
         context,
         listen: false,
       );
+      final chapter = widget.chapters[_currentIndex];
+      final chapterId = chapter is Chapter
+          ? chapter.id
+          : (chapter as LocalChapter).chapterId;
+
       await commentsProvider.postComment(
         widget.mangaId,
-        widget.chapterId,
+        chapterId,
         content,
-        auth.token!,
+        auth.token ?? '',
         imagePaths: images,
       );
     } catch (e) {
@@ -214,16 +256,31 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _buildNavButton(
-                              context,
-                              PhosphorIcons.caretLeft(),
-                              "Episode ${widget.currentChapterIndex + 262}",
+                            GestureDetector(
+                              onTap: _goToPreviousChapter,
+                              child: _buildNavButton(
+                                context,
+                                PhosphorIcons.caretLeft(),
+                                "Previous",
+                                isEnabled:
+                                _currentIndex < widget.chapters.length - 1,
+                              ),
                             ),
-                            _buildNavButton(
-                              context,
-                              PhosphorIcons.caretRight(),
-                              "Episode ${widget.currentChapterIndex + 264}",
-                              isRight: true,
+                            Text(
+                              "Chapter ${_currentIndex + 1}", // Assuming 1-based index for display
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: _goToNextChapter,
+                              child: _buildNavButton(
+                                context,
+                                PhosphorIcons.caretRight(),
+                                "Next",
+                                isRight: true,
+                                isEnabled: _currentIndex > 0,
+                              ),
                             ),
                           ],
                         ),
@@ -525,27 +582,35 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
       PhosphorIconData icon,
       String label, {
         bool isRight = false,
+        bool isEnabled = true,
       }) {
     final textColor = Theme.of(context).brightness == Brightness.dark
         ? Colors.white
         : Colors.black87;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: textColor.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          if (!isRight) Icon(icon, size: 18),
-          if (!isRight) const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-          ),
-          if (isRight) const SizedBox(width: 8),
-          if (isRight) Icon(icon, size: 18),
-        ],
+    return Opacity(
+      opacity: isEnabled ? 1.0 : 0.5,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.black12,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            if (!isRight) Icon(icon, size: 18, color: textColor),
+            if (!isRight) const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: textColor,
+              ),
+            ),
+            if (isRight) const SizedBox(width: 8),
+            if (isRight) Icon(icon, size: 18, color: textColor),
+          ],
+        ),
       ),
     );
   }
