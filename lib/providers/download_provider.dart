@@ -34,7 +34,9 @@ class DownloadProvider with ChangeNotifier {
     final result = await Connectivity().checkConnectivity();
     _isOnline = !result.contains(ConnectivityResult.none);
 
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((result) {
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+        result,
+        ) {
       final wasOnline = _isOnline;
       _isOnline = !result.contains(ConnectivityResult.none);
       if (_isOnline && !wasOnline && !_isGlobalPaused) {
@@ -54,7 +56,8 @@ class DownloadProvider with ChangeNotifier {
     // because they are not actually running anymore.
     await isar.writeTxn(() async {
       for (var item in _queue) {
-        if (item.status == 1) { // Downloading
+        if (item.status == 1) {
+          // Downloading
           item.status = 0; // Queued
           await isar.downloadQueueItems.put(item);
         }
@@ -101,7 +104,10 @@ class DownloadProvider with ChangeNotifier {
     if (exists != null) return;
 
     // Find last priority
-    final lastItem = await isar.downloadQueueItems.where().sortByPriorityDesc().findFirst();
+    final lastItem = await isar.downloadQueueItems
+        .where()
+        .sortByPriorityDesc()
+        .findFirst();
     final newPriority = (lastItem?.priority ?? -1) + 1;
 
     final item = DownloadQueueItem()
@@ -113,7 +119,8 @@ class DownloadProvider with ChangeNotifier {
       ..mangaTitle = mangaTitle
       ..mangaThumbnail = mangaThumbnail
       ..extensionName = extensionName
-      ..status = 0 // Queued
+      ..status =
+      0 // Queued
       ..priority = newPriority
       ..dateAdded = DateTime.now();
 
@@ -130,7 +137,10 @@ class DownloadProvider with ChangeNotifier {
     _cancellationTokens[chapterId] = true; // Cancel if running
 
     await isar.writeTxn(() async {
-      await isar.downloadQueueItems.filter().chapterIdEqualTo(chapterId).deleteFirst();
+      await isar.downloadQueueItems
+          .filter()
+          .chapterIdEqualTo(chapterId)
+          .deleteFirst();
     });
 
     _queue.removeWhere((item) => item.chapterId == chapterId);
@@ -208,7 +218,12 @@ class DownloadProvider with ChangeNotifier {
     }
   }
 
-  Future<void> reorderChaptersOfManga(String sourceId, String mangaId, int oldIndex, int newIndex) async {
+  Future<void> reorderChaptersOfManga(
+      String sourceId,
+      String mangaId,
+      int oldIndex,
+      int newIndex,
+      ) async {
     // 1. Get all chapters for this manga, sorted by priority
     final mangaChapters = _queue
         .where((i) => i.sourceId == sourceId && i.mangaId == mangaId)
@@ -228,10 +243,18 @@ class DownloadProvider with ChangeNotifier {
     // Replace the block of this manga's chapters with the reordered list.
     // Re-assign priorities for the whole source.
 
-    await _renormalizeSourcePriorities(sourceId, modifiedMangaId: mangaId, newMangaChapters: mangaChapters);
+    await _renormalizeSourcePriorities(
+      sourceId,
+      modifiedMangaId: mangaId,
+      newMangaChapters: mangaChapters,
+    );
   }
 
-  Future<void> reorderMangasOfExtension(String sourceId, int oldIndex, int newIndex) async {
+  Future<void> reorderMangasOfExtension(
+      String sourceId,
+      int oldIndex,
+      int newIndex,
+      ) async {
     // 1. Get unique mangaIds for this source, ordered by their *first* chapter's priority
     final sourceItems = _queue
         .where((i) => i.sourceId == sourceId)
@@ -298,7 +321,6 @@ class DownloadProvider with ChangeNotifier {
           await isar.downloadQueueItems.put(newSourceList[i]);
         }
       });
-
     } else if (orderedMangaIds != null) {
       // We are reordering mangas
       // Rebuild the list: items of manga 1, then items of manga 2, etc.
@@ -328,8 +350,43 @@ class DownloadProvider with ChangeNotifier {
     _processQueue();
   }
 
+  Future<void> cancelMangaDownloads(String sourceId, String mangaId) async {
+    final items = _queue
+        .where((i) => i.sourceId == sourceId && i.mangaId == mangaId)
+        .toList();
+
+    if (items.isEmpty) return;
+
+    // Cancel any active downloads
+    for (var item in items) {
+      if (item.status == 1) {
+        _cancellationTokens[item.chapterId] = true;
+      }
+    }
+
+    // Remove from DB
+    await isar.writeTxn(() async {
+      for (var item in items) {
+        await isar.downloadQueueItems.delete(item.id);
+      }
+    });
+
+    // Update local state
+    _queue.removeWhere((i) => i.sourceId == sourceId && i.mangaId == mangaId);
+
+    // Clean up active downloads map if needed
+    _activeDownloads.removeWhere((key, value) {
+      return items.any((i) => i.chapterId == value);
+    });
+
+    notifyListeners();
+    _processQueue();
+  }
+
   Future<void> togglePauseManga(String sourceId, String mangaId) async {
-    final items = _queue.where((i) => i.sourceId == sourceId && i.mangaId == mangaId).toList();
+    final items = _queue
+        .where((i) => i.sourceId == sourceId && i.mangaId == mangaId)
+        .toList();
     if (items.isEmpty) return;
 
     // Determine target state: if any is downloading/queued -> pause all. If all paused -> resume all.
@@ -371,7 +428,9 @@ class DownloadProvider with ChangeNotifier {
         ..sort((a, b) => a.priority.compareTo(b.priority));
 
       // Find first queued item
-      final nextItem = sourceItems.firstWhereOrNull((i) => i.status == 0); // 0 = Queued
+      final nextItem = sourceItems.firstWhereOrNull(
+            (i) => i.status == 0,
+      ); // 0 = Queued
 
       if (nextItem != null) {
         _startDownload(nextItem);
@@ -381,7 +440,8 @@ class DownloadProvider with ChangeNotifier {
 
   Future<void> _startDownload(DownloadQueueItem item) async {
     final token = getToken();
-    if (token == null) return; // Cannot download without token? Assuming required based on repo
+    if (token == null)
+      return; // Cannot download without token? Assuming required based on repo
 
     _activeDownloads[item.sourceId] = item.chapterId;
     _cancellationTokens[item.chapterId] = false;
@@ -413,7 +473,6 @@ class DownloadProvider with ChangeNotifier {
         await isar.downloadQueueItems.delete(item.id);
       });
       _queue.remove(item);
-
     } catch (e) {
       print("Download failed: $e");
 
@@ -421,7 +480,8 @@ class DownloadProvider with ChangeNotifier {
         // Was cancelled/paused manually
         // If paused, status is already 4. If cancelled, it's removed.
         // If we just cancelled for network/priority, set back to queued?
-        if (item.status == 1) { // Still marked downloading
+        if (item.status == 1) {
+          // Still marked downloading
           item.status = 0; // Back to queued
           await isar.writeTxn(() => isar.downloadQueueItems.put(item));
         }

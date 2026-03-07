@@ -209,11 +209,12 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _buildDragHandle(textColor),
                   Text(
                     "Filter Chapters",
                     style: GoogleFonts.denkOne(fontSize: 20, color: textColor),
