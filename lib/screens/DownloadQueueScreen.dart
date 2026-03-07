@@ -282,6 +282,8 @@ class _DownloadQueueScreenState extends State<DownloadQueueScreen> {
                   onSelected: (value) {
                     if (value == 'pause') {
                       provider.togglePauseManga(sourceId, mangaId);
+                    } else if (value == 'cancel') {
+                      provider.cancelMangaDownloads(sourceId, mangaId);
                     } else if (value == 'top') {
                       provider.reorderMangasOfExtension(
                         sourceId,
@@ -307,6 +309,10 @@ class _DownloadQueueScreenState extends State<DownloadQueueScreen> {
                     PopupMenuItem(
                       value: 'pause',
                       child: Text(isPaused ? 'Resume' : 'Pause'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'cancel',
+                      child: Text('Cancel All'),
                     ),
                     const PopupMenuItem(
                       value: 'top',
