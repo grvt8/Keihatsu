@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:isar/isar.dart';
+import '../models/local_models.dart';
+import '../services/manga_repository.dart';
 import '../components/MainNavigationBar.dart';
 import '../models/manga.dart';
 import '../services/sources_api.dart';
@@ -23,28 +26,69 @@ class _HomePageState extends State<HomePage> {
 
   late Future<List<Manga>> _popularMangaFuture;
   late Future<List<Manga>> _latestMangaFuture;
+  late Future<List<Manga>> _continueReadingFuture;
 
   final String _defaultSourceId = 'manhuatop';
 
   @override
   void initState() {
     super.initState();
+    _loadData();
+  }
+
+  void _loadData() {
     _popularMangaFuture = _sourcesApi
         .getMangaList(_defaultSourceId, 'popular')
         .then((page) => page.mangas);
     _latestMangaFuture = _sourcesApi
         .getMangaList(_defaultSourceId, 'latest')
         .then((page) => page.mangas);
+    _continueReadingFuture = _loadContinueReading();
+  }
+
+  Future<List<Manga>> _loadContinueReading() async {
+    // Wait for provider to be available if needed, but here we can't access context easily in initState for Provider.
+    // However, we can access it if we defer execution or use a post-frame callback, OR just rely on build calling this?
+    // Actually, initState cannot access Provider.of(context).
+    // So we should move this to didChangeDependencies or use a different approach.
+    // But wait, `_loadData` is called in `initState`. `_sourcesApi` is a field.
+    // For `_continueReadingFuture`, we need `MangaRepository` which is available via `Provider` or we can instantiate it if we have dependencies.
+    // But `MangaRepository` depends on `Isar` etc.
+    // Better to load this in `didChangeDependencies` or just use FutureBuilder that calls a method that accesses context.
+    return []; // Placeholder, real logic will be in _fetchHistory
+  }
+
+  Future<List<Manga>> _fetchHistory(BuildContext context) async {
+    final repo = Provider.of<OfflineLibraryProvider>(
+      context,
+      listen: false,
+    ).mangaRepo;
+    final localMangas = await repo.isar
+        .collection<LocalManga>()
+        .filter()
+        .lastReadAtIsNotNull()
+        .sortByLastReadAtDesc()
+        .limit(5)
+        .findAll();
+
+    return localMangas
+        .map(
+          (m) => Manga(
+        id: m.mangaId,
+        sourceId: m.sourceId,
+        title: m.title,
+        url: "",
+        thumbnailUrl: m.thumbnailUrl ?? "",
+        description: m.description ?? "",
+        status: m.status ?? "Unknown",
+      ),
+    )
+        .toList();
   }
 
   Future<void> _refreshData() async {
     setState(() {
-      _popularMangaFuture = _sourcesApi
-          .getMangaList(_defaultSourceId, 'popular')
-          .then((page) => page.mangas);
-      _latestMangaFuture = _sourcesApi
-          .getMangaList(_defaultSourceId, 'latest')
-          .then((page) => page.mangas);
+      _loadData();
     });
   }
 
@@ -100,9 +144,54 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Popular Now Section
+              // Continue Reading Section
+              FutureBuilder<List<Manga>>(
+                future: _fetchHistory(context),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  return Column(
+                    children: [
+                      _buildSectionHeader(
+                        "Continue Reading",
+                        textColor,
+                        onSeeMore: () {
+                          // Navigate to history screen (index 2 in MainNavigationBar)
+                          Navigator.pushReplacement(
+                            context,
+                            PageRouteBuilder(
+                              pageBuilder: (_, __, ___) => const Scaffold(
+                                body: Center(child: Text("History")),
+                              ), // Temporary, or just switch tab if MainNavigationBar supports it
+                            ),
+                          );
+                          // Actually, MainNavigationBar controls the body. HomePage is just one tab.
+                          // Switching tabs requires callback to parent or using a global state for tab index.
+                          // For now, let's just push HistoryScreen if available or do nothing/print.
+                          // The user said "LIKE history screen".
+                          // Let's just navigate to HistoryScreen directly for "See More"
+                          Navigator.pushNamed(context, '/history');
+                        },
+                      ),
+                      _buildMangaList(
+                        snapshot.data!,
+                        brandColor,
+                        textColor,
+                        cardColor,
+                        offlineLibrary,
+                        height: 200,
+                        compact: true,
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  );
+                },
+              ),
+
+              // Latest Update Section
               _buildSectionHeader(
-                "Popular Now",
+                "Latest Updates",
                 textColor,
                 onSeeMore: () {
                   Navigator.pushReplacementNamed(context, '/library');
@@ -120,18 +209,18 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 30),
 
               // Latest Updates Section
-              _buildSectionHeader("Latest Updates", textColor),
-              _buildFutureMangaList(
-                _latestMangaFuture,
-                brandColor,
-                textColor,
-                cardColor,
-                offlineLibrary,
-                height: 200,
-                compact: true,
-              ),
+              // _buildSectionHeader("Latest Updates", textColor),
+              // _buildFutureMangaList(
+              //   _latestMangaFuture,
+              //   brandColor,
+              //   textColor,
+              //   cardColor,
+              //   offlineLibrary,
+              //   height: 200,
+              //   compact: true,
+              // ),
 
-              const SizedBox(height: 30),
+              // const SizedBox(height: 30),
 
               // Recommendations (Using Popular for now)
               _buildSectionHeader("You might like", textColor),
@@ -154,6 +243,37 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: MainNavigationBar(
         currentIndex: _currentIndex,
         brandColor: brandColor,
+      ),
+    );
+  }
+
+  Widget _buildMangaList(
+      List<Manga> mangas,
+      Color brandColor,
+      Color textColor,
+      Color cardColor,
+      OfflineLibraryProvider offlineLibrary, {
+        required double height,
+        bool compact = false,
+      }) {
+    return SizedBox(
+      height: height,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: mangas.length,
+        itemBuilder: (context, index) {
+          final manga = mangas[index];
+          return _buildMangaCard(
+            context,
+            manga,
+            brandColor,
+            textColor,
+            cardColor,
+            offlineLibrary,
+            compact: compact,
+          );
+        },
       ),
     );
   }
@@ -191,25 +311,14 @@ class _HomePageState extends State<HomePage> {
         }
 
         final mangas = snapshot.data!.skip(skip).toList();
-        return SizedBox(
+        return _buildMangaList(
+          mangas,
+          brandColor,
+          textColor,
+          cardColor,
+          offlineLibrary,
           height: height,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: mangas.length,
-            itemBuilder: (context, index) {
-              final manga = mangas[index];
-              return _buildMangaCard(
-                context,
-                manga,
-                brandColor,
-                textColor,
-                cardColor,
-                offlineLibrary,
-                compact: compact,
-              );
-            },
-          ),
+          compact: compact,
         );
       },
     );

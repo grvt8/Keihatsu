@@ -11,6 +11,7 @@ import '../services/manga_repository.dart';
 import '../providers/auth_provider.dart'; // Added
 import '../providers/comments_provider.dart'; // Added
 import '../components/Comments.dart';
+import '../components/CustomBackButton.dart';
 
 class MangaReaderScreen extends StatefulWidget {
   final Manga manga;
@@ -309,13 +310,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                     ),
                     child: Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                          ),
-                          onPressed: () => Navigator.pop(context),
-                        ),
+                        const CustomBackButton(),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -446,7 +441,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(24),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
