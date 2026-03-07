@@ -192,6 +192,34 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
     }
   }
 
+  bool _hasPreviousChapter() {
+    return _currentChapterIndex < widget.chapters.length - 1;
+  }
+
+  bool _hasNextChapter() {
+    return _currentChapterIndex > 0;
+  }
+
+  void _goToPreviousChapter() {
+    setState(() => _currentChapterIndex++);
+    _loadPages();
+  }
+
+  void _goToNextChapter() {
+    setState(() => _currentChapterIndex--);
+    _loadPages();
+  }
+
+  void _scrollToPage(int pageIndex) {
+    if (_pages.isEmpty || !_scrollController.hasClients) return;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    if (maxScroll <= 0) return;
+
+    // Approximate scroll position
+    final targetOffset = (pageIndex / (_pages.length - 1)) * maxScroll;
+    _scrollController.jumpTo(targetOffset);
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -321,72 +349,87 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
 
           if (_showControls)
             Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                color: Colors.black.withOpacity(0.9),
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.all(15),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
+              bottom: 30,
+              left: 20,
+              right: 20,
+              child: SafeArea(
+                top: false,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildChapterButton(
+                      icon: PhosphorIcons.skipBack(PhosphorIconsStyle.fill),
+                      onPressed: _hasPreviousChapter()
+                          ? _goToPreviousChapter
+                          : null,
+                    ),
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: Container(
+                        height: 50,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Row(
                           children: [
-                            IconButton(
-                              icon: Icon(
-                                PhosphorIcons.caretDoubleLeft(),
-                                color: Colors.white,
-                              ),
-                              onPressed:
-                              _currentChapterIndex <
-                                  widget.chapters.length - 1
-                                  ? () {
-                                setState(() => _currentChapterIndex++);
-                                _loadPages();
-                              }
-                                  : null,
-                            ),
                             Text(
                               "${_sliderValue.toInt()}",
-                              style: const TextStyle(color: Colors.white),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Expanded(
-                              child: Slider(
-                                value: _sliderValue,
-                                min: 1,
-                                max: _pages.isEmpty
-                                    ? 1
-                                    : _pages.length.toDouble(),
-                                activeColor: Colors.white,
-                                inactiveColor: Colors.white24,
-                                onChanged: (val) =>
-                                    setState(() => _sliderValue = val),
+                              child: SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  trackHeight: 6,
+                                  activeTrackColor: const Color(0xFF34D399),
+                                  inactiveTrackColor: Colors.white.withOpacity(
+                                    0.2,
+                                  ),
+                                  thumbColor: const Color(0xFF34D399),
+                                  thumbShape: const VerticalBarThumbShape(),
+                                  overlayShape: const RoundSliderOverlayShape(
+                                    overlayRadius: 12,
+                                  ),
+                                  trackShape:
+                                  const RoundedRectSliderTrackShape(),
+                                ),
+                                child: Slider(
+                                  value: _sliderValue,
+                                  min: 1,
+                                  max: _pages.isEmpty
+                                      ? 1
+                                      : _pages.length.toDouble(),
+                                  divisions: _pages.isEmpty
+                                      ? 1
+                                      : _pages.length - 1,
+                                  onChanged: (val) {
+                                    setState(() => _sliderValue = val);
+                                    _scrollToPage(val.toInt() - 1);
+                                  },
+                                ),
                               ),
                             ),
                             Text(
                               "${_pages.length}",
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                PhosphorIcons.caretDoubleRight(),
+                              style: const TextStyle(
                                 color: Colors.white,
+                                fontWeight: FontWeight.bold,
                               ),
-                              onPressed: _currentChapterIndex > 0
-                                  ? () {
-                                setState(() => _currentChapterIndex--);
-                                _loadPages();
-                              }
-                                  : null,
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 15),
+                    _buildChapterButton(
+                      icon: PhosphorIcons.skipForward(PhosphorIconsStyle.fill),
+                      onPressed: _hasNextChapter() ? _goToNextChapter : null,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -484,5 +527,67 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildChapterButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.8),
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.white),
+        onPressed: onPressed,
+        disabledColor: Colors.white24,
+      ),
+    );
+  }
+}
+
+class VerticalBarThumbShape extends SliderComponentShape {
+  final double width;
+  final double height;
+  final Color color;
+
+  const VerticalBarThumbShape({
+    this.width = 4.0,
+    this.height = 24.0,
+    this.color = const Color(0xFF34D399),
+  });
+
+  @override
+  Size getPreferredSize(bool isEnabled, bool isDiscrete) {
+    return Size(width, height);
+  }
+
+  @override
+  void paint(
+      PaintingContext context,
+      Offset center, {
+        required Animation<double> activationAnimation,
+        required Animation<double> enableAnimation,
+        required bool isDiscrete,
+        required TextPainter labelPainter,
+        required RenderBox parentBox,
+        required SliderThemeData sliderTheme,
+        required TextDirection textDirection,
+        required double value,
+        required double textScaleFactor,
+        required Size sizeWithOverflow,
+      }) {
+    final Canvas canvas = context.canvas;
+    final Paint paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final RRect rRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: center, width: width, height: height),
+      const Radius.circular(2.0),
+    );
+
+    canvas.drawRRect(rRect, paint);
   }
 }
