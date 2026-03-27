@@ -166,6 +166,7 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
       'atsumaru': 'images/extensions/atsumaru.png',
       'manhuatop': 'images/extensions/manhuatop.jpeg',
       'weebcentral': 'images/extensions/weebcentral.png',
+      'mangafire': 'images/extensions/mangafire.png',
     };
 
     final imagePath = extensionImages[source.sourceId.toLowerCase()];

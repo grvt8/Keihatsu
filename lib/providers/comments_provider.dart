@@ -14,10 +14,10 @@ class CommentsProvider with ChangeNotifier {
   String? get error => _error;
 
   Future<void> fetchComments(
-      String mangaId,
-      String chapterId,
-      String? token,
-      ) async {
+    String mangaId,
+    String chapterId,
+    String? token,
+  ) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -32,7 +32,9 @@ class CommentsProvider with ChangeNotifier {
       final encodedChapterId = Uri.encodeComponent(chapterId);
 
       final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/comments/$encodedMangaId/$encodedChapterId'),
+        Uri.parse(
+          '${ApiConstants.baseUrl}/comments/$encodedMangaId/$encodedChapterId',
+        ),
         headers: headers,
       );
 
@@ -54,13 +56,13 @@ class CommentsProvider with ChangeNotifier {
   }
 
   Future<void> postComment(
-      String mangaId,
-      String chapterId,
-      String content,
-      String token, {
-        String? parentId,
-        List<String> imagePaths = const [],
-      }) async {
+    String mangaId,
+    String chapterId,
+    String content,
+    String token, {
+    String? parentId,
+    List<String> imagePaths = const [],
+  }) async {
     try {
       final encodedMangaId = Uri.encodeComponent(mangaId);
       final encodedChapterId = Uri.encodeComponent(chapterId);
@@ -100,28 +102,26 @@ class CommentsProvider with ChangeNotifier {
     }
   }
 
-  Future<void> voteComment(
-      String commentId,
-      String type,
-      String token,
-      String mangaId,
-      String chapterId,
-      ) async {
+  Future<void> likeComment(
+    String commentId,
+    String token,
+    String mangaId,
+    String chapterId,
+  ) async {
     try {
       final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/comments/$commentId/vote'),
+        Uri.parse('${ApiConstants.baseUrl}/comments/$commentId/like'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: json.encode({'type': type}),
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         // Refresh comments to get updated counts
         await fetchComments(mangaId, chapterId, token);
       } else {
-        throw Exception('Failed to vote: ${response.statusCode}');
+        throw Exception('Failed to like: ${response.statusCode}');
       }
     } catch (e) {
       rethrow;

@@ -1,6 +1,5 @@
 import 'package:keihatsu/models/user.dart';
 
-
 class Comment {
   final String id;
   final String content;
@@ -12,10 +11,9 @@ class Comment {
   final String? parentId;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final int upvotes;
-  final int downvotes;
+  final int likes;
   final List<Comment> replies;
-  final List<CommentVote>? votes;
+  final List<CommentLike>? userLikes;
 
   Comment({
     required this.id,
@@ -28,43 +26,46 @@ class Comment {
     this.parentId,
     required this.createdAt,
     required this.updatedAt,
-    this.upvotes = 0,
-    this.downvotes = 0,
+    this.likes = 0,
     this.replies = const [],
-    this.votes,
+    this.userLikes,
   });
 
   factory Comment.fromJson(Map<String, dynamic> json) {
     return Comment(
-      id: json['id'],
-      content: json['content'],
+      id: json['id'] ?? '',
+      content: json['content'] ?? '',
       images: List<String>.from(json['images'] ?? []),
-      userId: json['userId'],
+      userId: json['userId'] ?? '',
       user: json['user'] != null ? User.fromJson(json['user']) : null,
-      mangaId: json['mangaId'],
-      chapterId: json['chapterId'],
+      mangaId: json['mangaId'] ?? '',
+      chapterId: json['chapterId'] ?? '',
       parentId: json['parentId'],
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
-      upvotes: json['upvotes'] ?? 0,
-      downvotes: json['downvotes'] ?? 0,
-      replies: (json['replies'] as List<dynamic>?)
-          ?.map((e) => Comment.fromJson(e))
-          .toList() ??
+      createdAt: DateTime.parse(
+        json['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
+      updatedAt: DateTime.parse(
+        json['updatedAt'] ?? DateTime.now().toIso8601String(),
+      ),
+      likes: json['likes'] ?? 0,
+      replies:
+          (json['replies'] as List<dynamic>?)
+              ?.map((e) => Comment.fromJson(e))
+              .toList() ??
           [],
-      votes: (json['votes'] as List<dynamic>?)
-          ?.map((e) => CommentVote.fromJson(e))
+      userLikes: (json['userLikes'] as List<dynamic>?)
+          ?.map((e) => CommentLike.fromJson(e))
           .toList(),
     );
   }
 }
 
-class CommentVote {
-  final String type; // 'UPVOTE' or 'DOWNVOTE'
+class CommentLike {
+  final String id;
 
-  CommentVote({required this.type});
+  CommentLike({required this.id});
 
-  factory CommentVote.fromJson(Map<String, dynamic> json) {
-    return CommentVote(type: json['type']);
+  factory CommentLike.fromJson(Map<String, dynamic> json) {
+    return CommentLike(id: json['id'] ?? '');
   }
 }
