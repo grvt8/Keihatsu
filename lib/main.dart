@@ -79,13 +79,13 @@ void main() async {
   final libraryApi = LibraryApi();
   final authApi = AuthApi();
 
-  // We'll update the token retrieval logic later when AuthProvider is integrated
-  String? getToken() => null;
+  // Mutable token getter — starts as null, gets wired to AuthProvider after it's created
+  String? Function() _getToken = () => null;
 
   final syncManager = SyncManager(
     isar: isar,
     libraryApi: libraryApi,
-    getToken: getToken,
+    getToken: () => _getToken(),
   );
 
   final sourcesRepo = SourcesRepository(
@@ -111,20 +111,31 @@ void main() async {
     fileService: fileService,
   );
 
+  // Create AuthProvider and wire up the token getter for SyncManager
+  final authProvider = AuthProvider(
+    userRepository: userRepo,
+    onLogout: () async {
+      await isar.writeTxn(() async {
+        await isar.clear();
+      });
+    },
+  );
+
+  // NOW wire the SyncManager's token getter to the real AuthProvider
+  _getToken = () => authProvider.token;
+
+  // When auth state changes (login/logout), trigger the sync queue
+  authProvider.addListener(() {
+    if (authProvider.token != null) {
+      syncManager.processSyncQueue();
+    }
+  });
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: themeProvider),
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(
-            userRepository: userRepo,
-            onLogout: () async {
-              await isar.writeTxn(() async {
-                await isar.clear();
-              });
-            },
-          ),
-        ),
+        ChangeNotifierProvider.value(value: authProvider),
         // Repositories
         Provider.value(value: sourcesRepo),
         Provider.value(value: mangaRepo),
@@ -136,7 +147,7 @@ void main() async {
             libraryRepo: libraryRepo,
             mangaRepo: mangaRepo,
             getToken: () =>
-            Provider.of<AuthProvider>(context, listen: false).token,
+                Provider.of<AuthProvider>(context, listen: false).token,
           ),
           update: (context, auth, previous) => previous!,
         ),
@@ -145,7 +156,7 @@ void main() async {
             isar: isar,
             mangaRepo: mangaRepo,
             getToken: () =>
-            Provider.of<AuthProvider>(context, listen: false).token,
+                Provider.of<AuthProvider>(context, listen: false).token,
           ),
           update: (context, auth, previous) => previous!,
         ),

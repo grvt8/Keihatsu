@@ -106,7 +106,7 @@ class LibraryRepository {
                     .mangaIdEqualTo(mangaId)
                     .sourceIdEqualTo(sourceId)
                     .findFirst() ??
-                    LocalLibraryEntry();
+                LocalLibraryEntry();
 
             entry
               ..serverId = item['id']
@@ -178,10 +178,10 @@ class LibraryRepository {
   }
 
   Future<void> addToLibrary(
-      String token,
-      Manga manga, {
-        List<String>? categories,
-      }) async {
+    String token,
+    Manga manga, {
+    List<String>? categories,
+  }) async {
     // We try to get total chapters if possible from local or basic info
     // However, manga object passed here might be minimal.
     // Ideally, we fetch details first or rely on next refresh.
@@ -211,7 +211,8 @@ class LibraryRepository {
       ..language = manga.lang
       ..isBookmarked = true
       ..dateAddedAt = DateTime.now()
-      ..unreadCount = totalChapters // Initialize with available count
+      ..unreadCount =
+          totalChapters // Initialize with available count
       ..totalChapters = totalChapters;
 
     await isar.writeTxn(() async {
@@ -224,6 +225,7 @@ class LibraryRepository {
       'title': manga.title,
       'thumbnailUrl': manga.thumbnailUrl,
       'author': manga.author,
+      'language': manga.lang,
     });
 
     if (categories != null && categories.isNotEmpty) {
@@ -241,10 +243,10 @@ class LibraryRepository {
   }
 
   Future<void> toggleCategoryAssignment(
-      String mangaId,
-      String sourceId,
-      int localCategoryId,
-      ) async {
+    String mangaId,
+    String sourceId,
+    int localCategoryId,
+  ) async {
     final existing = await isar
         .collection<LocalCategoryAssignment>()
         .filter()
@@ -257,7 +259,7 @@ class LibraryRepository {
 
     if (existing != null) {
       await isar.writeTxn(
-            () => isar.collection<LocalCategoryAssignment>().delete(existing.id),
+        () => isar.collection<LocalCategoryAssignment>().delete(existing.id),
       );
       // Note: Backend API currently only supports "set", so "removal" would be
       // assigning to a different category or clearing.
@@ -268,7 +270,7 @@ class LibraryRepository {
         ..localCategoryId = localCategoryId;
 
       await isar.writeTxn(
-            () => isar.collection<LocalCategoryAssignment>().put(assignment),
+        () => isar.collection<LocalCategoryAssignment>().put(assignment),
       );
 
       await syncManager.addToQueue('ASSIGN_CATEGORY', {
@@ -280,10 +282,10 @@ class LibraryRepository {
   }
 
   Future<void> updateLibraryEntry(
-      String token,
-      String mangaId,
-      Map<String, dynamic> updates,
-      ) async {
+    String token,
+    String mangaId,
+    Map<String, dynamic> updates,
+  ) async {
     final entry = await isar
         .collection<LocalLibraryEntry>()
         .filter()
@@ -299,7 +301,7 @@ class LibraryRepository {
         entry.isCompleted = updates['isCompleted'];
 
       await isar.writeTxn(
-            () => isar.collection<LocalLibraryEntry>().put(entry),
+        () => isar.collection<LocalLibraryEntry>().put(entry),
       );
 
       if (entry.serverId != null) {
@@ -312,10 +314,10 @@ class LibraryRepository {
   }
 
   Future<void> removeFromLibrary(
-      String token,
-      String mangaId,
-      String sourceId,
-      ) async {
+    String token,
+    String mangaId,
+    String sourceId,
+  ) async {
     final entry = await isar
         .collection<LocalLibraryEntry>()
         .filter()
