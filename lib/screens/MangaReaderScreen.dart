@@ -34,9 +34,12 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
   double _sliderValue = 1;
   bool _showControls = true;
   bool _isLoading = true;
-  List<dynamic> _pages = []; // List<ReaderPage> or List<LocalPage>
+  bool _isAppendingNextChapter = false;
+  final Map<int, List<dynamic>> _chapterPages = {};
+  final List<_ReaderItem> _items = [];
   final ScrollController _scrollController = ScrollController();
   int _currentPageIndex = 0;
+  int _bottomChapterIndex = 0;
 
   // History tracking
   Timer? _debounceTimer;
@@ -48,21 +51,50 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
     super.initState();
     _readingTimer.start();
     _currentChapterIndex = widget.initialChapterIndex;
+    _bottomChapterIndex = _currentChapterIndex;
     _loadLocalManga();
-    _loadPages();
+    _loadInitialChapter();
 
     _scrollController.addListener(() {
-      if (_pages.isNotEmpty) {
+      if (_items.isNotEmpty) {
         double maxScroll = _scrollController.position.maxScrollExtent;
         double currentScroll = _scrollController.position.pixels;
         if (maxScroll > 0) {
-          final pageIndex = ((currentScroll / maxScroll) * (_pages.length - 1))
-              .clamp(0, _pages.length - 1);
-          setState(() {
-            _sliderValue = pageIndex + 1;
-          });
+          final estimatedIndex = ((currentScroll / maxScroll) * (_items.length - 1))
+              .clamp(0, _items.length - 1)
+              .round();
 
-          _debounceSaveProgress(pageIndex.round());
+          final nearestImageItem = _nearestImageItem(estimatedIndex);
+          if (nearestImageItem != null) {
+            final chapterPages = _chapterPages[nearestImageItem.chapterIndex] ?? [];
+            final sliderValue = (nearestImageItem.pageIndex + 1)
+                .toDouble()
+                .clamp(
+              1.0,
+              chapterPages.isEmpty ? 1.0 : chapterPages.length.toDouble(),
+            )
+                .toDouble();
+
+            if (mounted) {
+              setState(() {
+                _currentChapterIndex = nearestImageItem.chapterIndex;
+                _currentPageIndex = nearestImageItem.pageIndex;
+                _sliderValue = sliderValue;
+              });
+            }
+
+            if (chapterPages.isNotEmpty) {
+              _debounceSaveProgress(
+                nearestImageItem.chapterIndex,
+                nearestImageItem.pageIndex,
+                chapterPages.length,
+              );
+            }
+          }
+
+          if (currentScroll >= maxScroll - 800) {
+            _maybeAppendNextChapter();
+          }
         }
       }
     });
@@ -71,7 +103,10 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
   @override
   void dispose() {
     _debounceTimer?.cancel();
-    _saveProgress(_currentPageIndex);
+    final chapterPages = _chapterPages[_currentChapterIndex];
+    if (chapterPages != null && chapterPages.isNotEmpty) {
+      _saveProgress(_currentChapterIndex, _currentPageIndex, chapterPages.length);
+    }
     _scrollController.dispose();
     super.dispose();
   }
@@ -85,25 +120,31 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
     );
   }
 
-  void _debounceSaveProgress(int pageIndex) {
+  void _debounceSaveProgress(
+      int chapterIndex,
+      int pageIndex,
+      int totalPages,
+      ) {
     if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
     _debounceTimer = Timer(const Duration(seconds: 3), () {
-      _saveProgress(pageIndex);
+      _saveProgress(chapterIndex, pageIndex, totalPages);
     });
   }
 
-  Future<void> _saveProgress(int pageIndex) async {
+  Future<void> _saveProgress(
+      int chapterIndex,
+      int pageIndex,
+      int totalPages,
+      ) async {
     if (!mounted || _localManga == null) return;
     try {
       final repo = Provider.of<MangaRepository>(context, listen: false);
       final auth = Provider.of<AuthProvider>(context, listen: false);
 
-      final chapter = widget.chapters[_currentChapterIndex];
-      final chapterId = chapter is Chapter
-          ? chapter.id
-          : (chapter as LocalChapter).chapterId;
+      final chapter = widget.chapters[chapterIndex];
+      final chapterId = _getChapterId(chapter);
 
-      final isRead = _pages.isNotEmpty && pageIndex >= _pages.length - 1;
+      final isRead = totalPages > 0 && pageIndex >= totalPages - 1;
 
       final readingTimeMs = _readingTimer.elapsedMilliseconds;
       _readingTimer.reset();
@@ -126,58 +167,76 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
     }
   }
 
-  Future<void> _loadPages() async {
+  String _getChapterId(dynamic chapter) {
+    return chapter is Chapter ? chapter.id : (chapter as LocalChapter).chapterId;
+  }
+
+  String _getChapterName(dynamic chapter) {
+    return chapter is Chapter ? chapter.name : (chapter as LocalChapter).name;
+  }
+
+  Future<List<dynamic>> _fetchPagesForChapter(int chapterIndex) async {
+    final repo = Provider.of<MangaRepository>(context, listen: false);
+    final chapter = widget.chapters[chapterIndex];
+    final chapterId = _getChapterId(chapter);
+
+    final localPages = await repo.getChapterPages(chapterId);
+    bool useLocal = false;
+
+    if (localPages.isNotEmpty) {
+      if (localPages.first.imageLocalPath != null) {
+        final file = File(localPages.first.imageLocalPath!);
+        if (await file.exists()) {
+          useLocal = true;
+        }
+      }
+    }
+
+    if (useLocal) {
+      return localPages;
+    }
+
+    final remotePages = await repo.api.getPages(widget.manga.sourceId, chapterId);
+    return remotePages;
+  }
+
+  void _addChapterItems(int chapterIndex, List<dynamic> pages) {
+    for (int i = 0; i < pages.length; i++) {
+      _items.add(
+        _ReaderImageItem(
+          chapterIndex: chapterIndex,
+          pageIndex: i,
+          page: pages[i],
+        ),
+      );
+    }
+  }
+
+  Future<void> _loadInitialChapter() async {
     setState(() {
       _isLoading = true;
-      _pages = [];
+      _items.clear();
+      _chapterPages.clear();
       _sliderValue = 1;
     });
 
     try {
-      final repo = Provider.of<MangaRepository>(context, listen: false);
-      final chapter = widget.chapters[_currentChapterIndex];
-      final chapterId = chapter is Chapter
-          ? chapter.id
-          : (chapter as LocalChapter).chapterId;
+      final pages = await _fetchPagesForChapter(_currentChapterIndex);
+      _chapterPages[_currentChapterIndex] = pages;
+      _addChapterItems(_currentChapterIndex, pages);
 
-      // Update history immediately on chapter load (page 0)
+      setState(() {
+        _isLoading = false;
+      });
+
       if (_localManga != null) {
-        _saveProgress(0);
+        _saveProgress(_currentChapterIndex, 0, pages.length);
       } else {
-        // Retry after short delay if localManga not loaded yet
         Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted && _localManga != null) _saveProgress(0);
-        });
-      }
-
-      // Try local first
-      final localPages = await repo.getChapterPages(chapterId);
-      bool useLocal = false;
-
-      if (localPages.isNotEmpty) {
-        // Verify files actually exist
-        if (localPages.first.imageLocalPath != null) {
-          final file = File(localPages.first.imageLocalPath!);
-          if (await file.exists()) {
-            useLocal = true;
+          final chapterPages = _chapterPages[_currentChapterIndex];
+          if (mounted && _localManga != null && chapterPages != null) {
+            _saveProgress(_currentChapterIndex, 0, chapterPages.length);
           }
-        }
-      }
-
-      if (useLocal) {
-        setState(() {
-          _pages = localPages;
-          _isLoading = false;
-        });
-      } else {
-        // Fallback to API if not downloaded
-        final remotePages = await repo.api.getPages(
-          widget.manga.sourceId,
-          chapterId,
-        );
-        setState(() {
-          _pages = remotePages;
-          _isLoading = false;
         });
       }
 
@@ -194,6 +253,27 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
     }
   }
 
+  _ReaderImageItem? _nearestImageItem(int startIndex) {
+    if (_items.isEmpty) return null;
+
+    if (_items[startIndex] is _ReaderImageItem) {
+      return _items[startIndex] as _ReaderImageItem;
+    }
+
+    for (int delta = 1; delta < _items.length; delta++) {
+      final left = startIndex - delta;
+      if (left >= 0 && _items[left] is _ReaderImageItem) {
+        return _items[left] as _ReaderImageItem;
+      }
+      final right = startIndex + delta;
+      if (right < _items.length && _items[right] is _ReaderImageItem) {
+        return _items[right] as _ReaderImageItem;
+      }
+    }
+
+    return null;
+  }
+
   bool _hasPreviousChapter() {
     return _currentChapterIndex < widget.chapters.length - 1;
   }
@@ -204,22 +284,83 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
 
   void _goToPreviousChapter() {
     setState(() => _currentChapterIndex++);
-    _loadPages();
+    _bottomChapterIndex = _currentChapterIndex;
+    _loadInitialChapter();
   }
 
   void _goToNextChapter() {
     setState(() => _currentChapterIndex--);
-    _loadPages();
+    _bottomChapterIndex = _currentChapterIndex;
+    _loadInitialChapter();
   }
 
   void _scrollToPage(int pageIndex) {
-    if (_pages.isEmpty || !_scrollController.hasClients) return;
+    final chapterPages = _chapterPages[_currentChapterIndex];
+    if (chapterPages == null || chapterPages.isEmpty || !_scrollController.hasClients) {
+      return;
+    }
     final maxScroll = _scrollController.position.maxScrollExtent;
     if (maxScroll <= 0) return;
 
-    // Approximate scroll position
-    final targetOffset = (pageIndex / (_pages.length - 1)) * maxScroll;
+    final itemIndex = _items.indexWhere(
+          (item) =>
+      item is _ReaderImageItem &&
+          item.chapterIndex == _currentChapterIndex &&
+          item.pageIndex == pageIndex,
+    );
+    if (itemIndex == -1) return;
+
+    final targetOffset = (_items.length <= 1)
+        ? 0.0
+        : (itemIndex / (_items.length - 1)) * maxScroll;
     _scrollController.jumpTo(targetOffset);
+  }
+
+  Future<void> _maybeAppendNextChapter() async {
+    if (_isLoading || _isAppendingNextChapter) return;
+    if (_bottomChapterIndex <= 0) return;
+
+    final nextChapterIndex = _bottomChapterIndex - 1;
+    if (_chapterPages.containsKey(nextChapterIndex)) return;
+
+    setState(() => _isAppendingNextChapter = true);
+
+    try {
+      final previousChapter = widget.chapters[_bottomChapterIndex];
+      final currentChapter = widget.chapters[nextChapterIndex];
+
+      final nextPages = await _fetchPagesForChapter(nextChapterIndex);
+      _chapterPages[nextChapterIndex] = nextPages;
+
+      _items.add(
+        _ReaderChapterSeparatorItem(
+          previousChapterName: _getChapterName(previousChapter),
+          currentChapterName: _getChapterName(currentChapter),
+        ),
+      );
+      _addChapterItems(nextChapterIndex, nextPages);
+
+      _bottomChapterIndex = nextChapterIndex;
+
+      if (_localManga != null) {
+        _saveProgress(nextChapterIndex, 0, nextPages.length);
+      } else {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          final chapterPages = _chapterPages[nextChapterIndex];
+          if (mounted && _localManga != null && chapterPages != null) {
+            _saveProgress(nextChapterIndex, 0, chapterPages.length);
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading next chapter: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isAppendingNextChapter = false);
+    }
   }
 
   @override
@@ -227,9 +368,8 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final brandColor = themeProvider.brandColor;
     final currentChapter = widget.chapters[_currentChapterIndex];
-    final chapterName = currentChapter is Chapter
-        ? currentChapter.name
-        : (currentChapter as LocalChapter).name;
+    final chapterName = _getChapterName(currentChapter);
+    final currentChapterPages = _chapterPages[_currentChapterIndex] ?? [];
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -241,7 +381,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                 ? const Center(
               child: CircularProgressIndicator(color: Colors.white),
             )
-                : _pages.isEmpty
+                : _items.isEmpty
                 ? const Center(
               child: Text(
                 "No pages found",
@@ -250,9 +390,30 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
             )
                 : ListView.builder(
               controller: _scrollController,
-              itemCount: _pages.length,
+              itemCount: _items.length + (_isAppendingNextChapter ? 1 : 0),
               itemBuilder: (context, index) {
-                final page = _pages[index];
+                if (index >= _items.length) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                    ),
+                  );
+                }
+
+                final item = _items[index];
+
+                if (item is _ReaderChapterSeparatorItem) {
+                  return _ChapterSeparator(
+                    previousChapterName: item.previousChapterName,
+                    currentChapterName: item.currentChapterName,
+                  );
+                }
+
+                final imageItem = item as _ReaderImageItem;
+                final page = imageItem.page;
                 ImageProvider imageProvider;
 
                 if (page is LocalPage && page.imageLocalPath != null) {
@@ -398,12 +559,12 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                                 child: Slider(
                                   value: _sliderValue,
                                   min: 1,
-                                  max: _pages.isEmpty
+                                  max: currentChapterPages.isEmpty
                                       ? 1
-                                      : _pages.length.toDouble(),
-                                  divisions: _pages.isEmpty
+                                      : currentChapterPages.length.toDouble(),
+                                  divisions: currentChapterPages.isEmpty
                                       ? 1
-                                      : _pages.length - 1,
+                                      : currentChapterPages.length - 1,
                                   onChanged: (val) {
                                     setState(() => _sliderValue = val);
                                     _scrollToPage(val.toInt() - 1);
@@ -412,7 +573,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                               ),
                             ),
                             Text(
-                              "${_pages.length}",
+                              "${currentChapterPages.length}",
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -513,8 +674,9 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                                   onChapterChange: (index) {
                                     setState(() {
                                       _currentChapterIndex = index;
+                                      _bottomChapterIndex = index;
                                     });
-                                    _loadPages();
+                                    _loadInitialChapter();
                                   },
                                 ),
                               );
@@ -547,6 +709,98 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
         icon: Icon(icon, color: Colors.white),
         onPressed: onPressed,
         disabledColor: Colors.white24,
+      ),
+    );
+  }
+}
+
+sealed class _ReaderItem {}
+
+class _ReaderImageItem extends _ReaderItem {
+  final int chapterIndex;
+  final int pageIndex;
+  final dynamic page;
+
+  _ReaderImageItem({
+    required this.chapterIndex,
+    required this.pageIndex,
+    required this.page,
+  });
+}
+
+class _ReaderChapterSeparatorItem extends _ReaderItem {
+  final String previousChapterName;
+  final String currentChapterName;
+
+  _ReaderChapterSeparatorItem({
+    required this.previousChapterName,
+    required this.currentChapterName,
+  });
+}
+
+class _ChapterSeparator extends StatelessWidget {
+  final String previousChapterName;
+  final String currentChapterName;
+
+  const _ChapterSeparator({
+    required this.previousChapterName,
+    required this.currentChapterName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.black,
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 48),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Previous:',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            previousChapterName,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: 40,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 42),
+          const Text(
+            'Current:',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  currentChapterName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 40,
+                    height: 1.1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

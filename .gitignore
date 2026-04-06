@@ -46,3 +46,10 @@ google-services.json
 /android/app/profile
 /android/app/release
 /android/app/google-services.json
+
+# Signing — NEVER commit these
+/android/key.properties
+/android/upload-keystore.jks
+/android/app/upload-keystore.jks
+*.jks
+*.keystore

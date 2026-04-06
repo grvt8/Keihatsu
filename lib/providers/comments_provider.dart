@@ -16,11 +16,14 @@ class CommentsProvider with ChangeNotifier {
   Future<void> fetchComments(
     String mangaId,
     String chapterId,
-    String? token,
-  ) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    String? token, {
+    bool showLoader = true,
+  }) async {
+    if (showLoader) {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+    }
 
     try {
       final headers = {'Content-Type': 'application/json'};
@@ -50,7 +53,9 @@ class CommentsProvider with ChangeNotifier {
     } catch (e) {
       _error = e.toString();
     } finally {
-      _isLoading = false;
+      if (showLoader) {
+        _isLoading = false;
+      }
       notifyListeners();
     }
   }
@@ -118,8 +123,8 @@ class CommentsProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        // Refresh comments to get updated counts
-        await fetchComments(mangaId, chapterId, token);
+        // Refresh comments seamlessly
+        await fetchComments(mangaId, chapterId, token, showLoader: false);
       } else {
         throw Exception('Failed to like: ${response.statusCode}');
       }

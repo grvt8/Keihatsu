@@ -1,0 +1,276 @@
+# =============================================================================
+# Keihatsu — Automated Release Workflow
+# =============================================================================
+# Triggers on semantic version tags (e.g., v1.2.0).
+# Builds a signed release APK and publishes it as a GitHub Release asset.
+#
+# Required GitHub Secrets:
+#   KEYSTORE_BASE64       — Base64-encoded upload-keystore.jks
+#   KEY_ALIAS             — Keystore alias  (e.g. "upload")
+#   KEY_PASSWORD          — Key password
+#   STORE_PASSWORD        — Keystore password
+#   GOOGLE_SERVICES_JSON  — Contents of android/app/google-services.json
+#
+# Optional secrets (for future use):
+#   FIREBASE_APP_ID       — Firebase App Distribution app ID
+# =============================================================================
+
+name: "🚀 Release APK"
+
+on:
+  push:
+    tags:
+      - "v*"           # Trigger on any tag starting with 'v' (e.g., v1.0.0, v1.2.3)
+
+# Prevent concurrent releases for the same ref
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write       # Needed to create GitHub Releases
+
+env:
+  FLUTTER_VERSION: "3.29.3"   # Stable version compatible with Dart SDK ^3.8.1
+  JAVA_VERSION: "17"
+
+jobs:
+  # ===========================================================================
+  # Job: Build & Release
+  # ===========================================================================
+  build-and-release:
+    name: "Build Release APK"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Checkout
+      # -----------------------------------------------------------------------
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # Full history for release notes generation
+
+      # -----------------------------------------------------------------------
+      # 2. Extract version info & validate
+      # -----------------------------------------------------------------------
+      - name: 🏷️ Extract tag version
+        id: tag
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          TAG_VERSION="${TAG_NAME#v}"
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "tag_version=${TAG_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "📌 Tag: ${TAG_NAME} → Version: ${TAG_VERSION}"
+
+      - name: ✅ Validate tag matches pubspec.yaml version
+        run: |
+          # Extract version from pubspec.yaml (e.g., "1.2.0+4" → "1.2.0")
+          PUBSPEC_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: *//' | sed 's/+.*//' | tr -d '[:space:]')
+          TAG_VERSION="${{ steps.tag.outputs.tag_version }}"
+
+          # Strip build metadata from tag too if present (v1.2.0+4 → 1.2.0)
+          TAG_VERSION_CLEAN=$(echo "$TAG_VERSION" | sed 's/+.*//')
+
+          echo "📦 pubspec.yaml version: ${PUBSPEC_VERSION}"
+          echo "🏷️  Git tag version:      ${TAG_VERSION_CLEAN}"
+
+          if [ "$PUBSPEC_VERSION" != "$TAG_VERSION_CLEAN" ]; then
+            echo "❌ ERROR: Version mismatch!"
+            echo "   pubspec.yaml has '${PUBSPEC_VERSION}' but tag is 'v${TAG_VERSION_CLEAN}'"
+            echo "   Please ensure the tag matches the version in pubspec.yaml."
+            exit 1
+          fi
+
+          echo "✅ Versions match!"
+
+      # -----------------------------------------------------------------------
+      # 3. Set up Java (required for Android builds)
+      # -----------------------------------------------------------------------
+      - name: ☕ Set up Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: ${{ env.JAVA_VERSION }}
+
+      # -----------------------------------------------------------------------
+      # 4. Set up Flutter with caching
+      # -----------------------------------------------------------------------
+      - name: 🐦 Set up Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          cache-key: "flutter-:os:-:channel:-:version:-:arch:-:hash:"
+          cache-path: "${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:"
+
+      # Cache pub dependencies
+      - name: 📦 Cache Pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+            .dart_tool/
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-
+
+      # -----------------------------------------------------------------------
+      # 5. Install dependencies
+      # -----------------------------------------------------------------------
+      - name: 📥 Install dependencies
+        run: flutter pub get
+
+      - name: 🔍 Flutter doctor
+        run: flutter doctor -v
+
+      # -----------------------------------------------------------------------
+      # 6. Inject Firebase config (google-services.json)
+      # -----------------------------------------------------------------------
+      - name: 🔥 Inject google-services.json
+        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > android/app/google-services.json
+
+      # -----------------------------------------------------------------------
+      # 7. Set up Android Signing (OPTIONAL / FUTURE)
+      # -----------------------------------------------------------------------
+      # UNCOMMENT THIS BLOCK LATER ONCE SECRETS ARE SET UP
+      # - name: 🔐 Set up Android signing
+      #   if: secrets.KEYSTORE_BASE64 != '' && secrets.KEY_ALIAS != ''
+      #   run: |
+      #     # Decode keystore
+      #     echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+      #
+      #     # Create key.properties
+      #     cat > android/key.properties << EOF
+      #     storePassword=${{ secrets.STORE_PASSWORD }}
+      #     keyPassword=${{ secrets.KEY_PASSWORD }}
+      #     keyAlias=${{ secrets.KEY_ALIAS }}
+      #     storeFile=upload-keystore.jks
+      #     EOF
+      #
+      #     echo "✅ Signing configured"
+
+      # -----------------------------------------------------------------------
+      # 8. Build release APK
+      # -----------------------------------------------------------------------
+      - name: 🔨 Build release APK
+        run: |
+          flutter build apk --release \
+            --build-name=${{ steps.tag.outputs.tag_version }} \
+            --dart-define=APP_VERSION=${{ steps.tag.outputs.tag_version }}
+
+      # -----------------------------------------------------------------------
+      # 9. Rename APK with version
+      # -----------------------------------------------------------------------
+      - name: 📎 Rename APK artifact
+        id: apk
+        run: |
+          APK_NAME="keihatsu-release-${{ steps.tag.outputs.tag_name }}.apk"
+          APK_SOURCE="build/app/outputs/flutter-apk/app-release.apk"
+
+          if [ ! -f "$APK_SOURCE" ]; then
+            echo "❌ APK not found at $APK_SOURCE"
+            ls -la build/app/outputs/flutter-apk/ || true
+            exit 1
+          fi
+
+          cp "$APK_SOURCE" "$APK_NAME"
+          APK_SIZE=$(du -h "$APK_NAME" | cut -f1)
+
+          echo "apk_name=${APK_NAME}" >> "$GITHUB_OUTPUT"
+          echo "apk_path=${APK_NAME}" >> "$GITHUB_OUTPUT"
+          echo "📦 APK: ${APK_NAME} (${APK_SIZE})"
+
+      # -----------------------------------------------------------------------
+      # 10. Generate release notes from Git history
+      # -----------------------------------------------------------------------
+      - name: 📝 Generate release notes
+        id: release_notes
+        run: |
+          # Find the previous tag
+          PREVIOUS_TAG=$(git tag --sort=-v:refname | head -n 2 | tail -n 1)
+          CURRENT_TAG="${{ steps.tag.outputs.tag_name }}"
+
+          echo "📌 Generating notes: ${PREVIOUS_TAG:-'(initial)'}..${CURRENT_TAG}"
+
+          # Build the release notes
+          {
+            echo "## 🎌 Keihatsu $CURRENT_TAG"
+            echo ""
+            echo "### What's Changed"
+            echo ""
+
+            if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$CURRENT_TAG" ]; then
+              # Categorize commits
+              FEATURES=$(git log "${PREVIOUS_TAG}..${CURRENT_TAG}" --pretty=format:"- %s (%h)" --grep="feat" --regexp-ignore-case 2>/dev/null || true)
+              FIXES=$(git log "${PREVIOUS_TAG}..${CURRENT_TAG}" --pretty=format:"- %s (%h)" --grep="fix" --regexp-ignore-case 2>/dev/null || true)
+              OTHER=$(git log "${PREVIOUS_TAG}..${CURRENT_TAG}" --pretty=format:"- %s (%h)" --invert-grep --grep="feat" --grep="fix" --all-match 2>/dev/null || true)
+
+              # All commits as fallback
+              ALL_COMMITS=$(git log "${PREVIOUS_TAG}..${CURRENT_TAG}" --pretty=format:"- %s (%h)" 2>/dev/null || true)
+
+              if [ -n "$FEATURES" ]; then
+                echo "#### ✨ Features"
+                echo "$FEATURES"
+                echo ""
+              fi
+
+              if [ -n "$FIXES" ]; then
+                echo "#### 🐛 Bug Fixes"
+                echo "$FIXES"
+                echo ""
+              fi
+
+              # If no categorized commits, show all
+              if [ -z "$FEATURES" ] && [ -z "$FIXES" ]; then
+                echo "$ALL_COMMITS"
+                echo ""
+              fi
+
+              COMPARE_URL="${{ github.server_url }}/${{ github.repository }}/compare/${PREVIOUS_TAG}...${CURRENT_TAG}"
+              echo "---"
+              echo "**Full Changelog:** [${PREVIOUS_TAG}...${CURRENT_TAG}](${COMPARE_URL})"
+            else
+              echo "🎉 Initial release!"
+            fi
+            echo ""
+            echo "---"
+            echo "📱 **Download:** Grab the APK from the assets below."
+          } > release_notes.md
+
+          cat release_notes.md
+          echo "notes_file=release_notes.md" >> "$GITHUB_OUTPUT"
+
+      # -----------------------------------------------------------------------
+      # 11. Create GitHub Release
+      # -----------------------------------------------------------------------
+      - name: 🚀 Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag.outputs.tag_name }}
+          name: "Keihatsu ${{ steps.tag.outputs.tag_name }}"
+          bodyFile: ${{ steps.release_notes.outputs.notes_file }}
+          artifacts: ${{ steps.apk.outputs.apk_path }}
+          artifactContentType: application/vnd.android.package-archive
+          draft: false
+          prerelease: ${{ contains(steps.tag.outputs.tag_name, '-') }}
+          makeLatest: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # -----------------------------------------------------------------------
+      # 12. Summary
+      # -----------------------------------------------------------------------
+      - name: 📊 Job Summary
+        if: always()
+        run: |
+          echo "## 🚀 Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Tag** | \`${{ steps.tag.outputs.tag_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **APK** | \`${{ steps.apk.outputs.apk_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Status** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Runner** | \`${{ runner.os }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Flutter** | \`${{ env.FLUTTER_VERSION }}\` |" >> $GITHUB_STEP_SUMMARY

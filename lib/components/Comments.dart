@@ -45,6 +45,25 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   late int _currentIndex;
   String? _replyingToCommentId;
   String? _replyingToUsername;
+  Set<String> _expandedComments = {};
+
+  String _formatCount(int count) {
+    if (count < 1000) return count.toString();
+    if (count < 100000)
+      return '${(count / 1000).toStringAsFixed(1)}k'.replaceAll('.0', '');
+    return '${(count / 1000000).toStringAsFixed(1)}m'.replaceAll('.0', '');
+  }
+
+  int _getTotalCommentsCount(List<Comment> comments) {
+    int count = 0;
+    for (var c in comments) {
+      count += 1; // parent
+      if (c.replies.isNotEmpty) {
+        count += _getTotalCommentsCount(c.replies);
+      }
+    }
+    return count;
+  }
 
   @override
   void initState() {
@@ -145,6 +164,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
 
     final content = _commentController.text;
     final images = List<String>.from(_selectedImages.map((e) => e.path));
+    final String? parentId = _replyingToCommentId; // Capture before clearing
 
     _commentController.clear();
     setState(() {
@@ -170,7 +190,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
         chapterId,
         content,
         auth.token ?? '',
-        parentId: _replyingToCommentId,
+        parentId: parentId,
         imagePaths: images,
       );
     } catch (e) {
@@ -323,11 +343,26 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "Comments on Episode ${widget.currentChapterIndex + 263}",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
+                        Text.rich(
+                          TextSpan(
+                            text: "Comments ",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: _formatCount(
+                                  _getTotalCommentsCount(
+                                    commentsProvider.comments,
+                                  ),
+                                ),
+                                style: TextStyle(
+                                  color: textColor.withOpacity(0.5),
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 25),
@@ -672,198 +707,190 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     final userImage = comment.user?.avatarUrl ?? "images/user3.jpeg";
     final time = _formatTime(comment.createdAt);
     final text = comment.content;
-    final likes = comment.likes.toString();
+    final int likeCount = comment.likes;
 
     // Check if user liked it
     final isLiked = comment.userLikes?.isNotEmpty == true;
+    final bool isExpanded = _expandedComments.contains(comment.id);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (isReply) ...[
-              const SizedBox(width: 15),
-              Container(
-                width: 2,
-                margin: const EdgeInsets.only(right: 15, bottom: 10),
-                decoration: BoxDecoration(
-                  color: textColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(1),
-                ),
-              ),
-            ],
-            GestureDetector(
-              onTap: () => _showUserProfile(context, user, userImage),
-              child: CircleAvatar(
-                radius: 14,
-                backgroundImage: userImage.startsWith('http')
-                    ? NetworkImage(userImage)
-                    : AssetImage(userImage) as ImageProvider,
-              ),
+    return Padding(
+      padding: EdgeInsets.only(bottom: isReply ? 12.0 : 20.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Avatar
+          GestureDetector(
+            onTap: () => _showUserProfile(context, user, userImage),
+            child: CircleAvatar(
+              radius: isReply ? 14 : 18,
+              backgroundImage: userImage.startsWith('http')
+                  ? NetworkImage(userImage)
+                  : AssetImage(userImage) as ImageProvider,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // User Info and Favorite Icon
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => _showUserProfile(context, user, userImage),
-                        child: Row(
-                          children: [
-                            Text(
-                              user,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
+          ),
+          const SizedBox(width: 12),
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Username
+                GestureDetector(
+                  onTap: () => _showUserProfile(context, user, userImage),
+                  child: Text(
+                    user,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: textColor.withOpacity(0.7),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                // Comment text
+                Text(text, style: const TextStyle(fontSize: 15, height: 1.4)),
+                // Images
+                if (comment.images.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: SizedBox(
+                      height: 180,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: comment.images.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: Image.network(
+                                comment.images[index],
+                                height: 180,
+                                width: 120,
+                                fit: BoxFit.cover,
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            Text(
-                              time,
-                              style: TextStyle(
-                                color: textColor.withOpacity(0.4),
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        icon: Icon(
-                          isLiked ? Icons.favorite : Icons.favorite_border,
-                          size: 18,
-                          color: isLiked
-                              ? Colors.red
-                              : textColor.withOpacity(0.6),
-                        ),
-                        onPressed: () {
-                          if (auth.token != null) {
-                            commentsProvider.likeComment(
-                              comment.id,
-                              auth.token!,
-                              widget.mangaId,
-                              widget.chapterId,
-                            );
-                          }
+                          );
                         },
                       ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  // Content Area
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        text,
-                        style: const TextStyle(fontSize: 15, height: 1.4),
+                const SizedBox(height: 8),
+                // Bottom Actions Row (Time, Reply, Likes)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      time,
+                      style: TextStyle(
+                        color: textColor.withOpacity(0.5),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                       ),
-                      if (comment.images.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: SizedBox(
-                            height: 180,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: comment.images.length,
-                              itemBuilder: (context, index) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(15),
-                                    child: Image.network(
-                                      comment.images[index],
-                                      height: 180,
-                                      width: 120,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
+                    ),
+                    const SizedBox(width: 16),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _replyingToCommentId = comment.id;
+                          _replyingToUsername = user;
+                        });
+                        _focusNode.requestFocus();
+                      },
+                      child: Text(
+                        "Reply",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: textColor.withOpacity(0.8),
                         ),
-                      // Actions
-                      const SizedBox(height: 8),
-                      Row(
+                      ),
+                    ),
+                    const Spacer(),
+                    // Heart and Count
+                    GestureDetector(
+                      onTap: () {
+                        if (auth.token != null) {
+                          commentsProvider.likeComment(
+                            comment.id,
+                            auth.token!,
+                            widget.mangaId,
+                            widget.chapterId,
+                          );
+                        }
+                      },
+                      child: Row(
                         children: [
-                          if (likes != "0") ...[
-                            Text(
-                              "$likes likes",
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: textColor.withOpacity(0.6),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 15),
-                          ],
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _replyingToCommentId = comment.id;
-                                _replyingToUsername = user;
-                              });
-                              _focusNode.requestFocus();
-                            },
-                            child: Text(
-                              "Reply",
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: textColor.withOpacity(0.6),
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
                           Icon(
-                            PhosphorIcons.dotsThreeVertical(),
-                            size: 20,
-                            color: textColor.withOpacity(0.4),
+                            isLiked ? Icons.favorite : Icons.favorite_border,
+                            size: 25,
+                            color: isLiked
+                                ? Colors.red
+                                : textColor.withOpacity(0.5),
                           ),
+                          if (likeCount > 0) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              _formatCount(likeCount),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: isLiked
+                                    ? Colors.red
+                                    : textColor.withOpacity(0.5),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
-                      // Collapsed Replies Indicator
-                      if (comment.replies.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8, bottom: 8),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 30,
-                                height: 1,
-                                color: textColor.withOpacity(0.2),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                "View ${comment.replies.length} replies",
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: textColor.withOpacity(0.6),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                PhosphorIcons.caretDown(),
-                                size: 14,
-                                color: textColor.withOpacity(0.6),
-                              ),
-                            ],
+                    ),
+                  ],
+                ),
+                // Collapsible Replies Toggle
+                if (comment.replies.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (isExpanded) {
+                          _expandedComments.remove(comment.id);
+                        } else {
+                          _expandedComments.add(comment.id);
+                        }
+                      });
+                    },
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 1,
+                          color: textColor.withOpacity(0.3),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          isExpanded
+                              ? "Hide replies"
+                              : "View ${comment.replies.length} replies",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: textColor.withOpacity(0.7),
                           ),
                         ),
-                    ],
+                        const SizedBox(width: 4),
+                        Icon(
+                          isExpanded
+                              ? PhosphorIcons.caretUp()
+                              : PhosphorIcons.caretDown(),
+                          size: 14,
+                          color: textColor.withOpacity(0.7),
+                        ),
+                      ],
+                    ),
                   ),
-                  // Render Sub-replies recursively
-                  if (comment.replies.isNotEmpty)
+                  if (isExpanded) ...[
+                    const SizedBox(height: 16),
                     ...comment.replies.map(
                       (reply) => _buildCommentThread(
                         context,
@@ -871,12 +898,13 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                         isReply: true,
                       ),
                     ),
+                  ],
                 ],
-              ),
+              ],
             ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }
