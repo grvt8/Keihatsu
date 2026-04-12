@@ -76,6 +76,44 @@ class User {
       'stats': stats?.toJson(),
     };
   }
+
+  User copyWith({
+    String? id,
+    String? googleId,
+    String? email,
+    String? avatarUrl,
+    String? bannerUrl,
+    String? username,
+    String? bio,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    DateTime? lastLoginAt,
+    bool? isOnboarded,
+    bool? isProfilePublic,
+    dynamic readingStats,
+    int? achievementCount,
+    int? points,
+    UserStats? stats,
+  }) {
+    return User(
+      id: id ?? this.id,
+      googleId: googleId ?? this.googleId,
+      email: email ?? this.email,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      bannerUrl: bannerUrl ?? this.bannerUrl,
+      username: username ?? this.username,
+      bio: bio ?? this.bio,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+      isOnboarded: isOnboarded ?? this.isOnboarded,
+      isProfilePublic: isProfilePublic ?? this.isProfilePublic,
+      readingStats: readingStats ?? this.readingStats,
+      achievementCount: achievementCount ?? this.achievementCount,
+      points: points ?? this.points,
+      stats: stats ?? this.stats,
+    );
+  }
 }
 
 class UserStats {
@@ -124,6 +162,90 @@ class AuthResponse {
     return AuthResponse(
       accessToken: json['accessToken'],
       user: User.fromJson(json['user']),
+    );
+  }
+}
+
+class PublicLibraryEntry {
+  final String id;
+  final String mangaId;
+  final String sourceId;
+  final String title;
+  final String? thumbnailUrl;
+  final String? author;
+  final int totalChapters;
+  final DateTime? lastReadAt;
+  final DateTime? dateAddedAt;
+
+  PublicLibraryEntry({
+    required this.id,
+    required this.mangaId,
+    required this.sourceId,
+    required this.title,
+    this.thumbnailUrl,
+    this.author,
+    this.totalChapters = 0,
+    this.lastReadAt,
+    this.dateAddedAt,
+  });
+
+  factory PublicLibraryEntry.fromJson(Map<String, dynamic> json) {
+    return PublicLibraryEntry(
+      id: json['id'] ?? '',
+      mangaId: json['mangaId'] ?? '',
+      sourceId: json['sourceId'] ?? '',
+      title: json['title'] ?? '',
+      thumbnailUrl: json['thumbnailUrl'],
+      author: json['author'],
+      totalChapters: json['totalChapters'] ?? 0,
+      lastReadAt: json['lastReadAt'] != null
+          ? DateTime.parse(json['lastReadAt'])
+          : null,
+      dateAddedAt: json['dateAddedAt'] != null
+          ? DateTime.parse(json['dateAddedAt'])
+          : null,
+    );
+  }
+}
+
+class PublicProfile {
+  final String id;
+  final String username;
+  final String? avatarUrl;
+  final String? bannerUrl;
+  final String? bio;
+  final bool isProfilePublic;
+  final DateTime? createdAt;
+  final UserStats? stats;
+  final List<PublicLibraryEntry> library;
+
+  PublicProfile({
+    required this.id,
+    required this.username,
+    this.avatarUrl,
+    this.bannerUrl,
+    this.bio,
+    this.isProfilePublic = true,
+    this.createdAt,
+    this.stats,
+    this.library = const [],
+  });
+
+  factory PublicProfile.fromJson(Map<String, dynamic> json) {
+    return PublicProfile(
+      id: json['id'] ?? '',
+      username: json['username'] ?? '',
+      avatarUrl: json['avatarUrl'],
+      bannerUrl: json['bannerUrl'],
+      bio: json['bio'],
+      isProfilePublic: json['isProfilePublic'] ?? true,
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : null,
+      stats: json['stats'] != null ? UserStats.fromJson(json['stats']) : null,
+      library: (json['library'] as List<dynamic>? ?? [])
+          .map((entry) => PublicLibraryEntry.fromJson(entry))
+          .toList(),
     );
   }
 }

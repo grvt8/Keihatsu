@@ -72,6 +72,18 @@ class AuthApi {
     }
   }
 
+  Future<PublicProfile> getPublicProfile(String userId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/user/profile/public/$userId'),
+    );
+
+    if (response.statusCode == 200) {
+      return PublicProfile.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to fetch public profile');
+    }
+  }
+
   Future<User> updateProfile({
     required String token,
     String? username,
@@ -114,6 +126,26 @@ class AuthApi {
     } catch (e) {
       print('Update Profile Exception: $e');
       rethrow;
+    }
+  }
+
+  Future<User> updateProfileVisibility({
+    required String token,
+    required bool isProfilePublic,
+  }) async {
+    final response = await http.patch(
+      Uri.parse('$baseUrl/user/profile/visibility'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({'isProfilePublic': isProfilePublic}),
+    );
+
+    if (response.statusCode == 200) {
+      return User.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to update profile visibility');
     }
   }
 

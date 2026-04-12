@@ -2,48 +2,57 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import '../models/user.dart';
+import '../services/auth_api.dart';
+import '../services/sources_repository.dart';
 import '../theme_provider.dart';
-import '../data/manga_data.dart';
 
 class PublicProfileScreen extends StatefulWidget {
-  final String username;
-  final String userImage;
+  final String userId;
+  final String fallbackUsername;
+  final String? fallbackAvatarUrl;
 
   const PublicProfileScreen({
     super.key,
-    required this.username,
-    required this.userImage,
+    required this.userId,
+    required this.fallbackUsername,
+    this.fallbackAvatarUrl,
   });
 
   @override
   State<PublicProfileScreen> createState() => _PublicProfileScreenState();
 }
 
-class _PublicProfileScreenState extends State<PublicProfileScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  late ScrollController _scrollController;
-  bool _showTitle = false;
+class _PublicProfileScreenState extends State<PublicProfileScreen> {
+  late Future<PublicProfile> _profileFuture;
   bool _isGridView = false;
+  Map<String, String> _sourceNames = {};
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    _scrollController = ScrollController();
-    _scrollController.addListener(() {
-      if (_scrollController.offset > 130) {
-        if (!_showTitle) setState(() => _showTitle = true);
-      } else {
-        if (_showTitle) setState(() => _showTitle = false);
-      }
+    _profileFuture = AuthApi().getPublicProfile(widget.userId);
+    _loadSourceNames();
+  }
+
+  Future<void> _loadSourceNames() async {
+    final sourcesRepo = Provider.of<SourcesRepository>(context, listen: false);
+    final sources = await sourcesRepo.getSources();
+    if (!mounted) return;
+
+    setState(() {
+      _sourceNames = {
+        for (final source in sources) source.sourceId: source.name,
+      };
     });
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    _scrollController.dispose();
-    super.dispose();
+  Future<void> _refreshProfile() async {
+    final future = AuthApi().getPublicProfile(widget.userId);
+    setState(() {
+      _profileFuture = future;
+    });
+    await future;
   }
 
   @override
@@ -51,97 +60,115 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> with SingleTi
     final themeProvider = Provider.of<ThemeProvider>(context);
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
-    final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
-    final Color textColor = isDarkMode ? Colors.white : Colors.black87;
-    final Color cardColor = isDarkMode ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
+    final cardColor = isDarkMode
+        ? Colors.white.withOpacity(0.05)
+        : Colors.black.withOpacity(0.05);
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: Stack(
-        children: [
-          NestedScrollView(
-            controller: _scrollController,
-            headerSliverBuilder: (context, innerBoxIsScrolled) {
-              return [
+      body: FutureBuilder<PublicProfile>(
+        future: _profileFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      PhosphorIcons.warningCircle(),
+                      size: 40,
+                      color: textColor.withOpacity(0.5),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Failed to load this profile',
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: _refreshProfile,
+                      child: const Text('Try again'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          final profile = snapshot.data!;
+
+          return RefreshIndicator(
+            onRefresh: _refreshProfile,
+            child: CustomScrollView(
+              slivers: [
                 SliverAppBar(
-                  expandedHeight: 180,
+                  expandedHeight: 220,
                   pinned: true,
                   backgroundColor: bgColor,
                   elevation: 0,
                   leading: IconButton(
-                    icon: Icon(Icons.arrow_back, color: _showTitle ? textColor : Colors.white),
+                    icon: const Icon(Icons.arrow_back),
+                    color: Colors.white,
                     onPressed: () => Navigator.pop(context),
                   ),
-                  title: _showTitle
-                      ? Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 16,
-                              backgroundImage: AssetImage(widget.userImage),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      widget.username,
-                                      style: GoogleFonts.denkOne(
-                                        textStyle: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: textColor,
-                                        ),
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _buildBadge(context, PhosphorIcons.hammer(PhosphorIconsStyle.fill), "", Colors.tealAccent),
-                                ],
-                              ),
-                            ),
-                          ],
-                        )
-                      : null,
                   flexibleSpace: FlexibleSpaceBar(
                     background: Stack(
-                      clipBehavior: Clip.none,
+                      fit: StackFit.expand,
                       children: [
-                        // Banner
-                        Container(
-                          height: 140,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: const AssetImage('images/profileBg.jpeg'),
-                              fit: BoxFit.cover,
-                              colorFilter: ColorFilter.mode(
-                                Colors.black.withOpacity(0.3),
-                                BlendMode.darken,
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Profile Picture
+                        _buildBanner(profile.bannerUrl),
+                        Container(color: Colors.black.withOpacity(0.35)),
                         Positioned(
-                          bottom: 10,
                           left: 20,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: bgColor,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(15),
-                              child: Image.asset(
-                                widget.userImage,
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
+                          right: 20,
+                          bottom: 20,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: bgColor,
+                                  borderRadius: BorderRadius.circular(22),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(18),
+                                  child: _buildAvatar(
+                                    profile.avatarUrl ?? widget.fallbackAvatarUrl,
+                                    96,
+                                  ),
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: Text(
+                                    profile.username,
+                                    style: GoogleFonts.hennyPenny(
+                                      textStyle: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -149,315 +176,351 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> with SingleTi
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 10),
-                      // Profile Info
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          profile.bio?.trim().isNotEmpty == true
+                              ? profile.bio!.trim()
+                              : 'No bio available',
+                          style: TextStyle(
+                            color: textColor.withOpacity(0.75),
+                            fontSize: 15,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      widget.username,
-                                      style: GoogleFonts.hennyPenny(
-                                        textStyle: TextStyle(
-                                          fontSize: 32,
-                                          fontWeight: FontWeight.bold,
-                                          color: textColor,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    _buildBadge(context, PhosphorIcons.hammer(PhosphorIconsStyle.fill), "", Colors.tealAccent),
-                                  ],
-                                ),
-                                const Text(
-                                  "25, Artist, Avid Bookworm",
-                                  style: TextStyle(color: Colors.grey, fontSize: 16),
-                                ),
-                                const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    Icon(PhosphorIcons.calendarDots(), size: 18, color: Colors.grey),
-                                    const SizedBox(width: 5),
-                                    const Text("Member since 2023", style: TextStyle(color: Colors.grey)),
-                                    const SizedBox(width: 20),
-                                    Icon(PhosphorIcons.mapPinArea(), size: 18, color: Colors.grey),
-                                    const SizedBox(width: 5),
-                                    const Text("Canada", style: TextStyle(color: Colors.grey)),
-                                  ],
-                                ),
-                              ],
+                            Icon(
+                              PhosphorIcons.calendarDots(),
+                              size: 16,
+                              color: textColor.withOpacity(0.45),
                             ),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: brandColor.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(15),
+                            const SizedBox(width: 6),
+                            Text(
+                              profile.createdAt != null
+                                  ? 'Member since ${profile.createdAt!.year}'
+                                  : 'Keihatsu member',
+                              style: TextStyle(
+                                color: textColor.withOpacity(0.45),
                               ),
-                              child: Icon(PhosphorIcons.shareNetwork(), color: brandColor),
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 30),
-                      // Stats Row
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
+                        const SizedBox(height: 20),
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 18),
                           decoration: BoxDecoration(
                             color: cardColor,
-                            borderRadius: BorderRadius.circular(25),
+                            borderRadius: BorderRadius.circular(24),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              _buildStatItem("#126", "Ranked", textColor),
-                              Container(height: 40, width: 1, color: textColor.withOpacity(0.1)),
-                              _buildStatItem("45h", "Of Reading", textColor),
-                              Container(height: 40, width: 1, color: textColor.withOpacity(0.1)),
-                              _buildStatItem("192", "Manhwas Read", textColor),
+                              _buildStatItem(
+                                '${profile.stats?.libraryCount ?? 0}',
+                                'In Library',
+                                textColor,
+                              ),
+                              _buildDivider(textColor),
+                              _buildStatItem(
+                                _formatReadingTime(
+                                  profile.stats?.totalReadingTimeMinutes ?? 0,
+                                ),
+                                'Reading',
+                                textColor,
+                              ),
+                              _buildDivider(textColor),
+                              _buildStatItem(
+                                '${profile.stats?.commentsCount ?? 0}',
+                                'Comments',
+                                textColor,
+                              ),
                             ],
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      // Badge Images Box
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildImageBadge('images/badge1.png', "Night Owl", textColor),
-                              _buildImageBadge('images/badge2.png', "Touch Grass", textColor),
-                              _buildImageBadge('images/badge3.png', "Offline Samurai", textColor),
-                              _buildImageBadge('images/badge4.png', "Keyboard Warrior", textColor),
-                            ],
-                          ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Library (${profile.stats?.libraryCount ?? profile.library.length})',
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isGridView = !_isGridView;
+                                });
+                              },
+                              icon: Icon(
+                                _isGridView
+                                    ? PhosphorIcons.list()
+                                    : PhosphorIcons.squaresFour(),
+                                color: brandColor,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _SliverAppBarDelegate(
-                    TabBar(
-                      controller: _tabController,
-                      dividerColor: Colors.transparent,
-                      indicator: BoxDecoration(
-                        color: brandColor,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      labelColor: Colors.white,
-                      unselectedLabelColor: textColor.withOpacity(0.6),
-                      labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                      padding: const EdgeInsets.all(10),
-                      tabs: const [
-                        Tab(text: "Library (21)"),
-                        Tab(text: "Activity (174)"),
+                        const SizedBox(height: 8),
                       ],
                     ),
-                    bgColor,
                   ),
                 ),
-              ];
-            },
-            body: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildLibraryTab(context, textColor, brandColor, cardColor),
-                _buildActivityTab(context, textColor, brandColor, cardColor),
-              ],
-            ),
-          ),
-          // Floating Search Bar
-          Positioned(
-            bottom: 20,
-            left: 20,
-            right: 20,
-            child: Container(
-              height: 60,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey[900] : Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Icon(PhosphorIcons.magnifyingGlass(), color: textColor.withOpacity(0.5)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      style: TextStyle(color: textColor),
-                      decoration: InputDecoration(
-                        hintText: "Search in library...",
-                        hintStyle: TextStyle(color: textColor.withOpacity(0.3)),
-                        border: InputBorder.none,
+                if (!profile.isProfilePublic)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              PhosphorIcons.lock(),
+                              size: 40,
+                              color: textColor.withOpacity(0.5),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "This user's library is not public",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: textColor.withOpacity(0.8),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 30,
-                    color: textColor.withOpacity(0.1),
-                    margin: const EdgeInsets.symmetric(horizontal: 10),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      _isGridView ? PhosphorIcons.list() : PhosphorIcons.squaresFour(),
-                      color: brandColor,
+                  )
+                else if (profile.library.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              PhosphorIcons.books(),
+                              size: 40,
+                              color: textColor.withOpacity(0.35),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No manhwas in this library yet',
+                              style: TextStyle(
+                                color: textColor.withOpacity(0.7),
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _isGridView = !_isGridView;
-                      });
-                    },
-                  ),
-                ],
-              ),
+                  )
+                else if (_isGridView)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+                      sliver: SliverGrid(
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final entry = profile.library[index];
+                          return _buildGridItem(
+                            entry,
+                            textColor,
+                            brandColor,
+                            cardColor,
+                          );
+                        }, childCount: profile.library.length),
+                        gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.58,
+                          crossAxisSpacing: 14,
+                          mainAxisSpacing: 14,
+                        ),
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final entry = profile.library[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: _buildListItem(
+                              entry,
+                              textColor,
+                              brandColor,
+                              cardColor,
+                            ),
+                          );
+                        }, childCount: profile.library.length),
+                      ),
+                    ),
+              ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildBadge(BuildContext context, PhosphorIconData icon, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          if (label.isNotEmpty) ...[
-            const SizedBox(width: 6),
-            Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
-          ],
-        ],
-      ),
-    );
+  Widget _buildBanner(String? bannerUrl) {
+    if (bannerUrl != null && bannerUrl.isNotEmpty) {
+      return Image.network(
+        bannerUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Image.asset(
+          'images/profileBg.jpeg',
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+
+    return Image.asset('images/profileBg.jpeg', fit: BoxFit.cover);
   }
 
-  Widget _buildImageBadge(String imagePath, String name, Color textColor) {
-    return SizedBox(
-      width: 70,
-      child: Column(
-        children: [
-          Container(
-            width: 50,
-            height: 60,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-            ),
-            child: Image.asset(imagePath, fit: BoxFit.cover, errorBuilder: (c, e, s) => Icon(PhosphorIcons.medal(), color: textColor.withOpacity(0.2))),
+  Widget _buildAvatar(String? avatarUrl, double size) {
+    if (avatarUrl != null && avatarUrl.isNotEmpty) {
+      final isNetwork = avatarUrl.startsWith('http');
+      if (isNetwork) {
+        return Image.network(
+          avatarUrl,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Image.asset(
+            'images/user3.jpeg',
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
           ),
-          const SizedBox(height: 8),
-          Text(
-            name,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: textColor.withOpacity(0.7)),
-          ),
-        ],
-      ),
+        );
+      }
+
+      return Image.asset(
+        avatarUrl,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+      );
+    }
+
+    return Image.asset(
+      'images/user3.jpeg',
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
     );
   }
 
   Widget _buildStatItem(String value, String label, Color textColor) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor)),
-        Text(label, style: TextStyle(color: textColor.withOpacity(0.5), fontSize: 12)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: textColor,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: textColor.withOpacity(0.5),
+            fontSize: 12,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildLibraryTab(BuildContext context, Color textColor, Color brandColor, Color cardColor) {
-    if (_isGridView) {
-      return GridView.builder(
-        padding: const EdgeInsets.fromLTRB(15, 15, 15, 100),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.7,
-          crossAxisSpacing: 15,
-          mainAxisSpacing: 15,
-        ),
-        itemCount: mangaData.length,
-        itemBuilder: (context, index) {
-          final manga = mangaData[index];
-          return _buildMangaGridItem(manga, textColor, brandColor);
-        },
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(15, 15, 15, 100),
-      itemCount: mangaData.length,
-      itemBuilder: (context, index) {
-        final manga = mangaData[index];
-        return _buildMangaListItem(manga, textColor, brandColor);
-      },
-    );
+  Widget _buildDivider(Color textColor) {
+    return Container(height: 38, width: 1, color: textColor.withOpacity(0.1));
   }
 
-  Widget _buildMangaListItem(Map<String, String> manga, Color textColor, Color brandColor) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
+  Widget _buildListItem(
+      PublicLibraryEntry entry,
+      Color textColor,
+      Color brandColor,
+      Color cardColor,
+      ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      padding: const EdgeInsets.all(12),
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(manga["image"]!, width: 80, height: 110, fit: BoxFit.cover),
+            borderRadius: BorderRadius.circular(12),
+            child: _buildCover(entry.thumbnailUrl, width: 82, height: 118),
           ),
-          const SizedBox(width: 15),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(manga["title"]!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                const Text("Brent Bristol", style: TextStyle(color: Colors.grey, fontSize: 14)),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(PhosphorIcons.bookOpen(), size: 16, color: Colors.grey),
-                    const SizedBox(width: 5),
-                    const Text("157 chapters", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  ],
+                Text(
+                  entry.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                Row(
+                const SizedBox(height: 6),
+                Text(
+                  entry.author?.trim().isNotEmpty == true
+                      ? entry.author!
+                      : 'Unknown author',
+                  style: TextStyle(
+                    color: textColor.withOpacity(0.65),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    Icon(PhosphorIcons.hourglassHigh(), size: 16, color: Colors.grey),
-                    const SizedBox(width: 5),
-                    const Text("4 days", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    _buildMetaChip(
+                      PhosphorIcons.globe(),
+                      _sourceNames[entry.sourceId] ?? entry.sourceId,
+                      textColor,
+                      brandColor,
+                    ),
+                    _buildMetaChip(
+                      PhosphorIcons.bookOpen(),
+                      '${entry.totalChapters} chapters',
+                      textColor,
+                      brandColor,
+                    ),
                   ],
                 ),
               ],
@@ -468,121 +531,133 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> with SingleTi
     );
   }
 
-  Widget _buildMangaGridItem(Map<String, String> manga, Color textColor, Color brandColor) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(15),
-            child: Image.asset(manga["image"]!, width: double.infinity, fit: BoxFit.cover),
+  Widget _buildGridItem(
+      PublicLibraryEntry entry,
+      Color textColor,
+      Color brandColor,
+      Color cardColor,
+      ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
+              child: _buildCover(entry.thumbnailUrl, width: double.infinity),
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          manga["title"]!,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        Text(
-          "157 chapters",
-          style: TextStyle(color: Colors.grey, fontSize: 12),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActivityTab(BuildContext context, Color textColor, Color brandColor, Color cardColor) {
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(15, 15, 15, 100),
-      itemCount: 10,
-      itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(radius: 15, backgroundImage: AssetImage(widget.userImage)),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(widget.username, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Row(
-                        children: [
-                          Icon(PhosphorIcons.chatCircleDots(), size: 14, color: Colors.grey),
-                          const SizedBox(width: 5),
-                          const Text("Replied to Izzy", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const Padding(
-                padding: EdgeInsets.only(left: 40, top: 5),
-                child: Text("I love the concept behind the Midgal-El talent :)", style: TextStyle(fontSize: 14)),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.only(left: 40),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: textColor.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(5),
-                        child: Image.asset(mangaData[index % mangaData.length]["image"]!, width: 40, height: 40, fit: BoxFit.cover),
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("Ch 101", style: TextStyle(color: Colors.grey, fontSize: 11)),
-                          Text(mangaData[index % mangaData.length]["title"]!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                          const Text("Brent Bristol", style: TextStyle(color: Colors.grey, fontSize: 11)),
-                        ],
-                      ),
-                    ],
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  entry.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  entry.author?.trim().isNotEmpty == true
+                      ? entry.author!
+                      : 'Unknown author',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: textColor.withOpacity(0.6),
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _sourceNames[entry.sourceId] ?? entry.sourceId,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: brandColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
-}
 
-class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  _SliverAppBarDelegate(this._tabBar, this.bgColor);
-
-  final TabBar _tabBar;
-  final Color bgColor;
-
-  @override
-  double get minExtent => _tabBar.preferredSize.height + 20;
-  @override
-  double get maxExtent => _tabBar.preferredSize.height + 20;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget _buildMetaChip(
+      IconData icon,
+      String text,
+      Color textColor,
+      Color brandColor,
+      ) {
     return Container(
-      color: bgColor,
-      child: _tabBar,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: brandColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: brandColor),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              color: textColor.withOpacity(0.8),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  @override
-  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
-    return false;
+  Widget _buildCover(String? thumbnailUrl, {double? width, double? height}) {
+    if (thumbnailUrl != null && thumbnailUrl.isNotEmpty) {
+      return Image.network(
+        thumbnailUrl,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: width,
+          height: height,
+          color: Colors.grey.shade900,
+          child: const Icon(Icons.broken_image, color: Colors.white24),
+        ),
+      );
+    }
+
+    return Container(
+      width: width,
+      height: height,
+      color: Colors.grey.shade900,
+      child: const Icon(Icons.menu_book, color: Colors.white24),
+    );
+  }
+
+  String _formatReadingTime(int minutes) {
+    if (minutes < 60) {
+      return '${minutes}m';
+    }
+
+    return '${(minutes / 60).toStringAsFixed(1)}h';
   }
 }

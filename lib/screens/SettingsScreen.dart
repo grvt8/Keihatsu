@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../theme_provider.dart';
 import '../components/CustomBackButton.dart';
 import 'LibrarySettingsScreen.dart';
+import 'PrivacySettingsScreen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -27,7 +28,11 @@ class SettingsScreen extends StatelessWidget {
         title: Text(
           'Settings',
           style: GoogleFonts.hennyPenny(
-            textStyle: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 24),
+            textStyle: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ),
           ),
         ),
       ),
@@ -50,7 +55,9 @@ class SettingsScreen extends StatelessWidget {
             subtitle: "Categories, global update, badges",
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const LibrarySettingsScreen()),
+              MaterialPageRoute(
+                builder: (context) => const LibrarySettingsScreen(),
+              ),
             ),
             textColor: textColor,
             brandColor: brandColor,
@@ -95,8 +102,13 @@ class SettingsScreen extends StatelessWidget {
             context,
             icon: PhosphorIcons.shieldCheck(),
             title: "Privacy",
-            subtitle: "Incognito mode, security",
-            onTap: () {},
+            subtitle: "Profile visibility and privacy",
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const PrivacySettingsScreen(),
+              ),
+            ),
             textColor: textColor,
             brandColor: brandColor,
           ),
@@ -115,14 +127,14 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildSettingsTile(
-    BuildContext context, {
-    required PhosphorIconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    required Color textColor,
-    required Color brandColor,
-  }) {
+      BuildContext context, {
+        required PhosphorIconData icon,
+        required String title,
+        required String subtitle,
+        required VoidCallback onTap,
+        required Color textColor,
+        required Color brandColor,
+      }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: ListTile(
@@ -141,14 +153,22 @@ class SettingsScreen extends StatelessWidget {
         title: Text(
           title,
           style: GoogleFonts.delius(
-            textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
+            textStyle: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
           ),
         ),
         subtitle: Text(
           subtitle,
           style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 13),
         ),
-        trailing: Icon(PhosphorIcons.caretRight(), color: textColor.withOpacity(0.3), size: 18),
+        trailing: Icon(
+          PhosphorIcons.caretRight(),
+          color: textColor.withOpacity(0.3),
+          size: 18,
+        ),
       ),
     );
   }
