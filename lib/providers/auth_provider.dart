@@ -53,25 +53,7 @@ class AuthProvider with ChangeNotifier {
         // Fetch stats separately if they aren't included in getMe or if you want fresh stats
         try {
           final stats = await _authApi.getUserStats(_token!);
-          // Update the user object with new stats
-          _user = User(
-            id: _user!.id,
-            email: _user!.email,
-            googleId: _user!.googleId,
-            avatarUrl: _user!.avatarUrl,
-            bannerUrl: _user!.bannerUrl,
-            username: _user!.username,
-            bio: _user!.bio,
-            createdAt: _user!.createdAt,
-            updatedAt: _user!.updatedAt,
-            lastLoginAt: _user!.lastLoginAt,
-            isOnboarded: _user!.isOnboarded,
-            isProfilePublic: _user!.isProfilePublic,
-            readingStats: _user!.readingStats,
-            achievementCount: _user!.achievementCount,
-            points: _user!.points,
-            stats: stats,
-          );
+          _user = _user!.copyWith(stats: stats);
         } catch (e) {
           debugPrint("Failed to load user stats: $e");
         }
@@ -90,24 +72,7 @@ class AuthProvider with ChangeNotifier {
     if (_token == null || _user == null) return;
     try {
       final stats = await _authApi.getUserStats(_token!);
-      _user = User(
-        id: _user!.id,
-        email: _user!.email,
-        googleId: _user!.googleId,
-        avatarUrl: _user!.avatarUrl,
-        bannerUrl: _user!.bannerUrl,
-        username: _user!.username,
-        bio: _user!.bio,
-        createdAt: _user!.createdAt,
-        updatedAt: _user!.updatedAt,
-        lastLoginAt: _user!.lastLoginAt,
-        isOnboarded: _user!.isOnboarded,
-        isProfilePublic: _user!.isProfilePublic,
-        readingStats: _user!.readingStats,
-        achievementCount: _user!.achievementCount,
-        points: _user!.points,
-        stats: stats,
-      );
+      _user = _user!.copyWith(stats: stats);
       notifyListeners();
     } catch (e) {
       debugPrint("Failed to refresh user stats: $e");
@@ -227,13 +192,7 @@ class AuthProvider with ChangeNotifier {
         _isInitialized = true;
       }
 
-      final GoogleSignInAccount? googleUser = await _googleSignIn
-          .authenticate();
-      if (googleUser == null) {
-        _isLoading = false;
-        notifyListeners();
-        return;
-      }
+      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
 
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
       final String? idToken = googleAuth.idToken;
@@ -308,6 +267,27 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _isLoading = false;
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<void> updateProfileVisibility(bool isProfilePublic) async {
+    if (_token == null || _user == null) return;
+
+    final previousUser = _user;
+    _user = _user!.copyWith(isProfilePublic: isProfilePublic);
+    notifyListeners();
+
+    try {
+      final updatedUser = await _authApi.updateProfileVisibility(
+        token: _token!,
+        isProfilePublic: isProfilePublic,
+      );
+      _user = updatedUser.copyWith(stats: previousUser?.stats);
+      notifyListeners();
+    } catch (e) {
+      _user = previousUser;
       notifyListeners();
       rethrow;
     }
