@@ -4,9 +4,9 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:isar/isar.dart';
 import '../models/local_models.dart';
-import '../services/manga_repository.dart';
 import '../components/MainNavigationBar.dart';
 import '../models/manga.dart';
+import '../providers/auth_provider.dart';
 import '../services/sources_api.dart';
 import '../theme_provider.dart';
 import '../providers/offline_library_provider.dart';
@@ -25,8 +25,6 @@ class _HomePageState extends State<HomePage> {
   final SourcesApi _sourcesApi = SourcesApi();
 
   late Future<List<Manga>> _popularMangaFuture;
-  late Future<List<Manga>> _latestMangaFuture;
-  late Future<List<Manga>> _continueReadingFuture;
 
   final String _defaultSourceId = 'manhuatop';
 
@@ -40,25 +38,10 @@ class _HomePageState extends State<HomePage> {
     _popularMangaFuture = _sourcesApi
         .getMangaList(_defaultSourceId, 'popular')
         .then((page) => page.mangas);
-    _latestMangaFuture = _sourcesApi
-        .getMangaList(_defaultSourceId, 'latest')
-        .then((page) => page.mangas);
-    _continueReadingFuture = _loadContinueReading();
-  }
-
-  Future<List<Manga>> _loadContinueReading() async {
-    // Wait for provider to be available if needed, but here we can't access context easily in initState for Provider.
-    // However, we can access it if we defer execution or use a post-frame callback, OR just rely on build calling this?
-    // Actually, initState cannot access Provider.of(context).
-    // So we should move this to didChangeDependencies or use a different approach.
-    // But wait, `_loadData` is called in `initState`. `_sourcesApi` is a field.
-    // For `_continueReadingFuture`, we need `MangaRepository` which is available via `Provider` or we can instantiate it if we have dependencies.
-    // But `MangaRepository` depends on `Isar` etc.
-    // Better to load this in `didChangeDependencies` or just use FutureBuilder that calls a method that accesses context.
-    return []; // Placeholder, real logic will be in _fetchHistory
   }
 
   Future<List<Manga>> _fetchHistory(BuildContext context) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final repo = Provider.of<OfflineLibraryProvider>(
       context,
       listen: false,
@@ -66,6 +49,7 @@ class _HomePageState extends State<HomePage> {
     final localMangas = await repo.isar
         .collection<LocalManga>()
         .filter()
+        .ownerUserIdEqualTo(authProvider.localScopeUserId)
         .lastReadAtIsNotNull()
         .sortByLastReadAtDesc()
         .limit(5)

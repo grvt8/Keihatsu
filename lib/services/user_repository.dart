@@ -10,15 +10,23 @@ class UserRepository {
   final Isar isar;
   final AuthApi api;
   final FileService fileService;
+  final String Function() getCurrentUserId;
 
   UserRepository({
     required this.isar,
     required this.api,
     required this.fileService,
+    required this.getCurrentUserId,
   });
 
+  String get _currentUserId => getCurrentUserId();
+
   Future<UserPreferences?> getPreferences() async {
-    final local = await isar.collection<LocalUserPreferences>().where().findFirst();
+    final local = await isar
+        .collection<LocalUserPreferences>()
+        .filter()
+        .ownerUserIdEqualTo(_currentUserId)
+        .findFirst();
     if (local == null) return null;
 
     final Map<String, dynamic> sourcePrefsJson = local.sourcePreferencesJson.isNotEmpty
@@ -55,8 +63,16 @@ class UserRepository {
   }
 
   Future<void> savePreferencesLocally(UserPreferences prefsData) async {
-    final localPrefs = await isar.collection<LocalUserPreferences>().where().findFirst() ?? LocalUserPreferences();
+    final localPrefs =
+        await isar
+            .collection<LocalUserPreferences>()
+            .filter()
+            .ownerUserIdEqualTo(_currentUserId)
+            .findFirst() ??
+            LocalUserPreferences()
+              ..ownerUserId = _currentUserId;
 
+    localPrefs.ownerUserId = _currentUserId;
     localPrefs.libraryDisplayStyle = prefsData.libraryDisplayStyle;
     localPrefs.categoriesDisplayMode = prefsData.categoriesDisplayMode;
     localPrefs.libraryItemsPerRow = prefsData.libraryItemsPerRow;

@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/local_models.dart';
 import '../models/manga.dart';
 import '../services/library_repository.dart';
+import '../services/local_scope.dart';
 import '../services/manga_repository.dart';
 
 class LibraryFilterState {
@@ -44,7 +45,11 @@ class OfflineLibraryProvider with ChangeNotifier {
   final LibraryRepository libraryRepo;
   final MangaRepository mangaRepo;
   final String? Function() getToken;
+  String _currentUserId = guestLocalScopeUserId;
 
+  List<LocalLibraryEntry> _allLibrary = [];
+  List<LocalCategory> _allCategories = [];
+  List<LocalCategoryAssignment> _allCategoryAssignments = [];
   List<LocalLibraryEntry> _library = [];
   List<LocalCategory> _categories = [];
   List<LocalCategoryAssignment> _categoryAssignments = [];
@@ -61,21 +66,40 @@ class OfflineLibraryProvider with ChangeNotifier {
 
   void _init() {
     libraryRepo.watchLibrary().listen((entries) {
-      _library = entries;
-      notifyListeners();
+      _allLibrary = entries;
+      _applyScope();
     });
 
     libraryRepo.watchCategoryAssignments().listen((assignments) {
-      _categoryAssignments = assignments;
-      notifyListeners();
+      _allCategoryAssignments = assignments;
+      _applyScope();
     });
 
     libraryRepo.watchCategories().listen((categories) {
-      _categories = categories;
-      notifyListeners();
+      _allCategories = categories;
+      _applyScope();
     });
 
     _loadSortPreferences();
+  }
+
+  void bindUserScope(String userId) {
+    if (_currentUserId == userId) return;
+    _currentUserId = userId;
+    _applyScope();
+  }
+
+  void _applyScope() {
+    _library = _allLibrary
+        .where((entry) => entry.ownerUserId == _currentUserId)
+        .toList();
+    _categories = _allCategories
+        .where((category) => category.ownerUserId == _currentUserId)
+        .toList();
+    _categoryAssignments = _allCategoryAssignments
+        .where((assignment) => assignment.ownerUserId == _currentUserId)
+        .toList();
+    notifyListeners();
   }
 
   Future<void> _loadSortPreferences() async {
