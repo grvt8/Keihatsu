@@ -24,9 +24,15 @@ class LocalSource {
 class LocalManga {
   Id id = Isar.autoIncrement;
 
-  @Index(unique: true, replace: true, composite: [CompositeIndex('sourceId')])
+  @Index(
+    unique: true,
+    replace: true,
+    composite: [CompositeIndex('sourceId'), CompositeIndex('ownerUserId')],
+  )
   late String mangaId;
   late String sourceId;
+  @Index()
+  late String ownerUserId;
 
   late String title;
   String? description;
@@ -48,11 +54,17 @@ class LocalChapter {
   @Index(
     unique: true,
     replace: true,
-    composite: [CompositeIndex('mangaId'), CompositeIndex('sourceId')],
+    composite: [
+      CompositeIndex('mangaId'),
+      CompositeIndex('sourceId'),
+      CompositeIndex('ownerUserId'),
+    ],
   )
   late String chapterId;
   late String mangaId;
   late String sourceId;
+  @Index()
+  late String ownerUserId;
 
   late String name;
   late double chapterNumber;
@@ -70,10 +82,16 @@ class LocalChapter {
 class LocalPage {
   Id id = Isar.autoIncrement;
 
-  @Index()
+  @Index(
+    unique: true,
+    replace: true,
+    composite: [CompositeIndex('index'), CompositeIndex('ownerUserId')],
+  )
   late String chapterId;
 
   late int index;
+  @Index()
+  late String ownerUserId;
   String? imageLocalPath;
   late String imageRemoteUrl;
 }
@@ -85,9 +103,15 @@ class LocalLibraryEntry {
   @Index()
   String? serverId;
 
-  @Index(unique: true, replace: true, composite: [CompositeIndex('sourceId')])
+  @Index(
+    unique: true,
+    replace: true,
+    composite: [CompositeIndex('sourceId'), CompositeIndex('ownerUserId')],
+  )
   late String mangaId;
   late String sourceId;
+  @Index()
+  late String ownerUserId;
 
   bool isBookmarked = true;
   bool isCompleted = false;
@@ -116,7 +140,10 @@ class LocalCategory {
   @Index(unique: true, replace: true)
   String? serverId; // null if not synced yet
 
+  @Index(unique: true, replace: true, composite: [CompositeIndex('ownerUserId')])
   late String name;
+  @Index()
+  late String ownerUserId;
   bool isSynced = false;
 }
 
@@ -124,12 +151,22 @@ class LocalCategory {
 class LocalCategoryAssignment {
   Id id = Isar.autoIncrement;
 
-  @Index()
+  @Index(
+    unique: true,
+    replace: true,
+    composite: [
+      CompositeIndex('sourceId'),
+      CompositeIndex('localCategoryId'),
+      CompositeIndex('ownerUserId'),
+    ],
+  )
   late String mangaId;
   @Index()
   late String sourceId;
   @Index()
   late int localCategoryId; // Links to LocalCategory.id
+  @Index()
+  late String ownerUserId;
 }
 
 @collection
@@ -139,6 +176,8 @@ class SyncOperation {
   late String type; // 'ADD_LIBRARY', 'REMOVE_LIBRARY', 'CREATE_CATEGORY', etc.
   late String payload; // JSON string
   late DateTime timestamp;
+  @Index()
+  late String ownerUserId;
 
   @Index()
   bool completed = false;
@@ -150,6 +189,8 @@ class SyncOperation {
 class LocalUserPreferences {
   Id id = Isar.autoIncrement;
 
+  @Index(unique: true, replace: true)
+  late String ownerUserId;
   String libraryDisplayStyle = 'grid'; // 'grid' or 'list'
   String categoriesDisplayMode = 'comfortable grid';
   int libraryItemsPerRow = 3;

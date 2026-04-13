@@ -10,6 +10,7 @@ class SyncManager {
   final Isar isar;
   final LibraryApi libraryApi;
   final String? Function() getToken;
+  final String Function() getCurrentUserId;
 
   Timer? _syncTimer;
   bool _isProcessing = false;
@@ -18,10 +19,11 @@ class SyncManager {
     required this.isar,
     required this.libraryApi,
     required this.getToken,
+    required this.getCurrentUserId,
   }) {
     Connectivity().onConnectivityChanged.listen((
-      List<ConnectivityResult> results,
-    ) {
+        List<ConnectivityResult> results,
+        ) {
       if (results.isNotEmpty && !results.contains(ConnectivityResult.none)) {
         processSyncQueue();
       }
@@ -29,7 +31,7 @@ class SyncManager {
 
     _syncTimer = Timer.periodic(
       const Duration(minutes: 5),
-      (_) => processSyncQueue(),
+          (_) => processSyncQueue(),
     );
   }
 
@@ -42,6 +44,7 @@ class SyncManager {
       ..type = type
       ..payload = json.encode(payload)
       ..timestamp = DateTime.now()
+      ..ownerUserId = getCurrentUserId()
       ..completed = false;
 
     await isar.writeTxn(() async {
@@ -69,6 +72,7 @@ class SyncManager {
       final pendingOps = await isar
           .collection<SyncOperation>()
           .filter()
+          .ownerUserIdEqualTo(getCurrentUserId())
           .completedEqualTo(false)
           .sortByTimestamp()
           .findAll();
@@ -123,6 +127,7 @@ class SyncManager {
                   .filter()
                   .mangaIdEqualTo(payload['mangaId'])
                   .sourceIdEqualTo(payload['sourceId'])
+                  .ownerUserIdEqualTo(getCurrentUserId())
                   .findFirst();
               if (entry != null) {
                 entry.serverId = serverId;
@@ -144,6 +149,7 @@ class SyncManager {
                       .filter()
                       .mangaIdEqualTo(payload['mangaId'])
                       .sourceIdEqualTo(payload['sourceId'])
+                      .ownerUserIdEqualTo(getCurrentUserId())
                       .findFirst();
                   if (entry != null) {
                     entry.serverId = serverId;
@@ -168,9 +174,12 @@ class SyncManager {
             final String? serverId = data['id'];
 
             await isar.writeTxn(() async {
-              final cat = await isar.collection<LocalCategory>().get(
-                payload['localId'],
-              );
+              final cat = await isar
+                  .collection<LocalCategory>()
+                  .filter()
+                  .idEqualTo(payload['localId'])
+                  .ownerUserIdEqualTo(getCurrentUserId())
+                  .findFirst();
               if (cat != null) {
                 if (serverId != null) cat.serverId = serverId;
                 cat.isSynced = true;
@@ -187,9 +196,12 @@ class SyncManager {
           final int localCategoryId = payload['localCategoryId'];
 
           // Resolve Category serverId if it was local-only when queued
-          final cat = await isar.collection<LocalCategory>().get(
-            localCategoryId,
-          );
+          final cat = await isar
+              .collection<LocalCategory>()
+              .filter()
+              .idEqualTo(localCategoryId)
+              .ownerUserIdEqualTo(getCurrentUserId())
+              .findFirst();
           final String? serverCategoryId = cat?.serverId;
 
           // Ensure Manga is synced to server library first
@@ -198,6 +210,7 @@ class SyncManager {
               .filter()
               .mangaIdEqualTo(mangaId)
               .sourceIdEqualTo(sourceId)
+              .ownerUserIdEqualTo(getCurrentUserId())
               .findFirst();
 
           if (serverCategoryId == null || entry?.serverId == null) {
@@ -266,8 +279,8 @@ class SyncManager {
 
   Future<void> _updateLocalServerId<T>({
     required QueryBuilder<T, T, QAfterFilterCondition> Function(
-      QueryBuilder<T, T, QFilterCondition> q,
-    )
+        QueryBuilder<T, T, QFilterCondition> q,
+        )
     filter,
     required String serverId,
   }) async {

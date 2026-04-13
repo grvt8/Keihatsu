@@ -6,8 +6,8 @@ import '../models/user.dart';
 import '../models/user_preferences.dart';
 import '../services/auth_api.dart';
 import '../services/api_constants.dart';
-
 import '../services/user_repository.dart';
+import '../services/local_scope.dart';
 
 class AuthProvider with ChangeNotifier {
   static const String _webClientId =
@@ -16,7 +16,7 @@ class AuthProvider with ChangeNotifier {
   final AuthApi _authApi = AuthApi(baseUrl: ApiConstants.baseUrl);
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   final UserRepository userRepository;
-  final Future<void> Function()? onLogout;
+  final Future<void> Function(String userId)? onLogout;
 
   User? _user;
   String? _token;
@@ -29,6 +29,7 @@ class AuthProvider with ChangeNotifier {
   UserPreferences? get preferences => _preferences;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _token != null;
+  String get localScopeUserId => _user?.id ?? guestLocalScopeUserId;
 
   AuthProvider({this.onLogout, required this.userRepository}) {
     _init();
@@ -231,8 +232,9 @@ class AuthProvider with ChangeNotifier {
       await _googleSignIn.signOut();
     } catch (_) {}
 
-    if (onLogout != null) {
-      await onLogout!();
+    final logoutUserId = _user?.id;
+    if (onLogout != null && logoutUserId != null) {
+      await onLogout!(logoutUserId);
     }
 
     _user = null;

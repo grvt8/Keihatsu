@@ -19,7 +19,7 @@ import 'MangaReaderScreen.dart';
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
-  @override
+  @override 
   State<HistoryScreen> createState() => _HistoryScreenState();
 }
 
@@ -71,7 +71,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
       context: context,
       builder: (context) {
         final themeProvider = Provider.of<ThemeProvider>(context);
-        final brandColor = themeProvider.brandColor;
         final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
         final textColor = isDarkMode ? Colors.white : Colors.black87;
         final bgColor = themeProvider.effectiveBgColor;
@@ -115,11 +114,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Future<LocalChapter?> _getLastReadChapter(LocalManga manga) async {
     final isar = Provider.of<MangaRepository>(context, listen: false).isar;
+    final ownerUserId = Provider.of<AuthProvider>(
+      context,
+      listen: false,
+    ).localScopeUserId;
     return await isar
         .collection<LocalChapter>()
         .filter()
         .sourceIdEqualTo(manga.sourceId)
         .mangaIdEqualTo(manga.mangaId)
+        .ownerUserIdEqualTo(ownerUserId)
         .sortByLastReadAtDesc()
         .findFirst();
   }
@@ -132,6 +136,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
@@ -141,6 +146,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       stream: Provider.of<MangaRepository>(context, listen: false).isar
           .collection<LocalManga>()
           .filter()
+          .ownerUserIdEqualTo(authProvider.localScopeUserId)
           .lastReadAtIsNotNull()
           .sortByLastReadAtDesc()
           .watch(fireImmediately: true),
@@ -194,6 +200,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           final itemsToDelete = await isar
                               .collection<LocalManga>()
                               .filter()
+                              .ownerUserIdEqualTo(authProvider.localScopeUserId)
                               .anyOf(_selectedIds, (q, id) => q.idEqualTo(id))
                               .findAll();
                           for (var m in itemsToDelete) {
@@ -302,12 +309,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         final chapters = await _getAllChapters(manga);
 
                         // 2. Find last read chapter
-                        final lastReadChapter = await _getLastReadChapter(manga);
+                        final lastReadChapter = await _getLastReadChapter(
+                          manga,
+                        );
 
-                        if (lastReadChapter != null && chapters.isNotEmpty) {
+                        if (lastReadChapter != null &&
+                            chapters.isNotEmpty) {
                           // 3. Find index of last read chapter in the full list
                           // Note: chapters from repo are usually sorted by number descending
-                          final index = chapters.indexWhere((c) => c.chapterId == lastReadChapter.chapterId);
+                          final index = chapters.indexWhere(
+                                (c) =>
+                            c.chapterId == lastReadChapter.chapterId,
+                          );
 
                           if (index != -1) {
                             // 4. Navigate directly to reader
@@ -447,11 +460,16 @@ class _HistoryItemState extends State<HistoryItem> {
 
   Future<void> _loadChapter() async {
     final isar = Provider.of<MangaRepository>(context, listen: false).isar;
+    final ownerUserId = Provider.of<AuthProvider>(
+      context,
+      listen: false,
+    ).localScopeUserId;
     final chapter = await isar
         .collection<LocalChapter>()
         .filter()
         .sourceIdEqualTo(widget.manga.sourceId)
         .mangaIdEqualTo(widget.manga.mangaId)
+        .ownerUserIdEqualTo(ownerUserId)
         .sortByLastReadAtDesc()
         .findFirst();
     if (mounted) setState(() => _lastReadChapter = chapter);

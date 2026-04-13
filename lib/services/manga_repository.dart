@@ -2,7 +2,6 @@ import 'package:isar/isar.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../models/local_models.dart';
 import '../models/manga.dart';
-import '../models/chapter.dart';
 import 'sources_api.dart';
 import 'file_service.dart';
 import 'library_api.dart';
@@ -14,6 +13,7 @@ class MangaRepository {
   final FileService fileService;
   final LibraryApi libraryApi;
   final SyncManager? syncManager; // Optional, can be injected
+  final String Function() getCurrentUserId;
 
   MangaRepository({
     required this.isar,
@@ -21,7 +21,10 @@ class MangaRepository {
     required this.fileService,
     required this.libraryApi,
     this.syncManager,
+    required this.getCurrentUserId,
   });
+
+  String get _currentUserId => getCurrentUserId();
 
   Future<void> updateReadingProgress({
     required LocalManga manga,
@@ -34,6 +37,7 @@ class MangaRepository {
     final now = DateTime.now();
 
     // 1. Update LocalManga
+    manga.ownerUserId = _currentUserId;
     manga.lastReadAt = now;
     await isar.writeTxn(() async {
       await isar.collection<LocalManga>().put(manga);
@@ -46,6 +50,7 @@ class MangaRepository {
         .sourceIdEqualTo(manga.sourceId)
         .mangaIdEqualTo(manga.mangaId)
         .chapterIdEqualTo(chapterId)
+        .ownerUserIdEqualTo(_currentUserId)
         .findFirst();
 
     if (chapter != null) {
@@ -61,6 +66,7 @@ class MangaRepository {
         ..chapterId = chapterId
         ..mangaId = manga.mangaId
         ..sourceId = manga.sourceId
+        ..ownerUserId = _currentUserId
         ..name =
             "Chapter" // Placeholder, should be updated when chapter details are fetched
         ..chapterNumber =
@@ -81,6 +87,7 @@ class MangaRepository {
         .filter()
         .mangaIdEqualTo(manga.mangaId)
         .sourceIdEqualTo(manga.sourceId)
+        .ownerUserIdEqualTo(_currentUserId)
         .findFirst();
 
     if (libraryEntry != null) {
@@ -99,10 +106,17 @@ class MangaRepository {
 
     // 4. Sync with Backend
     if (syncManager != null) {
+      final chapterName = chapter?.name;
+      final chapterNumber = chapter?.chapterNumber;
       final payload = {
         'mangaId': manga.mangaId,
         'sourceId': manga.sourceId,
         'chapterId': chapterId,
+        'title': manga.title,
+        if (manga.thumbnailUrl != null) 'thumbnailUrl': manga.thumbnailUrl,
+        if (manga.author != null) 'author': manga.author,
+        if (chapterName != null) 'chapterName': chapterName,
+        if (chapterNumber != null) 'chapterNumber': chapterNumber,
         'pageNumber': pageIndex,
         'lastReadAt': now.toIso8601String(),
         if (isRead != null) 'isRead': isRead,
@@ -119,6 +133,11 @@ class MangaRepository {
             chapterId: chapterId,
             pageNumber: pageIndex,
             lastReadAt: now,
+            title: manga.title,
+            thumbnailUrl: manga.thumbnailUrl,
+            author: manga.author,
+            chapterName: chapterName,
+            chapterNumber: chapterNumber,
             isRead: isRead,
             readingTimeMs: readingTimeMs,
           );
@@ -150,6 +169,7 @@ class MangaRepository {
         .filter()
         .sourceIdEqualTo(sourceId)
         .mangaIdEqualTo(mangaId)
+        .ownerUserIdEqualTo(_currentUserId)
         .findFirst();
   }
 
@@ -159,11 +179,13 @@ class MangaRepository {
         .filter()
         .sourceIdEqualTo(manga.sourceId)
         .mangaIdEqualTo(manga.id)
+        .ownerUserIdEqualTo(_currentUserId)
         .findFirst();
 
     final local = (existing ?? LocalManga())
       ..mangaId = manga.id
       ..sourceId = manga.sourceId
+      ..ownerUserId = _currentUserId
       ..title = manga.title
       ..description = manga.description
       ..thumbnailUrl = manga.thumbnailUrl
@@ -176,9 +198,8 @@ class MangaRepository {
       await isar.collection<LocalManga>().put(local);
     });
 
-    if (manga.thumbnailUrl != null &&
-        (existing?.thumbnailUrl != manga.thumbnailUrl ||
-            existing?.thumbnailLocalPath == null)) {
+    if (existing?.thumbnailUrl != manga.thumbnailUrl ||
+        existing?.thumbnailLocalPath == null) {
       final localPath = await fileService.downloadFile(
         manga.thumbnailUrl,
         'thumbnails/${manga.sourceId}/${manga.id}.jpg',
@@ -207,12 +228,14 @@ class MangaRepository {
                 .sourceIdEqualTo(sourceId)
                 .mangaIdEqualTo(mangaId)
                 .chapterIdEqualTo(remote.id)
+                .ownerUserIdEqualTo(_currentUserId)
                 .findFirst();
 
             final local = (existing ?? LocalChapter())
               ..chapterId = remote.id
               ..mangaId = mangaId
               ..sourceId = sourceId
+              ..ownerUserId = _currentUserId
               ..name = remote.name
               ..chapterNumber = remote.chapterNumber
               ..dateUpload = remote.dateUpload
@@ -231,6 +254,7 @@ class MangaRepository {
         .filter()
         .sourceIdEqualTo(sourceId)
         .mangaIdEqualTo(mangaId)
+        .ownerUserIdEqualTo(_currentUserId)
         .sortByChapterNumberDesc()
         .findAll();
   }
@@ -257,6 +281,7 @@ class MangaRepository {
         final localPage = LocalPage()
           ..chapterId = chapterId
           ..index = page.index
+          ..ownerUserId = _currentUserId
           ..imageRemoteUrl = page.imageUrl;
         await isar.collection<LocalPage>().put(localPage);
       }
@@ -283,6 +308,7 @@ class MangaRepository {
             .filter()
             .chapterIdEqualTo(chapterId)
             .indexEqualTo(page.index)
+            .ownerUserIdEqualTo(_currentUserId)
             .findFirst();
         if (lp != null) {
           lp.imageLocalPath = localPath;
@@ -300,6 +326,7 @@ class MangaRepository {
         .sourceIdEqualTo(sourceId)
         .mangaIdEqualTo(mangaId)
         .chapterIdEqualTo(chapterId)
+        .ownerUserIdEqualTo(_currentUserId)
         .findFirst();
     if (chapter != null) {
       chapter.downloaded = true;
@@ -311,6 +338,7 @@ class MangaRepository {
           .filter()
           .mangaIdEqualTo(mangaId)
           .sourceIdEqualTo(sourceId)
+          .ownerUserIdEqualTo(_currentUserId)
           .findFirst();
 
       if (libraryEntry != null) {
@@ -339,6 +367,7 @@ class MangaRepository {
         .collection<LocalPage>()
         .filter()
         .chapterIdEqualTo(chapterId)
+        .ownerUserIdEqualTo(_currentUserId)
         .sortByIndex()
         .findAll();
   }
@@ -358,6 +387,8 @@ class MangaRepository {
         'mangaId': chapter.mangaId,
         'sourceId': chapter.sourceId,
         'chapterId': chapter.chapterId,
+        'chapterName': chapter.name,
+        'chapterNumber': chapter.chapterNumber,
         'pageNumber': chapter.lastPageRead ?? 0,
         'lastReadAt': DateTime.now().toIso8601String(),
         'isBookmarked': value,
@@ -373,6 +404,8 @@ class MangaRepository {
             chapterId: chapter.chapterId,
             pageNumber: chapter.lastPageRead ?? 0,
             lastReadAt: DateTime.now(),
+            chapterName: chapter.name,
+            chapterNumber: chapter.chapterNumber,
             isBookmarked: value,
           );
         } catch (e) {
@@ -399,6 +432,8 @@ class MangaRepository {
         'mangaId': chapter.mangaId,
         'sourceId': chapter.sourceId,
         'chapterId': chapter.chapterId,
+        'chapterName': chapter.name,
+        'chapterNumber': chapter.chapterNumber,
         'pageNumber': chapter.lastPageRead ?? 0,
         'lastReadAt': DateTime.now().toIso8601String(),
         'isRead': value,
@@ -414,6 +449,8 @@ class MangaRepository {
             chapterId: chapter.chapterId,
             pageNumber: chapter.lastPageRead ?? 0,
             lastReadAt: DateTime.now(),
+            chapterName: chapter.name,
+            chapterNumber: chapter.chapterNumber,
             isRead: value,
           );
         } catch (e) {
@@ -435,7 +472,11 @@ class MangaRepository {
 
     // 2. Delete LocalPage entries
     await isar.writeTxn(() async {
-      await isar.collection<LocalPage>().filter().chapterIdEqualTo(chapterId).deleteAll();
+      await isar
+          .collection<LocalPage>()
+          .filter()
+          .chapterIdEqualTo(chapterId)
+          .deleteAll();
     });
 
     // 3. Update Isar

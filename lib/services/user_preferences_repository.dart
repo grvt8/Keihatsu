@@ -10,19 +10,27 @@ class UserPreferencesRepository {
   final Isar isar;
   final LibraryApi api;
   final SyncManager syncManager;
+  final String Function() getCurrentUserId;
 
   UserPreferencesRepository({
     required this.isar,
     required this.api,
     required this.syncManager,
+    required this.getCurrentUserId,
   });
+
+  String get _currentUserId => getCurrentUserId();
 
   Future<UserPreferences> getPreferences({bool forceRefresh = false, String? token}) async {
     if (forceRefresh && token != null) {
       await refreshPreferences(token);
     }
 
-    final local = await isar.collection<LocalUserPreferences>().where().findFirst();
+    final local = await isar
+        .collection<LocalUserPreferences>()
+        .filter()
+        .ownerUserIdEqualTo(_currentUserId)
+        .findFirst();
     if (local == null) return UserPreferences();
 
     final Map<String, dynamic> sourcePrefsJson = local.sourcePreferencesJson.isNotEmpty
@@ -30,7 +38,7 @@ class UserPreferencesRepository {
         : {};
 
     final Map<String, SourcePreference> sourcePrefs = sourcePrefsJson.map(
-      (k, v) => MapEntry(k, SourcePreference.fromJson(v))
+            (k, v) => MapEntry(k, SourcePreference.fromJson(v))
     );
 
     return UserPreferences(
@@ -73,8 +81,16 @@ class UserPreferencesRepository {
   }
 
   Future<void> _saveLocally(UserPreferences prefs) async {
-    final local = await isar.collection<LocalUserPreferences>().where().findFirst() ?? LocalUserPreferences();
+    final local =
+        await isar
+            .collection<LocalUserPreferences>()
+            .filter()
+            .ownerUserIdEqualTo(_currentUserId)
+            .findFirst() ??
+            LocalUserPreferences()
+              ..ownerUserId = _currentUserId;
 
+    local.ownerUserId = _currentUserId;
     local.libraryDisplayStyle = prefs.libraryDisplayStyle;
     local.libraryItemsPerRow = prefs.libraryItemsPerRow;
     local.overlayShowDownloaded = prefs.overlayShowDownloaded;
@@ -84,7 +100,7 @@ class UserPreferencesRepository {
     local.tabsShowItemCount = prefs.tabsShowItemCount;
     local.categoriesDisplayMode = prefs.categoriesDisplayMode;
     local.sourcePreferencesJson = json.encode(
-      prefs.sourcePreferences.map((k, v) => MapEntry(k, v.toJson()))
+        prefs.sourcePreferences.map((k, v) => MapEntry(k, v.toJson()))
     );
 
     await isar.writeTxn(() => isar.collection<LocalUserPreferences>().put(local));

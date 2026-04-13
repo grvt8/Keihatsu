@@ -8,7 +8,6 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'dart:ui';
 
 import 'theme_provider.dart';
-import 'providers/library_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/offline_library_provider.dart';
 import 'providers/download_provider.dart';
@@ -18,10 +17,13 @@ import 'services/sources_api.dart';
 import 'services/library_api.dart';
 import 'services/auth_api.dart';
 import 'services/file_service.dart';
+import 'services/history_repository.dart';
+import 'services/local_scope.dart';
 import 'services/sync_manager.dart';
 import 'services/sources_repository.dart';
 import 'services/manga_repository.dart';
 import 'services/library_repository.dart';
+import 'services/session_bootstrap_service.dart';
 import 'services/user_repository.dart';
 
 // Screens
@@ -81,11 +83,13 @@ void main() async {
 
   // Mutable token getter — starts as null, gets wired to AuthProvider after it's created
   String? Function() _getToken = () => null;
+  String Function() _getCurrentUserId = () => guestLocalScopeUserId;
 
   final syncManager = SyncManager(
     isar: isar,
     libraryApi: libraryApi,
     getToken: () => _getToken(),
+    getCurrentUserId: () => _getCurrentUserId(),
   );
 
   final sourcesRepo = SourcesRepository(
@@ -99,35 +103,55 @@ void main() async {
     fileService: fileService,
     libraryApi: libraryApi,
     syncManager: syncManager,
+    getCurrentUserId: () => _getCurrentUserId(),
   );
   final libraryRepo = LibraryRepository(
     isar: isar,
     api: libraryApi,
     syncManager: syncManager,
+    getCurrentUserId: () => _getCurrentUserId(),
+  );
+  final historyRepo = HistoryRepository(
+    isar: isar,
+    api: libraryApi,
+    getCurrentUserId: () => _getCurrentUserId(),
   );
   final userRepo = UserRepository(
     isar: isar,
     api: authApi,
     fileService: fileService,
+    getCurrentUserId: () => _getCurrentUserId(),
+  );
+  final sessionBootstrapService = SessionBootstrapService(
+    libraryRepository: libraryRepo,
+    historyRepository: historyRepo,
   );
 
   // Create AuthProvider and wire up the token getter for SyncManager
   final authProvider = AuthProvider(
     userRepository: userRepo,
-    onLogout: () async {
-      await isar.writeTxn(() async {
-        await isar.clear();
-      });
-    },
+    onLogout: (_) async {},
   );
 
   // NOW wire the SyncManager's token getter to the real AuthProvider
   _getToken = () => authProvider.token;
+  _getCurrentUserId = () => authProvider.localScopeUserId;
 
   // When auth state changes (login/logout), trigger the sync queue
+  String? lastBootstrappedUserId;
   authProvider.addListener(() {
-    if (authProvider.token != null) {
+    if (authProvider.token != null && authProvider.user != null) {
+      final currentUserId = authProvider.user!.id;
+      if (lastBootstrappedUserId != currentUserId) {
+        lastBootstrappedUserId = currentUserId;
+        sessionBootstrapService.bootstrapUserData(
+          token: authProvider.token!,
+          userId: currentUserId,
+        );
+      }
       syncManager.processSyncQueue();
+    } else {
+      lastBootstrappedUserId = null;
     }
   });
 
@@ -140,6 +164,7 @@ void main() async {
         Provider.value(value: sourcesRepo),
         Provider.value(value: mangaRepo),
         Provider.value(value: libraryRepo),
+        Provider.value(value: historyRepo),
         Provider.value(value: userRepo),
         // Providers using Repositories
         ChangeNotifierProxyProvider<AuthProvider, OfflineLibraryProvider>(
@@ -147,16 +172,19 @@ void main() async {
             libraryRepo: libraryRepo,
             mangaRepo: mangaRepo,
             getToken: () =>
-                Provider.of<AuthProvider>(context, listen: false).token,
+            Provider.of<AuthProvider>(context, listen: false).token,
           ),
-          update: (context, auth, previous) => previous!,
+          update: (context, auth, previous) {
+            previous!.bindUserScope(auth.localScopeUserId);
+            return previous;
+          },
         ),
         ChangeNotifierProxyProvider<AuthProvider, DownloadProvider>(
           create: (context) => DownloadProvider(
             isar: isar,
             mangaRepo: mangaRepo,
             getToken: () =>
-                Provider.of<AuthProvider>(context, listen: false).token,
+            Provider.of<AuthProvider>(context, listen: false).token,
           ),
           update: (context, auth, previous) => previous!,
         ),
