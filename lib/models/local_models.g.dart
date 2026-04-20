@@ -4867,8 +4867,13 @@ const LocalChapterSchema = CollectionSchema(
       name: r'scanlator',
       type: IsarType.string,
     ),
-    r'sourceId': PropertySchema(
+    r'scopedChapterKey': PropertySchema(
       id: 12,
+      name: r'scopedChapterKey',
+      type: IsarType.string,
+    ),
+    r'sourceId': PropertySchema(
+      id: 13,
       name: r'sourceId',
       type: IsarType.string,
     )
@@ -4879,34 +4884,6 @@ const LocalChapterSchema = CollectionSchema(
   deserializeProp: _localChapterDeserializeProp,
   idName: r'id',
   indexes: {
-    r'chapterId_mangaId_sourceId_ownerUserId': IndexSchema(
-      id: 5119866641942526589,
-      name: r'chapterId_mangaId_sourceId_ownerUserId',
-      unique: true,
-      replace: true,
-      properties: [
-        IndexPropertySchema(
-          name: r'chapterId',
-          type: IndexType.hash,
-          caseSensitive: true,
-        ),
-        IndexPropertySchema(
-          name: r'mangaId',
-          type: IndexType.hash,
-          caseSensitive: true,
-        ),
-        IndexPropertySchema(
-          name: r'sourceId',
-          type: IndexType.hash,
-          caseSensitive: true,
-        ),
-        IndexPropertySchema(
-          name: r'ownerUserId',
-          type: IndexType.hash,
-          caseSensitive: true,
-        )
-      ],
-    ),
     r'ownerUserId': IndexSchema(
       id: 1631799950038639233,
       name: r'ownerUserId',
@@ -4915,6 +4892,19 @@ const LocalChapterSchema = CollectionSchema(
       properties: [
         IndexPropertySchema(
           name: r'ownerUserId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'scopedChapterKey': IndexSchema(
+      id: -4034800158752162839,
+      name: r'scopedChapterKey',
+      unique: true,
+      replace: true,
+      properties: [
+        IndexPropertySchema(
+          name: r'scopedChapterKey',
           type: IndexType.hash,
           caseSensitive: true,
         )
@@ -4945,6 +4935,7 @@ int _localChapterEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  bytesCount += 3 + object.scopedChapterKey.length * 3;
   bytesCount += 3 + object.sourceId.length * 3;
   return bytesCount;
 }
@@ -4967,7 +4958,8 @@ void _localChapterSerialize(
   writer.writeString(offsets[9], object.name);
   writer.writeString(offsets[10], object.ownerUserId);
   writer.writeString(offsets[11], object.scanlator);
-  writer.writeString(offsets[12], object.sourceId);
+  writer.writeString(offsets[12], object.scopedChapterKey);
+  writer.writeString(offsets[13], object.sourceId);
 }
 
 LocalChapter _localChapterDeserialize(
@@ -4990,7 +4982,8 @@ LocalChapter _localChapterDeserialize(
   object.name = reader.readString(offsets[9]);
   object.ownerUserId = reader.readString(offsets[10]);
   object.scanlator = reader.readStringOrNull(offsets[11]);
-  object.sourceId = reader.readString(offsets[12]);
+  object.scopedChapterKey = reader.readString(offsets[12]);
+  object.sourceId = reader.readString(offsets[13]);
   return object;
 }
 
@@ -5027,6 +5020,8 @@ P _localChapterDeserializeProp<P>(
       return (reader.readStringOrNull(offset)) as P;
     case 12:
       return (reader.readString(offset)) as P;
+    case 13:
+      return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -5046,146 +5041,59 @@ void _localChapterAttach(
 }
 
 extension LocalChapterByIndex on IsarCollection<LocalChapter> {
-  Future<LocalChapter?> getByChapterIdMangaIdSourceIdOwnerUserId(
-      String chapterId, String mangaId, String sourceId, String ownerUserId) {
-    return getByIndex(r'chapterId_mangaId_sourceId_ownerUserId',
-        [chapterId, mangaId, sourceId, ownerUserId]);
+  Future<LocalChapter?> getByScopedChapterKey(String scopedChapterKey) {
+    return getByIndex(r'scopedChapterKey', [scopedChapterKey]);
   }
 
-  LocalChapter? getByChapterIdMangaIdSourceIdOwnerUserIdSync(
-      String chapterId, String mangaId, String sourceId, String ownerUserId) {
-    return getByIndexSync(r'chapterId_mangaId_sourceId_ownerUserId',
-        [chapterId, mangaId, sourceId, ownerUserId]);
+  LocalChapter? getByScopedChapterKeySync(String scopedChapterKey) {
+    return getByIndexSync(r'scopedChapterKey', [scopedChapterKey]);
   }
 
-  Future<bool> deleteByChapterIdMangaIdSourceIdOwnerUserId(
-      String chapterId, String mangaId, String sourceId, String ownerUserId) {
-    return deleteByIndex(r'chapterId_mangaId_sourceId_ownerUserId',
-        [chapterId, mangaId, sourceId, ownerUserId]);
+  Future<bool> deleteByScopedChapterKey(String scopedChapterKey) {
+    return deleteByIndex(r'scopedChapterKey', [scopedChapterKey]);
   }
 
-  bool deleteByChapterIdMangaIdSourceIdOwnerUserIdSync(
-      String chapterId, String mangaId, String sourceId, String ownerUserId) {
-    return deleteByIndexSync(r'chapterId_mangaId_sourceId_ownerUserId',
-        [chapterId, mangaId, sourceId, ownerUserId]);
+  bool deleteByScopedChapterKeySync(String scopedChapterKey) {
+    return deleteByIndexSync(r'scopedChapterKey', [scopedChapterKey]);
   }
 
-  Future<List<LocalChapter?>> getAllByChapterIdMangaIdSourceIdOwnerUserId(
-      List<String> chapterIdValues,
-      List<String> mangaIdValues,
-      List<String> sourceIdValues,
-      List<String> ownerUserIdValues) {
-    final len = chapterIdValues.length;
-    assert(
-        mangaIdValues.length == len &&
-            sourceIdValues.length == len &&
-            ownerUserIdValues.length == len,
-        'All index values must have the same length');
-    final values = <List<dynamic>>[];
-    for (var i = 0; i < len; i++) {
-      values.add([
-        chapterIdValues[i],
-        mangaIdValues[i],
-        sourceIdValues[i],
-        ownerUserIdValues[i]
-      ]);
-    }
-
-    return getAllByIndex(r'chapterId_mangaId_sourceId_ownerUserId', values);
+  Future<List<LocalChapter?>> getAllByScopedChapterKey(
+      List<String> scopedChapterKeyValues) {
+    final values = scopedChapterKeyValues.map((e) => [e]).toList();
+    return getAllByIndex(r'scopedChapterKey', values);
   }
 
-  List<LocalChapter?> getAllByChapterIdMangaIdSourceIdOwnerUserIdSync(
-      List<String> chapterIdValues,
-      List<String> mangaIdValues,
-      List<String> sourceIdValues,
-      List<String> ownerUserIdValues) {
-    final len = chapterIdValues.length;
-    assert(
-        mangaIdValues.length == len &&
-            sourceIdValues.length == len &&
-            ownerUserIdValues.length == len,
-        'All index values must have the same length');
-    final values = <List<dynamic>>[];
-    for (var i = 0; i < len; i++) {
-      values.add([
-        chapterIdValues[i],
-        mangaIdValues[i],
-        sourceIdValues[i],
-        ownerUserIdValues[i]
-      ]);
-    }
-
-    return getAllByIndexSync(r'chapterId_mangaId_sourceId_ownerUserId', values);
+  List<LocalChapter?> getAllByScopedChapterKeySync(
+      List<String> scopedChapterKeyValues) {
+    final values = scopedChapterKeyValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'scopedChapterKey', values);
   }
 
-  Future<int> deleteAllByChapterIdMangaIdSourceIdOwnerUserId(
-      List<String> chapterIdValues,
-      List<String> mangaIdValues,
-      List<String> sourceIdValues,
-      List<String> ownerUserIdValues) {
-    final len = chapterIdValues.length;
-    assert(
-        mangaIdValues.length == len &&
-            sourceIdValues.length == len &&
-            ownerUserIdValues.length == len,
-        'All index values must have the same length');
-    final values = <List<dynamic>>[];
-    for (var i = 0; i < len; i++) {
-      values.add([
-        chapterIdValues[i],
-        mangaIdValues[i],
-        sourceIdValues[i],
-        ownerUserIdValues[i]
-      ]);
-    }
-
-    return deleteAllByIndex(r'chapterId_mangaId_sourceId_ownerUserId', values);
+  Future<int> deleteAllByScopedChapterKey(List<String> scopedChapterKeyValues) {
+    final values = scopedChapterKeyValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'scopedChapterKey', values);
   }
 
-  int deleteAllByChapterIdMangaIdSourceIdOwnerUserIdSync(
-      List<String> chapterIdValues,
-      List<String> mangaIdValues,
-      List<String> sourceIdValues,
-      List<String> ownerUserIdValues) {
-    final len = chapterIdValues.length;
-    assert(
-        mangaIdValues.length == len &&
-            sourceIdValues.length == len &&
-            ownerUserIdValues.length == len,
-        'All index values must have the same length');
-    final values = <List<dynamic>>[];
-    for (var i = 0; i < len; i++) {
-      values.add([
-        chapterIdValues[i],
-        mangaIdValues[i],
-        sourceIdValues[i],
-        ownerUserIdValues[i]
-      ]);
-    }
-
-    return deleteAllByIndexSync(
-        r'chapterId_mangaId_sourceId_ownerUserId', values);
+  int deleteAllByScopedChapterKeySync(List<String> scopedChapterKeyValues) {
+    final values = scopedChapterKeyValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'scopedChapterKey', values);
   }
 
-  Future<Id> putByChapterIdMangaIdSourceIdOwnerUserId(LocalChapter object) {
-    return putByIndex(r'chapterId_mangaId_sourceId_ownerUserId', object);
+  Future<Id> putByScopedChapterKey(LocalChapter object) {
+    return putByIndex(r'scopedChapterKey', object);
   }
 
-  Id putByChapterIdMangaIdSourceIdOwnerUserIdSync(LocalChapter object,
+  Id putByScopedChapterKeySync(LocalChapter object, {bool saveLinks = true}) {
+    return putByIndexSync(r'scopedChapterKey', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByScopedChapterKey(List<LocalChapter> objects) {
+    return putAllByIndex(r'scopedChapterKey', objects);
+  }
+
+  List<Id> putAllByScopedChapterKeySync(List<LocalChapter> objects,
       {bool saveLinks = true}) {
-    return putByIndexSync(r'chapterId_mangaId_sourceId_ownerUserId', object,
-        saveLinks: saveLinks);
-  }
-
-  Future<List<Id>> putAllByChapterIdMangaIdSourceIdOwnerUserId(
-      List<LocalChapter> objects) {
-    return putAllByIndex(r'chapterId_mangaId_sourceId_ownerUserId', objects);
-  }
-
-  List<Id> putAllByChapterIdMangaIdSourceIdOwnerUserIdSync(
-      List<LocalChapter> objects,
-      {bool saveLinks = true}) {
-    return putAllByIndexSync(r'chapterId_mangaId_sourceId_ownerUserId', objects,
+    return putAllByIndexSync(r'scopedChapterKey', objects,
         saveLinks: saveLinks);
   }
 }
@@ -5269,192 +5177,6 @@ extension LocalChapterQueryWhere
   }
 
   QueryBuilder<LocalChapter, LocalChapter, QAfterWhereClause>
-      chapterIdEqualToAnyMangaIdSourceIdOwnerUserId(String chapterId) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-        value: [chapterId],
-      ));
-    });
-  }
-
-  QueryBuilder<LocalChapter, LocalChapter, QAfterWhereClause>
-      chapterIdNotEqualToAnyMangaIdSourceIdOwnerUserId(String chapterId) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [],
-              upper: [chapterId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [chapterId],
-              includeLower: false,
-              upper: [],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [chapterId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [],
-              upper: [chapterId],
-              includeUpper: false,
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<LocalChapter, LocalChapter, QAfterWhereClause>
-      chapterIdMangaIdEqualToAnySourceIdOwnerUserId(
-          String chapterId, String mangaId) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-        value: [chapterId, mangaId],
-      ));
-    });
-  }
-
-  QueryBuilder<LocalChapter, LocalChapter, QAfterWhereClause>
-      chapterIdEqualToMangaIdNotEqualToAnySourceIdOwnerUserId(
-          String chapterId, String mangaId) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [chapterId],
-              upper: [chapterId, mangaId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [chapterId, mangaId],
-              includeLower: false,
-              upper: [chapterId],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [chapterId, mangaId],
-              includeLower: false,
-              upper: [chapterId],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [chapterId],
-              upper: [chapterId, mangaId],
-              includeUpper: false,
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<LocalChapter, LocalChapter, QAfterWhereClause>
-      chapterIdMangaIdSourceIdEqualToAnyOwnerUserId(
-          String chapterId, String mangaId, String sourceId) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-        value: [chapterId, mangaId, sourceId],
-      ));
-    });
-  }
-
-  QueryBuilder<LocalChapter, LocalChapter, QAfterWhereClause>
-      chapterIdMangaIdEqualToSourceIdNotEqualToAnyOwnerUserId(
-          String chapterId, String mangaId, String sourceId) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [chapterId, mangaId],
-              upper: [chapterId, mangaId, sourceId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [chapterId, mangaId, sourceId],
-              includeLower: false,
-              upper: [chapterId, mangaId],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [chapterId, mangaId, sourceId],
-              includeLower: false,
-              upper: [chapterId, mangaId],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [chapterId, mangaId],
-              upper: [chapterId, mangaId, sourceId],
-              includeUpper: false,
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<LocalChapter, LocalChapter, QAfterWhereClause>
-      chapterIdMangaIdSourceIdOwnerUserIdEqualTo(String chapterId,
-          String mangaId, String sourceId, String ownerUserId) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-        value: [chapterId, mangaId, sourceId, ownerUserId],
-      ));
-    });
-  }
-
-  QueryBuilder<LocalChapter, LocalChapter, QAfterWhereClause>
-      chapterIdMangaIdSourceIdEqualToOwnerUserIdNotEqualTo(String chapterId,
-          String mangaId, String sourceId, String ownerUserId) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [chapterId, mangaId, sourceId],
-              upper: [chapterId, mangaId, sourceId, ownerUserId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [chapterId, mangaId, sourceId, ownerUserId],
-              includeLower: false,
-              upper: [chapterId, mangaId, sourceId],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [chapterId, mangaId, sourceId, ownerUserId],
-              includeLower: false,
-              upper: [chapterId, mangaId, sourceId],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'chapterId_mangaId_sourceId_ownerUserId',
-              lower: [chapterId, mangaId, sourceId],
-              upper: [chapterId, mangaId, sourceId, ownerUserId],
-              includeUpper: false,
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<LocalChapter, LocalChapter, QAfterWhereClause>
       ownerUserIdEqualTo(String ownerUserId) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
@@ -5493,6 +5215,51 @@ extension LocalChapterQueryWhere
               indexName: r'ownerUserId',
               lower: [],
               upper: [ownerUserId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<LocalChapter, LocalChapter, QAfterWhereClause>
+      scopedChapterKeyEqualTo(String scopedChapterKey) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'scopedChapterKey',
+        value: [scopedChapterKey],
+      ));
+    });
+  }
+
+  QueryBuilder<LocalChapter, LocalChapter, QAfterWhereClause>
+      scopedChapterKeyNotEqualTo(String scopedChapterKey) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'scopedChapterKey',
+              lower: [],
+              upper: [scopedChapterKey],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'scopedChapterKey',
+              lower: [scopedChapterKey],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'scopedChapterKey',
+              lower: [scopedChapterKey],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'scopedChapterKey',
+              lower: [],
+              upper: [scopedChapterKey],
               includeUpper: false,
             ));
       }
@@ -6552,6 +6319,142 @@ extension LocalChapterQueryFilter
   }
 
   QueryBuilder<LocalChapter, LocalChapter, QAfterFilterCondition>
+      scopedChapterKeyEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'scopedChapterKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalChapter, LocalChapter, QAfterFilterCondition>
+      scopedChapterKeyGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'scopedChapterKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalChapter, LocalChapter, QAfterFilterCondition>
+      scopedChapterKeyLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'scopedChapterKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalChapter, LocalChapter, QAfterFilterCondition>
+      scopedChapterKeyBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'scopedChapterKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalChapter, LocalChapter, QAfterFilterCondition>
+      scopedChapterKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'scopedChapterKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalChapter, LocalChapter, QAfterFilterCondition>
+      scopedChapterKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'scopedChapterKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalChapter, LocalChapter, QAfterFilterCondition>
+      scopedChapterKeyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'scopedChapterKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalChapter, LocalChapter, QAfterFilterCondition>
+      scopedChapterKeyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'scopedChapterKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalChapter, LocalChapter, QAfterFilterCondition>
+      scopedChapterKeyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'scopedChapterKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<LocalChapter, LocalChapter, QAfterFilterCondition>
+      scopedChapterKeyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'scopedChapterKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<LocalChapter, LocalChapter, QAfterFilterCondition>
       sourceIdEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -6847,6 +6750,20 @@ extension LocalChapterQuerySortBy
     });
   }
 
+  QueryBuilder<LocalChapter, LocalChapter, QAfterSortBy>
+      sortByScopedChapterKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'scopedChapterKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<LocalChapter, LocalChapter, QAfterSortBy>
+      sortByScopedChapterKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'scopedChapterKey', Sort.desc);
+    });
+  }
+
   QueryBuilder<LocalChapter, LocalChapter, QAfterSortBy> sortBySourceId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sourceId', Sort.asc);
@@ -7025,6 +6942,20 @@ extension LocalChapterQuerySortThenBy
     });
   }
 
+  QueryBuilder<LocalChapter, LocalChapter, QAfterSortBy>
+      thenByScopedChapterKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'scopedChapterKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<LocalChapter, LocalChapter, QAfterSortBy>
+      thenByScopedChapterKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'scopedChapterKey', Sort.desc);
+    });
+  }
+
   QueryBuilder<LocalChapter, LocalChapter, QAfterSortBy> thenBySourceId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sourceId', Sort.asc);
@@ -7118,6 +7049,14 @@ extension LocalChapterQueryWhereDistinct
     });
   }
 
+  QueryBuilder<LocalChapter, LocalChapter, QDistinct>
+      distinctByScopedChapterKey({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'scopedChapterKey',
+          caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<LocalChapter, LocalChapter, QDistinct> distinctBySourceId(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -7203,6 +7142,13 @@ extension LocalChapterQueryProperty
   QueryBuilder<LocalChapter, String?, QQueryOperations> scanlatorProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'scanlator');
+    });
+  }
+
+  QueryBuilder<LocalChapter, String, QQueryOperations>
+      scopedChapterKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'scopedChapterKey');
     });
   }
 
@@ -13170,8 +13116,13 @@ const LocalCategoryAssignmentSchema = CollectionSchema(
       name: r'ownerUserId',
       type: IsarType.string,
     ),
-    r'sourceId': PropertySchema(
+    r'scopedAssignmentKey': PropertySchema(
       id: 3,
+      name: r'scopedAssignmentKey',
+      type: IsarType.string,
+    ),
+    r'sourceId': PropertySchema(
+      id: 4,
       name: r'sourceId',
       type: IsarType.string,
     )
@@ -13182,34 +13133,6 @@ const LocalCategoryAssignmentSchema = CollectionSchema(
   deserializeProp: _localCategoryAssignmentDeserializeProp,
   idName: r'id',
   indexes: {
-    r'mangaId_sourceId_localCategoryId_ownerUserId': IndexSchema(
-      id: -4475102358585983877,
-      name: r'mangaId_sourceId_localCategoryId_ownerUserId',
-      unique: true,
-      replace: true,
-      properties: [
-        IndexPropertySchema(
-          name: r'mangaId',
-          type: IndexType.hash,
-          caseSensitive: true,
-        ),
-        IndexPropertySchema(
-          name: r'sourceId',
-          type: IndexType.hash,
-          caseSensitive: true,
-        ),
-        IndexPropertySchema(
-          name: r'localCategoryId',
-          type: IndexType.value,
-          caseSensitive: false,
-        ),
-        IndexPropertySchema(
-          name: r'ownerUserId',
-          type: IndexType.hash,
-          caseSensitive: true,
-        )
-      ],
-    ),
     r'sourceId': IndexSchema(
       id: 2155220942429093580,
       name: r'sourceId',
@@ -13248,6 +13171,19 @@ const LocalCategoryAssignmentSchema = CollectionSchema(
           caseSensitive: true,
         )
       ],
+    ),
+    r'scopedAssignmentKey': IndexSchema(
+      id: 9145287408001874730,
+      name: r'scopedAssignmentKey',
+      unique: true,
+      replace: true,
+      properties: [
+        IndexPropertySchema(
+          name: r'scopedAssignmentKey',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
     )
   },
   links: {},
@@ -13266,6 +13202,7 @@ int _localCategoryAssignmentEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.mangaId.length * 3;
   bytesCount += 3 + object.ownerUserId.length * 3;
+  bytesCount += 3 + object.scopedAssignmentKey.length * 3;
   bytesCount += 3 + object.sourceId.length * 3;
   return bytesCount;
 }
@@ -13279,7 +13216,8 @@ void _localCategoryAssignmentSerialize(
   writer.writeLong(offsets[0], object.localCategoryId);
   writer.writeString(offsets[1], object.mangaId);
   writer.writeString(offsets[2], object.ownerUserId);
-  writer.writeString(offsets[3], object.sourceId);
+  writer.writeString(offsets[3], object.scopedAssignmentKey);
+  writer.writeString(offsets[4], object.sourceId);
 }
 
 LocalCategoryAssignment _localCategoryAssignmentDeserialize(
@@ -13293,7 +13231,8 @@ LocalCategoryAssignment _localCategoryAssignmentDeserialize(
   object.localCategoryId = reader.readLong(offsets[0]);
   object.mangaId = reader.readString(offsets[1]);
   object.ownerUserId = reader.readString(offsets[2]);
-  object.sourceId = reader.readString(offsets[3]);
+  object.scopedAssignmentKey = reader.readString(offsets[3]);
+  object.sourceId = reader.readString(offsets[4]);
   return object;
 }
 
@@ -13311,6 +13250,8 @@ P _localCategoryAssignmentDeserializeProp<P>(
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -13333,160 +13274,66 @@ void _localCategoryAssignmentAttach(
 
 extension LocalCategoryAssignmentByIndex
     on IsarCollection<LocalCategoryAssignment> {
-  Future<LocalCategoryAssignment?>
-      getByMangaIdSourceIdLocalCategoryIdOwnerUserId(String mangaId,
-          String sourceId, int localCategoryId, String ownerUserId) {
-    return getByIndex(r'mangaId_sourceId_localCategoryId_ownerUserId',
-        [mangaId, sourceId, localCategoryId, ownerUserId]);
+  Future<LocalCategoryAssignment?> getByScopedAssignmentKey(
+      String scopedAssignmentKey) {
+    return getByIndex(r'scopedAssignmentKey', [scopedAssignmentKey]);
   }
 
-  LocalCategoryAssignment? getByMangaIdSourceIdLocalCategoryIdOwnerUserIdSync(
-      String mangaId,
-      String sourceId,
-      int localCategoryId,
-      String ownerUserId) {
-    return getByIndexSync(r'mangaId_sourceId_localCategoryId_ownerUserId',
-        [mangaId, sourceId, localCategoryId, ownerUserId]);
+  LocalCategoryAssignment? getByScopedAssignmentKeySync(
+      String scopedAssignmentKey) {
+    return getByIndexSync(r'scopedAssignmentKey', [scopedAssignmentKey]);
   }
 
-  Future<bool> deleteByMangaIdSourceIdLocalCategoryIdOwnerUserId(String mangaId,
-      String sourceId, int localCategoryId, String ownerUserId) {
-    return deleteByIndex(r'mangaId_sourceId_localCategoryId_ownerUserId',
-        [mangaId, sourceId, localCategoryId, ownerUserId]);
+  Future<bool> deleteByScopedAssignmentKey(String scopedAssignmentKey) {
+    return deleteByIndex(r'scopedAssignmentKey', [scopedAssignmentKey]);
   }
 
-  bool deleteByMangaIdSourceIdLocalCategoryIdOwnerUserIdSync(String mangaId,
-      String sourceId, int localCategoryId, String ownerUserId) {
-    return deleteByIndexSync(r'mangaId_sourceId_localCategoryId_ownerUserId',
-        [mangaId, sourceId, localCategoryId, ownerUserId]);
+  bool deleteByScopedAssignmentKeySync(String scopedAssignmentKey) {
+    return deleteByIndexSync(r'scopedAssignmentKey', [scopedAssignmentKey]);
   }
 
-  Future<List<LocalCategoryAssignment?>>
-      getAllByMangaIdSourceIdLocalCategoryIdOwnerUserId(
-          List<String> mangaIdValues,
-          List<String> sourceIdValues,
-          List<int> localCategoryIdValues,
-          List<String> ownerUserIdValues) {
-    final len = mangaIdValues.length;
-    assert(
-        sourceIdValues.length == len &&
-            localCategoryIdValues.length == len &&
-            ownerUserIdValues.length == len,
-        'All index values must have the same length');
-    final values = <List<dynamic>>[];
-    for (var i = 0; i < len; i++) {
-      values.add([
-        mangaIdValues[i],
-        sourceIdValues[i],
-        localCategoryIdValues[i],
-        ownerUserIdValues[i]
-      ]);
-    }
-
-    return getAllByIndex(
-        r'mangaId_sourceId_localCategoryId_ownerUserId', values);
+  Future<List<LocalCategoryAssignment?>> getAllByScopedAssignmentKey(
+      List<String> scopedAssignmentKeyValues) {
+    final values = scopedAssignmentKeyValues.map((e) => [e]).toList();
+    return getAllByIndex(r'scopedAssignmentKey', values);
   }
 
-  List<LocalCategoryAssignment?>
-      getAllByMangaIdSourceIdLocalCategoryIdOwnerUserIdSync(
-          List<String> mangaIdValues,
-          List<String> sourceIdValues,
-          List<int> localCategoryIdValues,
-          List<String> ownerUserIdValues) {
-    final len = mangaIdValues.length;
-    assert(
-        sourceIdValues.length == len &&
-            localCategoryIdValues.length == len &&
-            ownerUserIdValues.length == len,
-        'All index values must have the same length');
-    final values = <List<dynamic>>[];
-    for (var i = 0; i < len; i++) {
-      values.add([
-        mangaIdValues[i],
-        sourceIdValues[i],
-        localCategoryIdValues[i],
-        ownerUserIdValues[i]
-      ]);
-    }
-
-    return getAllByIndexSync(
-        r'mangaId_sourceId_localCategoryId_ownerUserId', values);
+  List<LocalCategoryAssignment?> getAllByScopedAssignmentKeySync(
+      List<String> scopedAssignmentKeyValues) {
+    final values = scopedAssignmentKeyValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'scopedAssignmentKey', values);
   }
 
-  Future<int> deleteAllByMangaIdSourceIdLocalCategoryIdOwnerUserId(
-      List<String> mangaIdValues,
-      List<String> sourceIdValues,
-      List<int> localCategoryIdValues,
-      List<String> ownerUserIdValues) {
-    final len = mangaIdValues.length;
-    assert(
-        sourceIdValues.length == len &&
-            localCategoryIdValues.length == len &&
-            ownerUserIdValues.length == len,
-        'All index values must have the same length');
-    final values = <List<dynamic>>[];
-    for (var i = 0; i < len; i++) {
-      values.add([
-        mangaIdValues[i],
-        sourceIdValues[i],
-        localCategoryIdValues[i],
-        ownerUserIdValues[i]
-      ]);
-    }
-
-    return deleteAllByIndex(
-        r'mangaId_sourceId_localCategoryId_ownerUserId', values);
+  Future<int> deleteAllByScopedAssignmentKey(
+      List<String> scopedAssignmentKeyValues) {
+    final values = scopedAssignmentKeyValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'scopedAssignmentKey', values);
   }
 
-  int deleteAllByMangaIdSourceIdLocalCategoryIdOwnerUserIdSync(
-      List<String> mangaIdValues,
-      List<String> sourceIdValues,
-      List<int> localCategoryIdValues,
-      List<String> ownerUserIdValues) {
-    final len = mangaIdValues.length;
-    assert(
-        sourceIdValues.length == len &&
-            localCategoryIdValues.length == len &&
-            ownerUserIdValues.length == len,
-        'All index values must have the same length');
-    final values = <List<dynamic>>[];
-    for (var i = 0; i < len; i++) {
-      values.add([
-        mangaIdValues[i],
-        sourceIdValues[i],
-        localCategoryIdValues[i],
-        ownerUserIdValues[i]
-      ]);
-    }
-
-    return deleteAllByIndexSync(
-        r'mangaId_sourceId_localCategoryId_ownerUserId', values);
+  int deleteAllByScopedAssignmentKeySync(
+      List<String> scopedAssignmentKeyValues) {
+    final values = scopedAssignmentKeyValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'scopedAssignmentKey', values);
   }
 
-  Future<Id> putByMangaIdSourceIdLocalCategoryIdOwnerUserId(
-      LocalCategoryAssignment object) {
-    return putByIndex(r'mangaId_sourceId_localCategoryId_ownerUserId', object);
+  Future<Id> putByScopedAssignmentKey(LocalCategoryAssignment object) {
+    return putByIndex(r'scopedAssignmentKey', object);
   }
 
-  Id putByMangaIdSourceIdLocalCategoryIdOwnerUserIdSync(
-      LocalCategoryAssignment object,
+  Id putByScopedAssignmentKeySync(LocalCategoryAssignment object,
       {bool saveLinks = true}) {
-    return putByIndexSync(
-        r'mangaId_sourceId_localCategoryId_ownerUserId', object,
-        saveLinks: saveLinks);
+    return putByIndexSync(r'scopedAssignmentKey', object, saveLinks: saveLinks);
   }
 
-  Future<List<Id>> putAllByMangaIdSourceIdLocalCategoryIdOwnerUserId(
+  Future<List<Id>> putAllByScopedAssignmentKey(
       List<LocalCategoryAssignment> objects) {
-    return putAllByIndex(
-        r'mangaId_sourceId_localCategoryId_ownerUserId', objects);
+    return putAllByIndex(r'scopedAssignmentKey', objects);
   }
 
-  List<Id> putAllByMangaIdSourceIdLocalCategoryIdOwnerUserIdSync(
+  List<Id> putAllByScopedAssignmentKeySync(
       List<LocalCategoryAssignment> objects,
       {bool saveLinks = true}) {
-    return putAllByIndexSync(
-        r'mangaId_sourceId_localCategoryId_ownerUserId', objects,
+    return putAllByIndexSync(r'scopedAssignmentKey', objects,
         saveLinks: saveLinks);
   }
 }
@@ -13577,257 +13424,6 @@ extension LocalCategoryAssignmentQueryWhere on QueryBuilder<
         upper: upperId,
         includeUpper: includeUpper,
       ));
-    });
-  }
-
-  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
-          QAfterWhereClause>
-      mangaIdEqualToAnySourceIdLocalCategoryIdOwnerUserId(String mangaId) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-        value: [mangaId],
-      ));
-    });
-  }
-
-  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
-          QAfterWhereClause>
-      mangaIdNotEqualToAnySourceIdLocalCategoryIdOwnerUserId(String mangaId) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [],
-              upper: [mangaId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [mangaId],
-              includeLower: false,
-              upper: [],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [mangaId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [],
-              upper: [mangaId],
-              includeUpper: false,
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
-          QAfterWhereClause>
-      mangaIdSourceIdEqualToAnyLocalCategoryIdOwnerUserId(
-          String mangaId, String sourceId) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-        value: [mangaId, sourceId],
-      ));
-    });
-  }
-
-  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
-          QAfterWhereClause>
-      mangaIdEqualToSourceIdNotEqualToAnyLocalCategoryIdOwnerUserId(
-          String mangaId, String sourceId) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [mangaId],
-              upper: [mangaId, sourceId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [mangaId, sourceId],
-              includeLower: false,
-              upper: [mangaId],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [mangaId, sourceId],
-              includeLower: false,
-              upper: [mangaId],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [mangaId],
-              upper: [mangaId, sourceId],
-              includeUpper: false,
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
-          QAfterWhereClause>
-      mangaIdSourceIdLocalCategoryIdEqualToAnyOwnerUserId(
-          String mangaId, String sourceId, int localCategoryId) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-        value: [mangaId, sourceId, localCategoryId],
-      ));
-    });
-  }
-
-  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
-          QAfterWhereClause>
-      mangaIdSourceIdEqualToLocalCategoryIdNotEqualToAnyOwnerUserId(
-          String mangaId, String sourceId, int localCategoryId) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [mangaId, sourceId],
-              upper: [mangaId, sourceId, localCategoryId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [mangaId, sourceId, localCategoryId],
-              includeLower: false,
-              upper: [mangaId, sourceId],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [mangaId, sourceId, localCategoryId],
-              includeLower: false,
-              upper: [mangaId, sourceId],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [mangaId, sourceId],
-              upper: [mangaId, sourceId, localCategoryId],
-              includeUpper: false,
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
-          QAfterWhereClause>
-      mangaIdSourceIdEqualToLocalCategoryIdGreaterThanAnyOwnerUserId(
-    String mangaId,
-    String sourceId,
-    int localCategoryId, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-        lower: [mangaId, sourceId, localCategoryId],
-        includeLower: include,
-        upper: [mangaId, sourceId],
-      ));
-    });
-  }
-
-  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
-          QAfterWhereClause>
-      mangaIdSourceIdEqualToLocalCategoryIdLessThanAnyOwnerUserId(
-    String mangaId,
-    String sourceId,
-    int localCategoryId, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-        lower: [mangaId, sourceId],
-        upper: [mangaId, sourceId, localCategoryId],
-        includeUpper: include,
-      ));
-    });
-  }
-
-  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
-          QAfterWhereClause>
-      mangaIdSourceIdEqualToLocalCategoryIdBetweenAnyOwnerUserId(
-    String mangaId,
-    String sourceId,
-    int lowerLocalCategoryId,
-    int upperLocalCategoryId, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-        lower: [mangaId, sourceId, lowerLocalCategoryId],
-        includeLower: includeLower,
-        upper: [mangaId, sourceId, upperLocalCategoryId],
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
-          QAfterWhereClause>
-      mangaIdSourceIdLocalCategoryIdOwnerUserIdEqualTo(String mangaId,
-          String sourceId, int localCategoryId, String ownerUserId) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-        value: [mangaId, sourceId, localCategoryId, ownerUserId],
-      ));
-    });
-  }
-
-  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
-          QAfterWhereClause>
-      mangaIdSourceIdLocalCategoryIdEqualToOwnerUserIdNotEqualTo(String mangaId,
-          String sourceId, int localCategoryId, String ownerUserId) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [mangaId, sourceId, localCategoryId],
-              upper: [mangaId, sourceId, localCategoryId, ownerUserId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [mangaId, sourceId, localCategoryId, ownerUserId],
-              includeLower: false,
-              upper: [mangaId, sourceId, localCategoryId],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [mangaId, sourceId, localCategoryId, ownerUserId],
-              includeLower: false,
-              upper: [mangaId, sourceId, localCategoryId],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'mangaId_sourceId_localCategoryId_ownerUserId',
-              lower: [mangaId, sourceId, localCategoryId],
-              upper: [mangaId, sourceId, localCategoryId, ownerUserId],
-              includeUpper: false,
-            ));
-      }
     });
   }
 
@@ -14008,6 +13604,53 @@ extension LocalCategoryAssignmentQueryWhere on QueryBuilder<
               indexName: r'ownerUserId',
               lower: [],
               upper: [ownerUserId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
+          QAfterWhereClause>
+      scopedAssignmentKeyEqualTo(String scopedAssignmentKey) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'scopedAssignmentKey',
+        value: [scopedAssignmentKey],
+      ));
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
+          QAfterWhereClause>
+      scopedAssignmentKeyNotEqualTo(String scopedAssignmentKey) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'scopedAssignmentKey',
+              lower: [],
+              upper: [scopedAssignmentKey],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'scopedAssignmentKey',
+              lower: [scopedAssignmentKey],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'scopedAssignmentKey',
+              lower: [scopedAssignmentKey],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'scopedAssignmentKey',
+              lower: [],
+              upper: [scopedAssignmentKey],
               includeUpper: false,
             ));
       }
@@ -14406,6 +14049,144 @@ extension LocalCategoryAssignmentQueryFilter on QueryBuilder<
   }
 
   QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
+      QAfterFilterCondition> scopedAssignmentKeyEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'scopedAssignmentKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
+      QAfterFilterCondition> scopedAssignmentKeyGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'scopedAssignmentKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
+      QAfterFilterCondition> scopedAssignmentKeyLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'scopedAssignmentKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
+      QAfterFilterCondition> scopedAssignmentKeyBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'scopedAssignmentKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
+      QAfterFilterCondition> scopedAssignmentKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'scopedAssignmentKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
+      QAfterFilterCondition> scopedAssignmentKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'scopedAssignmentKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
+          QAfterFilterCondition>
+      scopedAssignmentKeyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'scopedAssignmentKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
+          QAfterFilterCondition>
+      scopedAssignmentKeyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'scopedAssignmentKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
+      QAfterFilterCondition> scopedAssignmentKeyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'scopedAssignmentKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
+      QAfterFilterCondition> scopedAssignmentKeyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'scopedAssignmentKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment,
       QAfterFilterCondition> sourceIdEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -14595,6 +14376,20 @@ extension LocalCategoryAssignmentQuerySortBy
   }
 
   QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment, QAfterSortBy>
+      sortByScopedAssignmentKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'scopedAssignmentKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment, QAfterSortBy>
+      sortByScopedAssignmentKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'scopedAssignmentKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment, QAfterSortBy>
       sortBySourceId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sourceId', Sort.asc);
@@ -14668,6 +14463,20 @@ extension LocalCategoryAssignmentQuerySortThenBy on QueryBuilder<
   }
 
   QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment, QAfterSortBy>
+      thenByScopedAssignmentKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'scopedAssignmentKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment, QAfterSortBy>
+      thenByScopedAssignmentKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'scopedAssignmentKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment, QAfterSortBy>
       thenBySourceId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sourceId', Sort.asc);
@@ -14706,6 +14515,14 @@ extension LocalCategoryAssignmentQueryWhereDistinct on QueryBuilder<
   }
 
   QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment, QDistinct>
+      distinctByScopedAssignmentKey({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'scopedAssignmentKey',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, LocalCategoryAssignment, QDistinct>
       distinctBySourceId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'sourceId', caseSensitive: caseSensitive);
@@ -14739,6 +14556,13 @@ extension LocalCategoryAssignmentQueryProperty on QueryBuilder<
       ownerUserIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'ownerUserId');
+    });
+  }
+
+  QueryBuilder<LocalCategoryAssignment, String, QQueryOperations>
+      scopedAssignmentKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'scopedAssignmentKey');
     });
   }
 

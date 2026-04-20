@@ -26,6 +26,15 @@ class MangaRepository {
 
   String get _currentUserId => getCurrentUserId();
 
+  String _chapterScopedKey(
+      String chapterId,
+      String mangaId,
+      String sourceId,
+      String ownerUserId,
+      ) {
+    return '$ownerUserId::$sourceId::$mangaId::$chapterId';
+  }
+
   Future<void> updateReadingProgress({
     required LocalManga manga,
     required String chapterId,
@@ -54,6 +63,12 @@ class MangaRepository {
         .findFirst();
 
     if (chapter != null) {
+      chapter.scopedChapterKey = _chapterScopedKey(
+        chapter.chapterId,
+        chapter.mangaId,
+        chapter.sourceId,
+        _currentUserId,
+      );
       chapter.lastReadAt = now;
       chapter.lastPageRead = pageIndex;
       if (isRead != null) chapter.isRead = isRead;
@@ -67,6 +82,12 @@ class MangaRepository {
         ..mangaId = manga.mangaId
         ..sourceId = manga.sourceId
         ..ownerUserId = _currentUserId
+        ..scopedChapterKey = _chapterScopedKey(
+          chapterId,
+          manga.mangaId,
+          manga.sourceId,
+          _currentUserId,
+        )
         ..name =
             "Chapter" // Placeholder, should be updated when chapter details are fetched
         ..chapterNumber =
@@ -236,6 +257,12 @@ class MangaRepository {
               ..mangaId = mangaId
               ..sourceId = sourceId
               ..ownerUserId = _currentUserId
+              ..scopedChapterKey = _chapterScopedKey(
+                remote.id,
+                mangaId,
+                sourceId,
+                _currentUserId,
+              )
               ..name = remote.name
               ..chapterNumber = remote.chapterNumber
               ..dateUpload = remote.dateUpload
@@ -329,6 +356,12 @@ class MangaRepository {
         .ownerUserIdEqualTo(_currentUserId)
         .findFirst();
     if (chapter != null) {
+      chapter.scopedChapterKey = _chapterScopedKey(
+        chapter.chapterId,
+        chapter.mangaId,
+        chapter.sourceId,
+        _currentUserId,
+      );
       chapter.downloaded = true;
       await isar.writeTxn(() => isar.collection<LocalChapter>().put(chapter));
 
@@ -377,6 +410,12 @@ class MangaRepository {
       bool value, {
         String? token,
       }) async {
+    chapter.scopedChapterKey = _chapterScopedKey(
+      chapter.chapterId,
+      chapter.mangaId,
+      chapter.sourceId,
+      _currentUserId,
+    );
     chapter.isBookmarked = value;
     await isar.writeTxn(() async {
       await isar.collection<LocalChapter>().put(chapter);
@@ -422,6 +461,12 @@ class MangaRepository {
       bool value, {
         String? token,
       }) async {
+    chapter.scopedChapterKey = _chapterScopedKey(
+      chapter.chapterId,
+      chapter.mangaId,
+      chapter.sourceId,
+      _currentUserId,
+    );
     chapter.isRead = value;
     await isar.writeTxn(() async {
       await isar.collection<LocalChapter>().put(chapter);

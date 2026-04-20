@@ -51,20 +51,13 @@ class LocalManga {
 class LocalChapter {
   Id id = Isar.autoIncrement;
 
-  @Index(
-    unique: true,
-    replace: true,
-    composite: [
-      CompositeIndex('mangaId'),
-      CompositeIndex('sourceId'),
-      CompositeIndex('ownerUserId'),
-    ],
-  )
   late String chapterId;
   late String mangaId;
   late String sourceId;
   @Index()
   late String ownerUserId;
+  @Index(unique: true, replace: true)
+  late String scopedChapterKey;
 
   late String name;
   late double chapterNumber;
@@ -151,15 +144,6 @@ class LocalCategory {
 class LocalCategoryAssignment {
   Id id = Isar.autoIncrement;
 
-  @Index(
-    unique: true,
-    replace: true,
-    composite: [
-      CompositeIndex('sourceId'),
-      CompositeIndex('localCategoryId'),
-      CompositeIndex('ownerUserId'),
-    ],
-  )
   late String mangaId;
   @Index()
   late String sourceId;
@@ -167,6 +151,8 @@ class LocalCategoryAssignment {
   late int localCategoryId; // Links to LocalCategory.id
   @Index()
   late String ownerUserId;
+  @Index(unique: true, replace: true)
+  late String scopedAssignmentKey;
 }
 
 @collection
