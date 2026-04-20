@@ -21,6 +21,15 @@ class LibraryRepository {
 
   String get _currentUserId => getCurrentUserId();
 
+  String _assignmentScopedKey(
+      String mangaId,
+      String sourceId,
+      int localCategoryId,
+      String ownerUserId,
+      ) {
+    return '$ownerUserId::$sourceId::$mangaId::$localCategoryId';
+  }
+
   Stream<List<LocalLibraryEntry>> watchLibrary() {
     return isar.collection<LocalLibraryEntry>().where().watch(
       fireImmediately: true,
@@ -177,6 +186,12 @@ class LibraryRepository {
                   ..mangaId = mangaId
                   ..sourceId = sourceId
                   ..ownerUserId = _currentUserId
+                  ..scopedAssignmentKey = _assignmentScopedKey(
+                    mangaId,
+                    sourceId,
+                    localCat.id,
+                    _currentUserId,
+                  )
                   ..localCategoryId = localCat.id;
                 await isar.collection<LocalCategoryAssignment>().put(
                   assignment,
@@ -289,6 +304,12 @@ class LibraryRepository {
         ..mangaId = mangaId
         ..sourceId = sourceId
         ..ownerUserId = _currentUserId
+        ..scopedAssignmentKey = _assignmentScopedKey(
+          mangaId,
+          sourceId,
+          localCategoryId,
+          _currentUserId,
+        )
         ..localCategoryId = localCategoryId;
 
       await isar.writeTxn(

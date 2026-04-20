@@ -20,6 +20,15 @@ class CategoriesRepository {
 
   String get _currentUserId => getCurrentUserId();
 
+  String _assignmentScopedKey(
+      String mangaId,
+      String sourceId,
+      int localCategoryId,
+      String ownerUserId,
+      ) {
+    return '$ownerUserId::$sourceId::$mangaId::$localCategoryId';
+  }
+
   Stream<List<LocalCategory>> watchCategories() {
     return isar.collection<LocalCategory>().where().sortByName().watch(fireImmediately: true);
   }
@@ -113,6 +122,12 @@ class CategoriesRepository {
           ..mangaId = mangaId
           ..sourceId = sourceId
           ..ownerUserId = _currentUserId
+          ..scopedAssignmentKey = _assignmentScopedKey(
+            mangaId,
+            sourceId,
+            localCat.id,
+            _currentUserId,
+          )
           ..localCategoryId = localCat.id;
         await isar.collection<LocalCategoryAssignment>().put(assignment);
       }

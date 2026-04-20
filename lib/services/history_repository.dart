@@ -19,6 +19,15 @@ class HistoryRepository {
 
   String get _currentUserId => getCurrentUserId();
 
+  String _chapterScopedKey(
+      String chapterId,
+      String mangaId,
+      String sourceId,
+      String ownerUserId,
+      ) {
+    return '$ownerUserId::$sourceId::$mangaId::$chapterId';
+  }
+
   Future<void> refreshHistoryFromServer(String token) async {
     final connectivity = await Connectivity().checkConnectivity();
     if (connectivity.contains(ConnectivityResult.none)) return;
@@ -104,6 +113,12 @@ class HistoryRepository {
                   ..mangaId = mangaId
                   ..sourceId = sourceId
                   ..ownerUserId = ownerUserId
+                  ..scopedChapterKey = _chapterScopedKey(
+                    chapterId,
+                    mangaId,
+                    sourceId,
+                    ownerUserId,
+                  )
                   ..name = (entry['chapterName'] as String?)?.trim().isNotEmpty ==
                       true
                       ? (entry['chapterName'] as String).trim()
@@ -112,6 +127,12 @@ class HistoryRepository {
                   ..dateUpload = 0;
 
         localChapter.ownerUserId = ownerUserId;
+        localChapter.scopedChapterKey = _chapterScopedKey(
+          chapterId,
+          mangaId,
+          sourceId,
+          ownerUserId,
+        );
         if ((entry['chapterName'] as String?)?.trim().isNotEmpty == true) {
           localChapter.name = (entry['chapterName'] as String).trim();
         }
