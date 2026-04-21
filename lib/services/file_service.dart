@@ -103,7 +103,19 @@ class FileService {
         await file.parent.create(recursive: true);
       }
 
-      await _dio.download(url, fullPath);
+      await _dio.download(
+        url,
+        fullPath,
+        options: Options(
+          headers: {
+            'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+            'Referer': Uri.parse(url).origin,
+            'Accept':
+            'image/webp,image/apng,image/*,*/*;q=0.8',
+          },
+        ),
+      );
       print('DEBUG: File downloaded to: $fullPath');
       return fullPath;
     } catch (e) {
