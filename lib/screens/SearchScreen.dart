@@ -19,6 +19,9 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  static const String _browserUserAgent =
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+      '(KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36';
   final TextEditingController _searchController = TextEditingController();
   final SourcesApi _sourcesApi = SourcesApi();
 
@@ -116,6 +119,18 @@ class _SearchScreenState extends State<SearchScreen> {
         }
       });
     }
+  }
+
+  Map<String, String>? _buildImageHeaders(Manga manga) {
+    if (manga.sourceId.toLowerCase() != 'batcave') {
+      return null;
+    }
+
+    return {
+      'User-Agent': _browserUserAgent,
+      'Referer': manga.url,
+      'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+    };
   }
 
   @override
@@ -338,6 +353,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   children: [
                     Image.network(
                       manga.thumbnailUrl,
+                      headers: _buildImageHeaders(manga),
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.cover,

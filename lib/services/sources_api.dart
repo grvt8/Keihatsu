@@ -7,12 +7,20 @@ import 'api_constants.dart';
 
 class SourcesApi {
   final String baseUrl;
+  static const Duration _defaultTimeout = Duration(seconds: 10);
+  static const Duration _heavySourceTimeout = Duration(seconds: 30);
 
   SourcesApi({this.baseUrl = ApiConstants.baseUrl});
 
+  Duration _timeoutForSource(String sourceId) {
+    return sourceId.toLowerCase() == 'batcave'
+        ? _heavySourceTimeout
+        : _defaultTimeout;
+  }
+
   Future<List<Source>> getSources() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/sources')).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse('$baseUrl/sources')).timeout(_defaultTimeout);
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         return data.map((json) => Source.fromJson(json)).toList();
@@ -33,7 +41,7 @@ class SourcesApi {
       if (q != null) queryParams['q'] = q;
 
       final uri = Uri.parse('$baseUrl/sources/$sourceId/manga').replace(queryParameters: queryParams);
-      final response = await http.get(uri).timeout(const Duration(seconds: 10));
+      final response = await http.get(uri).timeout(_timeoutForSource(sourceId));
 
       if (response.statusCode == 200) {
         return MangasPage.fromJson(json.decode(response.body));
@@ -48,7 +56,9 @@ class SourcesApi {
   Future<Manga> getMangaDetails(String sourceId, String mangaId) async {
     try {
       final encodedMangaId = Uri.encodeComponent(mangaId);
-      final response = await http.get(Uri.parse('$baseUrl/sources/$sourceId/manga/$encodedMangaId')).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(Uri.parse('$baseUrl/sources/$sourceId/manga/$encodedMangaId'))
+          .timeout(_timeoutForSource(sourceId));
       if (response.statusCode == 200) {
         return Manga.fromJson(json.decode(response.body));
       }
@@ -62,7 +72,11 @@ class SourcesApi {
   Future<List<Chapter>> getChapters(String sourceId, String mangaId) async {
     try {
       final encodedMangaId = Uri.encodeComponent(mangaId);
-      final response = await http.get(Uri.parse('$baseUrl/sources/$sourceId/manga/$encodedMangaId/chapters')).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(
+        Uri.parse('$baseUrl/sources/$sourceId/manga/$encodedMangaId/chapters'),
+      )
+          .timeout(_timeoutForSource(sourceId));
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         return data.map((json) => Chapter.fromJson(json)).toList();
@@ -77,7 +91,9 @@ class SourcesApi {
   Future<List<ReaderPage>> getPages(String sourceId, String chapterId) async {
     try {
       final encodedChapterId = Uri.encodeComponent(chapterId);
-      final response = await http.get(Uri.parse('$baseUrl/sources/$sourceId/chapters/$encodedChapterId/pages')).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(Uri.parse('$baseUrl/sources/$sourceId/chapters/$encodedChapterId/pages'))
+          .timeout(_timeoutForSource(sourceId));
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         return data.map((json) => ReaderPage.fromJson(json)).toList();

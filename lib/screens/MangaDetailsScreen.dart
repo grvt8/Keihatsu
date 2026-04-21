@@ -9,7 +9,6 @@ import 'package:intl/intl.dart';
 import '../theme_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/manga.dart';
-import '../models/chapter.dart';
 import '../models/local_models.dart';
 import '../services/manga_repository.dart';
 import '../providers/offline_library_provider.dart';
@@ -26,6 +25,9 @@ class MangaDetailsScreen extends StatefulWidget {
 
 class _MangaDetailsScreenState extends State<MangaDetailsScreen>
     with SingleTickerProviderStateMixin {
+  static const String _browserUserAgent =
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+      '(KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36';
   late ScrollController _scrollController;
   bool _showTitle = false;
   late Future<LocalManga?> _mangaDetailsFuture;
@@ -264,6 +266,102 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
               ),
             );
           },
+        );
+      },
+    );
+  }
+
+  Map<String, String>? _buildImageHeaders(String? referer) {
+    if (widget.manga.sourceId.toLowerCase() != 'batcave') {
+      return null;
+    }
+
+    return {
+      'User-Agent': _browserUserAgent,
+      'Referer': referer?.isNotEmpty == true ? referer! : widget.manga.url,
+      'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+    };
+  }
+
+  Widget _buildDetailsHeader(
+      String displayTitle,
+      LocalManga? manga,
+      ImageProvider displayThumb,
+      ) {
+    final infoContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          displayTitle,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: GoogleFonts.hennyPenny(
+            textStyle: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              shadows: [
+                Shadow(
+                  blurRadius: 10.0,
+                  color: Colors.black,
+                  offset: Offset(2.0, 2.0),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        _buildInfoRow(PhosphorIcons.user(), manga?.author ?? "Unknown"),
+        const SizedBox(height: 4),
+        _buildInfoRow(
+          PhosphorIcons.clock(),
+          "${manga?.status ?? "Ongoing"} • ${widget.manga.sourceId.toUpperCase()}",
+        ),
+      ],
+    );
+
+    final cover = Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image(
+          image: displayThumb,
+          height: 180,
+          width: 120,
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 360) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              cover,
+              const SizedBox(height: 16),
+              Align(alignment: Alignment.centerLeft, child: infoContent),
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            cover,
+            const SizedBox(width: 20),
+            Expanded(child: infoContent),
+          ],
         );
       },
     );
@@ -641,7 +739,10 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
           final displayTitle = manga?.title ?? widget.manga.title;
           final displayThumb = manga?.thumbnailLocalPath != null
               ? FileImage(File(manga!.thumbnailLocalPath!)) as ImageProvider
-              : NetworkImage(widget.manga.thumbnailUrl);
+              : NetworkImage(
+            widget.manga.thumbnailUrl,
+            headers: _buildImageHeaders(widget.manga.url),
+          );
 
           return Stack(
             children: [
@@ -722,70 +823,16 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.3),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image(
-                                    image: displayThumb,
-                                    height: 180,
-                                    width: 120,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      displayTitle,
-                                      style: GoogleFonts.hennyPenny(
-                                        textStyle: const TextStyle(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                          shadows: [
-                                            Shadow(
-                                              blurRadius: 10.0,
-                                              color: Colors.black,
-                                              offset: Offset(2.0, 2.0),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    _buildInfoRow(
-                                      PhosphorIcons.user(),
-                                      manga?.author ?? "Unknown",
-                                    ),
-                                    const SizedBox(height: 4),
-                                    _buildInfoRow(
-                                      PhosphorIcons.clock(),
-                                      "${manga?.status ?? "Ongoing"} • ${widget.manga.sourceId.toUpperCase()}",
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                          _buildDetailsHeader(
+                            displayTitle,
+                            manga,
+                            displayThumb,
                           ),
                           const SizedBox(height: 25),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            runSpacing: 16,
+                            spacing: 20,
                             children: [
                               _buildActionButton(
                                 isInLibrary
@@ -1071,6 +1118,11 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
                                                       child: Image.network(
                                                         recommendation
                                                             .thumbnailUrl,
+                                                        headers:
+                                                        _buildImageHeaders(
+                                                          recommendation
+                                                              .url,
+                                                        ),
                                                         width: 100,
                                                         height: 140,
                                                         fit: BoxFit.cover,
@@ -1154,7 +1206,7 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
                             bool hasHistory = false;
 
                             if (hasChapters) {
-                              targetChapter = _getContinueChapter(chapters!);
+                              targetChapter = _getContinueChapter(chapters);
                               hasHistory = chapters.any(
                                     (c) => c.lastReadAt != null,
                               );
@@ -1163,15 +1215,16 @@ class _MangaDetailsScreenState extends State<MangaDetailsScreen>
                             return GestureDetector(
                               onTap: (hasChapters && targetChapter != null)
                                   ? () {
+                                final selectedChapter = targetChapter!;
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         MangaReaderScreen(
                                           manga: widget.manga,
-                                          chapters: chapters!,
+                                          chapters: chapters,
                                           initialChapterIndex: chapters
-                                              .indexOf(targetChapter!),
+                                              .indexOf(selectedChapter),
                                         ),
                                   ),
                                 ).then((_) => setState(() {}));
