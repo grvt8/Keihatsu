@@ -40,8 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (sheetContext) {
         return SafeArea(
           child: Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
             decoration: BoxDecoration(
               color: bgColor,
               borderRadius: BorderRadius.circular(28),
@@ -105,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         child: const Text(
-                          'Logout',
+                          'Yes, Logout',
                           style: TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
