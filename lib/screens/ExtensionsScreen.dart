@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import '../components/AppToast.dart';
 import '../components/MainNavigationBar.dart';
 import '../models/local_models.dart';
 import '../services/sources_repository.dart';
@@ -20,7 +21,7 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
   late Future<List<LocalSource>> _sourcesFuture;
   String _searchQuery = '';
 
-  static const String _availableSourceId = 'manhuatop';
+  static const Set<String> _availableSourceIds = {'manhuatop', 'batcave'};
 
   @override
   void initState() {
@@ -45,8 +46,7 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
     final sources = await repo.getSources(forceRefresh: forceRefresh);
 
     for (final source in sources) {
-      if (source.sourceId.toLowerCase() != _availableSourceId &&
-          source.enabled) {
+      if (!_isSourceAvailable(source) && source.enabled) {
         await repo.toggleSource(source.sourceId, false);
       }
     }
@@ -59,13 +59,15 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
       LocalSource source,
       bool value,
       ) async {
-    final isAvailable = source.sourceId.toLowerCase() == _availableSourceId;
+    final isAvailable = _isSourceAvailable(source);
 
     if (!isAvailable) {
       if (value && mounted) {
-        ScaffoldMessenger.of(
+        AppToast.show(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Coming soon')));
+          message: 'Coming soon',
+          type: AppToastType.warning,
+        );
       }
 
       if (source.enabled) {
@@ -79,19 +81,19 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
     _loadSources();
   }
 
+  bool _isSourceAvailable(LocalSource source) {
+    return _availableSourceIds.contains(source.sourceId.toLowerCase());
+  }
+
   Widget _buildFallbackIcon(LocalSource source, Color brandColor) {
     if (source.iconLocalPath != null) {
       return Image.file(
         File(source.iconLocalPath!),
         fit: BoxFit.cover,
-        color:
-        source.sourceId.toLowerCase() == _availableSourceId &&
-            source.enabled
+        color: _isSourceAvailable(source) && source.enabled
             ? null
             : Colors.grey,
-        colorBlendMode:
-        source.sourceId.toLowerCase() == _availableSourceId &&
-            source.enabled
+        colorBlendMode: _isSourceAvailable(source) && source.enabled
             ? null
             : BlendMode.saturation,
         errorBuilder: (context, error, stackTrace) =>
@@ -101,14 +103,10 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
       return Image.network(
         source.iconUrl!,
         fit: BoxFit.cover,
-        color:
-        source.sourceId.toLowerCase() == _availableSourceId &&
-            source.enabled
+        color: _isSourceAvailable(source) && source.enabled
             ? null
             : Colors.grey,
-        colorBlendMode:
-        source.sourceId.toLowerCase() == _availableSourceId &&
-            source.enabled
+        colorBlendMode: _isSourceAvailable(source) && source.enabled
             ? null
             : BlendMode.saturation,
         errorBuilder: (context, error, stackTrace) =>
@@ -288,7 +286,7 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
       Color cardColor,
       SourcesRepository repo,
       ) {
-    final isAvailable = source.sourceId.toLowerCase() == _availableSourceId;
+    final isAvailable = _isSourceAvailable(source);
     final isEnabled = isAvailable && source.enabled;
 
     // Map of source IDs to local image assets
