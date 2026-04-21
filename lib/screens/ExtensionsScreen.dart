@@ -18,6 +18,9 @@ class ExtensionsScreen extends StatefulWidget {
 class _ExtensionsScreenState extends State<ExtensionsScreen> {
   final int _currentIndex = 3;
   late Future<List<LocalSource>> _sourcesFuture;
+  String _searchQuery = '';
+
+  static const String _availableSourceId = 'manhuatop';
 
   @override
   void initState() {
@@ -28,8 +31,52 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
   void _loadSources({bool forceRefresh = false}) {
     final repo = Provider.of<SourcesRepository>(context, listen: false);
     setState(() {
-      _sourcesFuture = repo.getSources(forceRefresh: forceRefresh);
+      _sourcesFuture = _loadAndNormalizeSources(
+        repo,
+        forceRefresh: forceRefresh,
+      );
     });
+  }
+
+  Future<List<LocalSource>> _loadAndNormalizeSources(
+      SourcesRepository repo, {
+        bool forceRefresh = false,
+      }) async {
+    final sources = await repo.getSources(forceRefresh: forceRefresh);
+
+    for (final source in sources) {
+      if (source.sourceId.toLowerCase() != _availableSourceId &&
+          source.enabled) {
+        await repo.toggleSource(source.sourceId, false);
+      }
+    }
+
+    return repo.getSources();
+  }
+
+  Future<void> _handleSourceToggle(
+      SourcesRepository repo,
+      LocalSource source,
+      bool value,
+      ) async {
+    final isAvailable = source.sourceId.toLowerCase() == _availableSourceId;
+
+    if (!isAvailable) {
+      if (value && mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Coming soon')));
+      }
+
+      if (source.enabled) {
+        await repo.toggleSource(source.sourceId, false);
+        _loadSources();
+      }
+      return;
+    }
+
+    await repo.toggleSource(source.sourceId, value);
+    _loadSources();
   }
 
   Widget _buildFallbackIcon(LocalSource source, Color brandColor) {
@@ -37,8 +84,16 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
       return Image.file(
         File(source.iconLocalPath!),
         fit: BoxFit.cover,
-        color: source.enabled ? null : Colors.grey,
-        colorBlendMode: source.enabled ? null : BlendMode.saturation,
+        color:
+        source.sourceId.toLowerCase() == _availableSourceId &&
+            source.enabled
+            ? null
+            : Colors.grey,
+        colorBlendMode:
+        source.sourceId.toLowerCase() == _availableSourceId &&
+            source.enabled
+            ? null
+            : BlendMode.saturation,
         errorBuilder: (context, error, stackTrace) =>
             Icon(PhosphorIcons.puzzlePiece(), color: brandColor),
       );
@@ -46,8 +101,16 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
       return Image.network(
         source.iconUrl!,
         fit: BoxFit.cover,
-        color: source.enabled ? null : Colors.grey,
-        colorBlendMode: source.enabled ? null : BlendMode.saturation,
+        color:
+        source.sourceId.toLowerCase() == _availableSourceId &&
+            source.enabled
+            ? null
+            : Colors.grey,
+        colorBlendMode:
+        source.sourceId.toLowerCase() == _availableSourceId &&
+            source.enabled
+            ? null
+            : BlendMode.saturation,
         errorBuilder: (context, error, stackTrace) =>
             Icon(PhosphorIcons.puzzlePiece(), color: brandColor),
       );
@@ -128,13 +191,44 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
           }
 
           final sources = snapshot.data!;
+          final filteredSources = sources.where((source) {
+            if (_searchQuery.trim().isEmpty) {
+              return true;
+            }
+
+            final query = _searchQuery.toLowerCase();
+            return source.name.toLowerCase().contains(query) ||
+                source.sourceId.toLowerCase().contains(query) ||
+                source.baseUrl.toLowerCase().contains(query);
+          }).toList();
+
+          if (filteredSources.isEmpty) {
+            return ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                _buildSearchField(brandColor, textColor, cardColor),
+                const SizedBox(height: 24),
+                Center(
+                  child: Text(
+                    'No extensions match your search',
+                    style: TextStyle(color: textColor.withOpacity(0.6)),
+                  ),
+                ),
+              ],
+            );
+          }
 
           return ListView.separated(
             padding: const EdgeInsets.all(20),
-            itemCount: sources.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemCount: filteredSources.length + 1,
+            separatorBuilder: (context, index) =>
+                SizedBox(height: index == 0 ? 20 : 12),
             itemBuilder: (context, index) {
-              final source = sources[index];
+              if (index == 0) {
+                return _buildSearchField(brandColor, textColor, cardColor);
+              }
+
+              final source = filteredSources[index - 1];
               return _buildSourceCard(
                 source,
                 brandColor,
@@ -153,6 +247,40 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
     );
   }
 
+  Widget _buildSearchField(Color brandColor, Color textColor, Color cardColor) {
+    return TextField(
+      onChanged: (value) {
+        setState(() {
+          _searchQuery = value;
+        });
+      },
+      style: TextStyle(color: textColor),
+      cursorColor: brandColor,
+      decoration: InputDecoration(
+        hintText: 'Search extensions',
+        hintStyle: TextStyle(color: textColor.withOpacity(0.45)),
+        prefixIcon: Icon(
+          PhosphorIcons.magnifyingGlass(),
+          color: textColor.withOpacity(0.45),
+        ),
+        filled: true,
+        fillColor: cardColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: brandColor.withOpacity(0.35)),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSourceCard(
       LocalSource source,
       Color brandColor,
@@ -160,6 +288,9 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
       Color cardColor,
       SourcesRepository repo,
       ) {
+    final isAvailable = source.sourceId.toLowerCase() == _availableSourceId;
+    final isEnabled = isAvailable && source.enabled;
+
     // Map of source IDs to local image assets
     final Map<String, String> extensionImages = {
       'atsumaru': 'images/extensions/atsumaru.png',
@@ -174,7 +305,7 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: source.enabled ? cardColor : cardColor.withOpacity(0.2),
+        color: isEnabled ? cardColor : cardColor.withOpacity(0.2),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
@@ -192,10 +323,8 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
                   ? Image.asset(
                 imagePath,
                 fit: BoxFit.cover,
-                color: source.enabled ? null : Colors.grey,
-                colorBlendMode: source.enabled
-                    ? null
-                    : BlendMode.saturation,
+                color: isEnabled ? null : Colors.grey,
+                colorBlendMode: isEnabled ? null : BlendMode.saturation,
                 errorBuilder: (context, error, stackTrace) =>
                     _buildFallbackIcon(source, brandColor),
               )
@@ -212,21 +341,30 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: source.enabled
-                        ? textColor
-                        : textColor.withOpacity(0.4),
+                    color: isEnabled ? textColor : textColor.withOpacity(0.4),
                   ),
                 ),
                 Text(
                   '${source.lang.toUpperCase()} • ${source.baseUrl}',
                   style: TextStyle(
                     fontSize: 12,
-                    color: source.enabled
+                    color: isEnabled
                         ? textColor.withOpacity(0.6)
                         : textColor.withOpacity(0.2),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  isAvailable ? 'Available now' : 'Coming soon',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isAvailable
+                        ? brandColor
+                        : textColor.withOpacity(0.35),
+                  ),
                 ),
               ],
             ),
@@ -246,11 +384,10 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
             ),
           ),
           Switch(
-            value: source.enabled,
+            value: isEnabled,
             activeColor: brandColor,
             onChanged: (val) async {
-              await repo.toggleSource(source.sourceId, val);
-              _loadSources();
+              await _handleSourceToggle(repo, source, val);
             },
           ),
         ],
