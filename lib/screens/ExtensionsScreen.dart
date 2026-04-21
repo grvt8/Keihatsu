@@ -7,7 +7,6 @@ import '../components/MainNavigationBar.dart';
 import '../models/local_models.dart';
 import '../services/sources_repository.dart';
 import '../theme_provider.dart';
-import '../providers/auth_provider.dart';
 
 class ExtensionsScreen extends StatefulWidget {
   const ExtensionsScreen({super.key});
@@ -164,6 +163,7 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
     // Map of source IDs to local image assets
     final Map<String, String> extensionImages = {
       'atsumaru': 'images/extensions/atsumaru.png',
+      'batcave': 'images/extensions/batcave.png',
       'manhuatop': 'images/extensions/manhuatop.jpeg',
       'weebcentral': 'images/extensions/weebcentral.png',
       'mangafire': 'images/extensions/mangafire.png',
