@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:keihatsu/screens/AboutScreen.dart';
 import 'package:keihatsu/screens/DonateScreen.dart';
@@ -25,6 +26,99 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _currentIndex = 4; // Profile is index 4
   late ScrollController _scrollController;
   bool _showTitle = false;
+
+  Future<void> _showLogoutSheet(AuthProvider authProvider) async {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final bgColor = themeProvider.effectiveBgColor;
+    final textColor = themeProvider.pureBlackDarkMode
+        ? Colors.white
+        : Colors.black87;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SvgPicture.asset(
+                  'images/warning.svg',
+                  width: 42,
+                  height: 42,
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'Are you sure you want to log out',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: textColor.withOpacity(0.15)),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: textColor.withOpacity(0.75),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.pop(sheetContext);
+                          await authProvider.logout();
+                          if (!mounted) return;
+                          Navigator.pushReplacementNamed(context, '/login');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        child: const Text(
+                          'Logout',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -504,18 +598,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 30),
                     if (authProvider.isAuthenticated)
                       TextButton(
-                        onPressed: () async {
-                          await authProvider.logout();
-                          if (context.mounted) {
-                            Navigator.pushReplacementNamed(context, '/login');
-                          }
-                        },
-                        child: const Text(
-                          "Log Out",
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        onPressed: () => _showLogoutSheet(authProvider),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SvgPicture.asset(
+                              'images/logout.svg',
+                              width: 18,
+                              height: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              "Log Out",
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       )
                     else
