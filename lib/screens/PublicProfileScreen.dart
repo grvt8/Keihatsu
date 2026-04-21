@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import '../components/CustomBackButton.dart';
 import '../models/user.dart';
 import '../services/auth_api.dart';
 import '../services/sources_repository.dart';
@@ -25,14 +26,32 @@ class PublicProfileScreen extends StatefulWidget {
 
 class _PublicProfileScreenState extends State<PublicProfileScreen> {
   late Future<PublicProfile> _profileFuture;
+  late ScrollController _scrollController;
   bool _isGridView = false;
+  bool _showTitle = false;
   Map<String, String> _sourceNames = {};
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(() {
+      if (_scrollController.offset > 120) {
+        if (!_showTitle) {
+          setState(() => _showTitle = true);
+        }
+      } else if (_showTitle) {
+        setState(() => _showTitle = false);
+      }
+    });
     _profileFuture = AuthApi().getPublicProfile(widget.userId);
     _loadSourceNames();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSourceNames() async {
@@ -112,63 +131,82 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
           return RefreshIndicator(
             onRefresh: _refreshProfile,
             child: CustomScrollView(
+              controller: _scrollController,
               slivers: [
                 SliverAppBar(
-                  expandedHeight: 220,
+                  expandedHeight: 160,
                   pinned: true,
                   backgroundColor: bgColor,
                   elevation: 0,
-                  leading: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    color: Colors.white,
-                    onPressed: () => Navigator.pop(context),
-                  ),
+                  leading: _showTitle ? const CustomBackButton() : null,
+                  title: _showTitle
+                      ? Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: Colors.transparent,
+                        child: ClipOval(
+                          child: _buildAvatar(
+                            profile.avatarUrl ?? widget.fallbackAvatarUrl,
+                            32,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          profile.username,
+                          style: GoogleFonts.denkOne(
+                            textStyle: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  )
+                      : null,
                   flexibleSpace: FlexibleSpaceBar(
                     background: Stack(
-                      fit: StackFit.expand,
+                      clipBehavior: Clip.none,
                       children: [
-                        _buildBanner(profile.bannerUrl),
-                        Container(color: Colors.black.withOpacity(0.35)),
+                        SizedBox(
+                          height: 140,
+                          width: double.infinity,
+                          child: ColorFiltered(
+                            colorFilter: ColorFilter.mode(
+                              Colors.black.withOpacity(0.4),
+                              BlendMode.darken,
+                            ),
+                            child: _buildBanner(profile.bannerUrl),
+                          ),
+                        ),
+                        if (!_showTitle)
+                          const SafeArea(
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: CustomBackButton(),
+                            ),
+                          ),
                         Positioned(
+                          bottom: 10,
                           left: 20,
-                          right: 20,
-                          bottom: 20,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: bgColor,
-                                  borderRadius: BorderRadius.circular(22),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(18),
-                                  child: _buildAvatar(
-                                    profile.avatarUrl ?? widget.fallbackAvatarUrl,
-                                    96,
-                                  ),
-                                ),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: bgColor,
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: _buildAvatar(
+                                profile.avatarUrl ?? widget.fallbackAvatarUrl,
+                                100,
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(bottom: 6),
-                                  child: Text(
-                                    profile.username,
-                                    style: GoogleFonts.hennyPenny(
-                                      textStyle: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ],
@@ -176,102 +214,116 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          profile.bio?.trim().isNotEmpty == true
-                              ? profile.bio!.trim()
-                              : 'No bio available',
-                          style: TextStyle(
-                            color: textColor.withOpacity(0.75),
-                            fontSize: 15,
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
-                          children: [
-                            Icon(
-                              PhosphorIcons.calendarDots(),
-                              size: 16,
-                              color: textColor.withOpacity(0.45),
+                  child: Transform.translate(
+                    offset: const Offset(0, 10),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            profile.username,
+                            style: GoogleFonts.hennyPenny(
+                              textStyle: TextStyle(
+                                color: textColor,
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            const SizedBox(width: 6),
-                            Text(
-                              profile.createdAt != null
-                                  ? 'Member since ${profile.createdAt!.year}'
-                                  : 'Keihatsu member',
-                              style: TextStyle(
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            profile.bio?.trim().isNotEmpty == true
+                                ? profile.bio!.trim()
+                                : 'No bio available',
+                            style: TextStyle(
+                              color: textColor.withOpacity(0.75),
+                              fontSize: 15,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          Row(
+                            children: [
+                              Icon(
+                                PhosphorIcons.calendarDots(),
+                                size: 16,
                                 color: textColor.withOpacity(0.45),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              _buildStatItem(
-                                '${profile.stats?.libraryCount ?? 0}',
-                                'In Library',
-                                textColor,
-                              ),
-                              _buildDivider(textColor),
-                              _buildStatItem(
-                                _formatReadingTime(
-                                  profile.stats?.totalReadingTimeMinutes ?? 0,
+                              const SizedBox(width: 6),
+                              Text(
+                                profile.createdAt != null
+                                    ? 'Member since ${profile.createdAt!.year}'
+                                    : 'Keihatsu member',
+                                style: TextStyle(
+                                  color: textColor.withOpacity(0.45),
                                 ),
-                                'Reading',
-                                textColor,
-                              ),
-                              _buildDivider(textColor),
-                              _buildStatItem(
-                                '${profile.stats?.commentsCount ?? 0}',
-                                'Comments',
-                                textColor,
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Library (${profile.stats?.libraryCount ?? profile.library.length})',
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
+                          const SizedBox(height: 20),
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            decoration: BoxDecoration(
+                              color: cardColor,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _buildStatItem(
+                                  '${profile.stats?.libraryCount ?? 0}',
+                                  'In Library',
+                                  textColor,
+                                ),
+                                _buildDivider(textColor),
+                                _buildStatItem(
+                                  _formatReadingTime(
+                                    profile.stats?.totalReadingTimeMinutes ?? 0,
+                                  ),
+                                  'Reading',
+                                  textColor,
+                                ),
+                                _buildDivider(textColor),
+                                _buildStatItem(
+                                  '${profile.stats?.commentsCount ?? 0}',
+                                  'Comments',
+                                  textColor,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Library (${profile.stats?.libraryCount ?? profile.library.length})',
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isGridView = !_isGridView;
-                                });
-                              },
-                              icon: Icon(
-                                _isGridView
-                                    ? PhosphorIcons.list()
-                                    : PhosphorIcons.squaresFour(),
-                                color: brandColor,
+                              IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _isGridView = !_isGridView;
+                                  });
+                                },
+                                icon: Icon(
+                                  _isGridView
+                                      ? PhosphorIcons.list()
+                                      : PhosphorIcons.squaresFour(),
+                                  color: brandColor,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                      ],
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -390,10 +442,8 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
       return Image.network(
         bannerUrl,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Image.asset(
-          'images/profileBg.jpeg',
-          fit: BoxFit.cover,
-        ),
+        errorBuilder: (context, error, stackTrace) =>
+            Image.asset('images/profileBg.jpeg', fit: BoxFit.cover),
       );
     }
 
@@ -448,10 +498,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(
-            color: textColor.withOpacity(0.5),
-            fontSize: 12,
-          ),
+          style: TextStyle(color: textColor.withOpacity(0.5), fontSize: 12),
         ),
       ],
     );
