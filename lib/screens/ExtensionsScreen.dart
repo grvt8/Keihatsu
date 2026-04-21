@@ -16,17 +16,26 @@ class ExtensionsScreen extends StatefulWidget {
   State<ExtensionsScreen> createState() => _ExtensionsScreenState();
 }
 
-class _ExtensionsScreenState extends State<ExtensionsScreen> {
+class _ExtensionsScreenState extends State<ExtensionsScreen>
+    with SingleTickerProviderStateMixin {
   final int _currentIndex = 3;
   late Future<List<LocalSource>> _sourcesFuture;
   String _searchQuery = '';
+  late TabController _tabController;
 
   static const Set<String> _availableSourceIds = {'manhuatop', 'batcave'};
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _loadSources();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   void _loadSources({bool forceRefresh = false}) {
@@ -152,95 +161,205 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<LocalSource>>(
-        future: _sourcesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator(color: brandColor));
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    PhosphorIcons.warningCircle(),
-                    size: 48,
-                    color: Colors.red,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Failed to load extensions',
-                    style: TextStyle(color: textColor, fontSize: 16),
-                  ),
-                  TextButton(
-                    onPressed: () => _loadSources(),
-                    child: Text('Retry', style: TextStyle(color: brandColor)),
-                  ),
-                ],
-              ),
-            );
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-              child: Text(
-                'No extensions found',
-                style: TextStyle(color: textColor.withOpacity(0.6)),
-              ),
-            );
-          }
-
-          final sources = snapshot.data!;
-          final filteredSources = sources.where((source) {
-            if (_searchQuery.trim().isEmpty) {
-              return true;
-            }
-
-            final query = _searchQuery.toLowerCase();
-            return source.name.toLowerCase().contains(query) ||
-                source.sourceId.toLowerCase().contains(query) ||
-                source.baseUrl.toLowerCase().contains(query);
-          }).toList();
-
-          if (filteredSources.isEmpty) {
-            return ListView(
-              padding: const EdgeInsets.all(20),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: _buildTabBar(brandColor, textColor, cardColor),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
               children: [
-                _buildSearchField(brandColor, textColor, cardColor),
-                const SizedBox(height: 24),
-                Center(
-                  child: Text(
-                    'No extensions match your search',
-                    style: TextStyle(color: textColor.withOpacity(0.6)),
-                  ),
-                ),
+                _buildSourcesTab(brandColor, textColor, cardColor, repo),
+                _buildPluginStoreTab(brandColor, textColor, cardColor, repo),
               ],
-            );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(20),
-            itemCount: filteredSources.length + 1,
-            separatorBuilder: (context, index) =>
-                SizedBox(height: index == 0 ? 20 : 12),
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return _buildSearchField(brandColor, textColor, cardColor);
-              }
-
-              final source = filteredSources[index - 1];
-              return _buildSourceCard(
-                source,
-                brandColor,
-                textColor,
-                cardColor,
-                repo,
-              );
-            },
-          );
-        },
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: MainNavigationBar(
         currentIndex: _currentIndex,
         brandColor: brandColor,
+      ),
+    );
+  }
+
+  Widget _buildSourcesTab(
+      Color brandColor,
+      Color textColor,
+      Color cardColor,
+      SourcesRepository repo,
+      ) {
+    return FutureBuilder<List<LocalSource>>(
+      future: _sourcesFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator(color: brandColor));
+        } else if (snapshot.hasError) {
+          return _buildErrorWidget(brandColor, textColor);
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return _buildEmptyWidget(textColor);
+        }
+
+        final sources = snapshot.data!;
+        final installedSources = sources.where((s) => s.enabled).toList();
+        installedSources.sort((a, b) {
+          final pinnedA = a.pinned ? 0 : 1;
+          final pinnedB = b.pinned ? 0 : 1;
+          if (pinnedA != pinnedB) return pinnedA.compareTo(pinnedB);
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        });
+
+        final filteredSources = _filterSources(installedSources);
+
+        return ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            _buildSearchField(brandColor, textColor, cardColor),
+            const SizedBox(height: 20),
+            ...filteredSources.map(
+                  (source) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildSourceCard(
+                  source,
+                  brandColor,
+                  textColor,
+                  cardColor,
+                  repo,
+                  showPin: true,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPluginStoreTab(
+      Color brandColor,
+      Color textColor,
+      Color cardColor,
+      SourcesRepository repo,
+      ) {
+    return FutureBuilder<List<LocalSource>>(
+      future: _sourcesFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator(color: brandColor));
+        } else if (snapshot.hasError) {
+          return _buildErrorWidget(brandColor, textColor);
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return _buildEmptyWidget(textColor);
+        }
+
+        final sources = snapshot.data!;
+        sources.sort(
+              (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
+
+        final filteredSources = _filterSources(sources);
+
+        return ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            _buildSearchField(brandColor, textColor, cardColor),
+            const SizedBox(height: 20),
+            ...filteredSources.map(
+                  (source) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildSourceCard(
+                  source,
+                  brandColor,
+                  textColor,
+                  cardColor,
+                  repo,
+                  showPin: false,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  List<LocalSource> _filterSources(List<LocalSource> sources) {
+    if (_searchQuery.trim().isEmpty) {
+      return sources;
+    }
+    final query = _searchQuery.toLowerCase();
+    return sources.where((source) {
+      return source.name.toLowerCase().contains(query) ||
+          source.sourceId.toLowerCase().contains(query) ||
+          source.baseUrl.toLowerCase().contains(query);
+    }).toList();
+  }
+
+  Widget _buildErrorWidget(Color brandColor, Color textColor) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(PhosphorIcons.warningCircle(), size: 48, color: Colors.red),
+          const SizedBox(height: 16),
+          Text(
+            'Failed to load extensions',
+            style: TextStyle(color: textColor, fontSize: 16),
+          ),
+          TextButton(
+            onPressed: () => _loadSources(),
+            child: Text('Retry', style: TextStyle(color: brandColor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabBar(Color brandColor, Color textColor, Color cardColor) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: textColor.withOpacity(0.08)),
+      ),
+      child: TabBar(
+        controller: _tabController,
+        isScrollable: false,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: BoxDecoration(
+          color: brandColor.withOpacity(0.16),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        labelColor: brandColor,
+        unselectedLabelColor: textColor.withOpacity(0.6),
+        labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+        labelPadding: EdgeInsets.zero,
+        padding: EdgeInsets.zero,
+        indicatorPadding: EdgeInsets.zero,
+        splashBorderRadius: BorderRadius.circular(16),
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        dividerColor: Colors.transparent,
+        tabs: const [
+          Tab(height: 40, child: Center(child: Text('Sources'))),
+          Tab(height: 40, child: Center(child: Text('Plugin Store'))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyWidget(Color textColor) {
+    return Center(
+      child: Text(
+        'No extensions found',
+        style: TextStyle(color: textColor.withOpacity(0.6)),
       ),
     );
   }
@@ -284,8 +403,9 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
       Color brandColor,
       Color textColor,
       Color cardColor,
-      SourcesRepository repo,
-      ) {
+      SourcesRepository repo, {
+        bool showPin = true,
+      }) {
     final isAvailable = _isSourceAvailable(source);
     final isEnabled = isAvailable && source.enabled;
 
@@ -367,20 +487,20 @@ class _ExtensionsScreenState extends State<ExtensionsScreen> {
               ],
             ),
           ),
-          // Pin Icon moved beside the toggles
-          IconButton(
-            onPressed: () async {
-              await repo.pinSource(source.sourceId, !source.pinned);
-              _loadSources();
-            },
-            icon: Icon(
-              source.pinned
-                  ? PhosphorIcons.pushPin(PhosphorIconsStyle.fill)
-                  : PhosphorIcons.pushPin(),
-              color: source.pinned ? brandColor : textColor.withOpacity(0.3),
-              size: 20,
+          if (showPin)
+            IconButton(
+              onPressed: () async {
+                await repo.pinSource(source.sourceId, !source.pinned);
+                _loadSources();
+              },
+              icon: Icon(
+                source.pinned
+                    ? PhosphorIcons.pushPin(PhosphorIconsStyle.fill)
+                    : PhosphorIcons.pushPin(),
+                color: source.pinned ? brandColor : textColor.withOpacity(0.3),
+                size: 20,
+              ),
             ),
-          ),
           Switch(
             value: isEnabled,
             activeColor: brandColor,

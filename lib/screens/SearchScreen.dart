@@ -22,6 +22,8 @@ class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final SourcesApi _sourcesApi = SourcesApi();
 
+  static const Set<String> _allowedSourceIds = {'manhuatop', 'batcave'};
+
   List<Source> _sources = [];
   Map<String, List<Manga>> _results = {};
   Map<String, bool> _loadingSources = {};
@@ -83,13 +85,17 @@ class _SearchScreenState extends State<SearchScreen> {
 
     _addToHistory(query);
 
+    final searchSources = _sources
+        .where((s) => _allowedSourceIds.contains(s.id.toLowerCase()))
+        .toList();
+
     setState(() {
       _results = {};
-      _loadingSources = {for (var s in _sources) s.id: true};
+      _loadingSources = {for (var s in searchSources) s.id: true};
       _hasSearched = true;
     });
 
-    for (var source in _sources) {
+    for (var source in searchSources) {
       _sourcesApi
           .getMangaList(source.id, 'search', q: query)
           .then((page) {
@@ -209,10 +215,7 @@ class _SearchScreenState extends State<SearchScreen> {
         ..._searchHistory.map(
               (query) => ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-            title: Text(
-              query,
-              style: TextStyle(color: textColor),
-            ),
+            title: Text(query, style: TextStyle(color: textColor)),
             trailing: Icon(
               Icons.arrow_outward_rounded,
               color: textColor.withOpacity(0.5),
