@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:keihatsu/screens/AboutScreen.dart';
@@ -8,6 +9,7 @@ import 'package:keihatsu/screens/InboxScreen.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../components/MainNavigationBar.dart';
+import '../components/OfflineImage.dart';
 import '../theme_provider.dart';
 import '../providers/auth_provider.dart';
 import 'SettingsScreen.dart';
@@ -26,6 +28,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _currentIndex = 4; // Profile is index 4
   late ScrollController _scrollController;
   bool _showTitle = false;
+  String? _primedAvatarUrl;
+  String? _primedBannerUrl;
 
   Future<void> _showLogoutSheet(AuthProvider authProvider) async {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
@@ -48,11 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SvgPicture.asset(
-                  'images/warning.svg',
-                  width: 42,
-                  height: 42,
-                ),
+                SvgPicture.asset('images/warning.svg', width: 42, height: 42),
                 const SizedBox(height: 18),
                 Text(
                   'Are you sure you want to log out',
@@ -138,11 +138,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
+  void _primeProfileImages(String? avatarUrl, String? bannerUrl) {
+    _primeImage(avatarUrl, isAvatar: true);
+    _primeImage(bannerUrl, isAvatar: false);
+  }
+
+  void _primeImage(String? imageUrl, {required bool isAvatar}) {
+    final trimmedUrl = imageUrl?.trim();
+    if (trimmedUrl == null || trimmedUrl.isEmpty) {
+      return;
+    }
+
+    final previousUrl = isAvatar ? _primedAvatarUrl : _primedBannerUrl;
+    if (previousUrl == trimmedUrl) {
+      return;
+    }
+
+    if (isAvatar) {
+      _primedAvatarUrl = trimmedUrl;
+    } else {
+      _primedBannerUrl = trimmedUrl;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      precacheImage(CachedNetworkImageProvider(trimmedUrl), context);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.user;
+
+    _primeProfileImages(user?.avatarUrl, user?.bannerUrl);
 
     final brandColor = themeProvider.brandColor;
     final bgColor = themeProvider.effectiveBgColor;
@@ -173,10 +206,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   CircleAvatar(
                     radius: 16,
-                    backgroundImage: user?.avatarUrl != null
-                        ? NetworkImage(user!.avatarUrl!)
-                        : const AssetImage('images/avatar.jpeg')
-                    as ImageProvider,
+                    backgroundColor: Colors.transparent,
+                    child: ClipOval(
+                      child: OfflineImage(
+                        imageUrl: user?.avatarUrl,
+                        width: 32,
+                        height: 32,
+                        fit: BoxFit.cover,
+                        fallback: Image.asset(
+                          'images/avatar.jpeg',
+                          width: 32,
+                          height: 32,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -200,28 +244,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 background: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Container(
+                    SizedBox(
                       height: 140,
                       width: double.infinity,
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image:
-                          user?.bannerUrl != null &&
-                              user!.bannerUrl!.isNotEmpty
-                              ? NetworkImage(user.bannerUrl!)
-                              : const AssetImage('images/profileBg.jpeg')
-                          as ImageProvider,
-                          fit: BoxFit.cover,
-                          colorFilter: ColorFilter.mode(
-                            Colors.black.withOpacity(0.4),
-                            BlendMode.darken,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          OfflineImage(
+                            imageUrl: user?.bannerUrl,
+                            fit: BoxFit.cover,
+                            fallback: Image.asset(
+                              'images/profileBg.jpeg',
+                              fit: BoxFit.cover,
+                            ),
                           ),
-                          onError: (exception, stackTrace) {
-                            debugPrint(
-                              'Error loading banner image: $exception',
-                            );
-                          },
-                        ),
+                          ColoredBox(color: Colors.black.withOpacity(0.4)),
+                        ],
                       ),
                     ),
                     if (!_showTitle)
@@ -248,24 +286,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
-                          child: user?.avatarUrl != null
-                              ? Image.network(
-                            user!.avatarUrl!,
+                          child: OfflineImage(
+                            imageUrl: user?.avatarUrl,
                             width: 100,
                             height: 100,
                             fit: BoxFit.cover,
-                            errorBuilder: (c, e, s) => Image.asset(
+                            fallback: Image.asset(
                               'images/avatar.jpeg',
                               width: 100,
                               height: 100,
                               fit: BoxFit.cover,
                             ),
-                          )
-                              : Image.asset(
-                            'images/avatar.jpeg',
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.cover,
                           ),
                         ),
                       ),

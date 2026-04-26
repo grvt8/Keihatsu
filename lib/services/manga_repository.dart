@@ -224,6 +224,7 @@ class MangaRepository {
       final localPath = await fileService.downloadFile(
         manga.thumbnailUrl,
         'thumbnails/${manga.sourceId}/${manga.id}.jpg',
+        referer: manga.url,
       );
       if (localPath != null) {
         local.thumbnailLocalPath = localPath;
@@ -327,6 +328,7 @@ class MangaRepository {
       final localPath = await fileService.downloadFile(
         page.imageUrl,
         'downloads/$sourceId/$safeMangaId/$chapterId/page${page.index.toString().padLeft(3, '0')}.jpg',
+        referer: page.url,
       );
 
       if (localPath != null) {

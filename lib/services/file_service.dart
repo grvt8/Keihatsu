@@ -67,7 +67,11 @@ class FileService {
     return directory.path;
   }
 
-  Future<String?> downloadFile(String url, String subPath) async {
+  Future<String?> downloadFile(
+      String url,
+      String subPath, {
+        String? referer,
+      }) async {
     try {
       // Ensure permissions are granted if writing to external storage
       if (subPath.startsWith('downloads/') && Platform.isAndroid) {
@@ -110,9 +114,8 @@ class FileService {
           headers: {
             'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
-            'Referer': Uri.parse(url).origin,
-            'Accept':
-            'image/webp,image/apng,image/*,*/*;q=0.8',
+            'Referer': referer ?? _buildReferer(url),
+            'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
           },
         ),
       );
@@ -121,6 +124,21 @@ class FileService {
     } catch (e) {
       print('Error downloading file: $e');
       return null;
+    }
+  }
+
+  String _buildReferer(String url) {
+    try {
+      final uri = Uri.parse(url);
+      final lowerHost = uri.host.toLowerCase();
+
+      if (lowerHost.contains('batcave')) {
+        return 'https://batcave.biz/';
+      }
+
+      return uri.origin;
+    } catch (_) {
+      return 'https://google.com';
     }
   }
 

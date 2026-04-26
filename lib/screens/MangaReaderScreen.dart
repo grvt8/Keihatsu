@@ -30,6 +30,9 @@ class MangaReaderScreen extends StatefulWidget {
 }
 
 class _MangaReaderScreenState extends State<MangaReaderScreen> {
+  static const String _browserUserAgent =
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+      '(KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36';
   late int _currentChapterIndex;
   double _sliderValue = 1;
   bool _showControls = true;
@@ -173,6 +176,18 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
 
   String _getChapterName(dynamic chapter) {
     return chapter is Chapter ? chapter.name : (chapter as LocalChapter).name;
+  }
+
+  Map<String, String>? _buildImageHeaders(String? referer) {
+    if (widget.manga.sourceId.toLowerCase() != 'batcave') {
+      return null;
+    }
+
+    return {
+      'User-Agent': _browserUserAgent,
+      'Referer': referer?.isNotEmpty == true ? referer! : widget.manga.url,
+      'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+    };
   }
 
   Future<List<dynamic>> _fetchPagesForChapter(int chapterIndex) async {
@@ -422,7 +437,11 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
                   final url = page is LocalPage
                       ? page.imageRemoteUrl
                       : page.imageUrl;
-                  imageProvider = NetworkImage(url);
+                  final referer = page is ReaderPage ? page.url : null;
+                  imageProvider = NetworkImage(
+                    url,
+                    headers: _buildImageHeaders(referer),
+                  );
                 }
 
                 return Image(
