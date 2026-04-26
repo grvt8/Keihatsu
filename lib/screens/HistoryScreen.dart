@@ -1,10 +1,10 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:isar/isar.dart';
 import 'package:intl/intl.dart';
+import '../components/OfflineImage.dart';
 import '../components/MainNavigationBar.dart';
 import '../theme_provider.dart';
 import '../providers/offline_library_provider.dart';
@@ -19,7 +19,7 @@ import 'MangaReaderScreen.dart';
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
-  @override 
+  @override
   State<HistoryScreen> createState() => _HistoryScreenState();
 }
 
@@ -415,7 +415,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     if (dateToCheck == today) return "Today";
     if (dateToCheck == yesterday) return "Yesterday";
-    return DateFormat('yyyy-MM-dd').format(date);
+    final day = date.day;
+    final monthAndYear = DateFormat('MMMM yyyy').format(date);
+    return '$day${_ordinalSuffix(day)} $monthAndYear';
+  }
+
+  String _ordinalSuffix(int day) {
+    if (day >= 11 && day <= 13) {
+      return 'th';
+    }
+
+    switch (day % 10) {
+      case 1:
+        return 'st';
+      case 2:
+        return 'nd';
+      case 3:
+        return 'rd';
+      default:
+        return 'th';
+    }
   }
 }
 
@@ -521,19 +540,13 @@ class _HistoryItemState extends State<HistoryItem> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
-                  child: widget.manga.thumbnailLocalPath != null
-                      ? Image.file(
-                    File(widget.manga.thumbnailLocalPath!),
+                  child: OfflineImage(
+                    localFilePath: widget.manga.thumbnailLocalPath,
+                    imageUrl: widget.manga.thumbnailUrl,
                     width: 50,
                     height: 70,
                     fit: BoxFit.cover,
-                  )
-                      : Image.network(
-                    widget.manga.thumbnailUrl ?? "",
-                    width: 50,
-                    height: 70,
-                    fit: BoxFit.cover,
-                    errorBuilder: (c, e, s) => Container(
+                    fallback: Container(
                       width: 50,
                       height: 70,
                       color: Colors.grey,

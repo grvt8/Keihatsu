@@ -21,9 +21,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  static const String _browserUserAgent =
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-      '(KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36';
   final int _currentIndex = 0;
   final SourcesApi _sourcesApi = SourcesApi();
 
@@ -41,18 +38,6 @@ class _HomePageState extends State<HomePage> {
     _popularMangaFuture = _sourcesApi
         .getMangaList(_defaultSourceId, 'popular')
         .then((page) => page.mangas);
-  }
-
-  Map<String, String>? _buildImageHeaders(Manga manga) {
-    if (manga.sourceId.toLowerCase() != 'batcave') {
-      return null;
-    }
-
-    return {
-      'User-Agent': _browserUserAgent,
-      'Referer': manga.url,
-      'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
-    };
   }
 
   Future<List<Manga>> _fetchHistory(BuildContext context) async {
@@ -400,7 +385,6 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Image.network(
                       manga.thumbnailUrl,
-                      headers: _buildImageHeaders(manga),
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.cover,

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:isar/isar.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../components/MainNavigationBar.dart';
 import '../components/LibraryDisplaySettingsSheet.dart';
+import '../components/OfflineImage.dart';
 import '../models/local_models.dart';
 import '../models/manga.dart';
 import '../providers/offline_library_provider.dart';
 import '../providers/auth_provider.dart';
+import '../services/manga_repository.dart';
 import '../theme_provider.dart';
 import 'MangaDetailsScreen.dart';
 
@@ -427,9 +429,7 @@ class _LibraryScreenState extends State<LibraryScreen>
         child: SizedBox(
           width: 50,
           height: 75,
-          child: entry.thumbnailUrl != null
-              ? Image.network(entry.thumbnailUrl!, fit: BoxFit.cover)
-              : Container(color: Colors.grey),
+          child: _LibraryCoverImage(entry: entry, width: 50, height: 75),
         ),
       ),
       title: Text(
@@ -485,11 +485,7 @@ class _LibraryScreenState extends State<LibraryScreen>
               borderRadius: BorderRadius.circular(8),
               child: Stack(
                 children: [
-                  Positioned.fill(
-                    child: entry.thumbnailUrl != null
-                        ? Image.network(entry.thumbnailUrl!, fit: BoxFit.cover)
-                        : Container(color: Colors.grey),
-                  ),
+                  Positioned.fill(child: _LibraryCoverImage(entry: entry)),
                   if (displayMode == 'compact grid')
                     Positioned.fill(
                       child: Container(
@@ -566,6 +562,73 @@ class _LibraryScreenState extends State<LibraryScreen>
           ),
         ],
       ),
+    );
+  }
+}
+
+class _LibraryCoverImage extends StatefulWidget {
+  final LocalLibraryEntry entry;
+  final double? width;
+  final double? height;
+
+  const _LibraryCoverImage({required this.entry, this.width, this.height});
+
+  @override
+  State<_LibraryCoverImage> createState() => _LibraryCoverImageState();
+}
+
+class _LibraryCoverImageState extends State<_LibraryCoverImage> {
+  late Future<String?> _localPathFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _localPathFuture = _loadLocalPath();
+  }
+
+  @override
+  void didUpdateWidget(covariant _LibraryCoverImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.entry.mangaId != widget.entry.mangaId ||
+        oldWidget.entry.sourceId != widget.entry.sourceId ||
+        oldWidget.entry.thumbnailUrl != widget.entry.thumbnailUrl) {
+      _localPathFuture = _loadLocalPath();
+    }
+  }
+
+  Future<String?> _loadLocalPath() async {
+    final repo = Provider.of<MangaRepository>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    final manga = await repo.isar
+        .collection<LocalManga>()
+        .filter()
+        .sourceIdEqualTo(widget.entry.sourceId)
+        .mangaIdEqualTo(widget.entry.mangaId)
+        .ownerUserIdEqualTo(authProvider.localScopeUserId)
+        .findFirst();
+
+    return manga?.thumbnailLocalPath;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<String?>(
+      future: _localPathFuture,
+      builder: (context, snapshot) {
+        return OfflineImage(
+          localFilePath: snapshot.data,
+          imageUrl: widget.entry.thumbnailUrl,
+          width: widget.width,
+          height: widget.height,
+          fit: BoxFit.cover,
+          fallback: Container(
+            width: widget.width,
+            height: widget.height,
+            color: Colors.grey,
+          ),
+        );
+      },
     );
   }
 }

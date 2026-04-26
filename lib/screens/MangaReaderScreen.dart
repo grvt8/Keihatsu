@@ -48,14 +48,10 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
   Timer? _debounceTimer;
   final Stopwatch _readingTimer = Stopwatch();
   LocalManga? _localManga;
-  late final MangaRepository _repo;
-  late final AuthProvider _auth;
 
   @override
   void initState() {
     super.initState();
-    _repo = Provider.of<MangaRepository>(context, listen: false);
-    _auth = Provider.of<AuthProvider>(context, listen: false);
     _readingTimer.start();
     _currentChapterIndex = widget.initialChapterIndex;
     _bottomChapterIndex = _currentChapterIndex;
@@ -67,15 +63,13 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
         double maxScroll = _scrollController.position.maxScrollExtent;
         double currentScroll = _scrollController.position.pixels;
         if (maxScroll > 0) {
-          final estimatedIndex =
-          ((currentScroll / maxScroll) * (_items.length - 1))
+          final estimatedIndex = ((currentScroll / maxScroll) * (_items.length - 1))
               .clamp(0, _items.length - 1)
               .round();
 
           final nearestImageItem = _nearestImageItem(estimatedIndex);
           if (nearestImageItem != null) {
-            final chapterPages =
-                _chapterPages[nearestImageItem.chapterIndex] ?? [];
+            final chapterPages = _chapterPages[nearestImageItem.chapterIndex] ?? [];
             final sliderValue = (nearestImageItem.pageIndex + 1)
                 .toDouble()
                 .clamp(
@@ -114,25 +108,26 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
     _debounceTimer?.cancel();
     final chapterPages = _chapterPages[_currentChapterIndex];
     if (chapterPages != null && chapterPages.isNotEmpty) {
-      _saveProgress(
-        _currentChapterIndex,
-        _currentPageIndex,
-        chapterPages.length,
-      );
+      _saveProgress(_currentChapterIndex, _currentPageIndex, chapterPages.length);
     }
     _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _loadLocalManga() async {
+    final repo = Provider.of<MangaRepository>(context, listen: false);
     // Ensure we have a local manga record to attach history to
-    _localManga = await _repo.getMangaDetails(
+    _localManga = await repo.getMangaDetails(
       widget.manga.sourceId,
       widget.manga.id,
     );
   }
 
-  void _debounceSaveProgress(int chapterIndex, int pageIndex, int totalPages) {
+  void _debounceSaveProgress(
+      int chapterIndex,
+      int pageIndex,
+      int totalPages,
+      ) {
     if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
     _debounceTimer = Timer(const Duration(seconds: 3), () {
       _saveProgress(chapterIndex, pageIndex, totalPages);
@@ -144,8 +139,11 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
       int pageIndex,
       int totalPages,
       ) async {
-    if (_localManga == null) return;
+    if (!mounted || _localManga == null) return;
     try {
+      final repo = Provider.of<MangaRepository>(context, listen: false);
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+
       final chapter = widget.chapters[chapterIndex];
       final chapterId = _getChapterId(chapter);
 
@@ -154,11 +152,11 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
       final readingTimeMs = _readingTimer.elapsedMilliseconds;
       _readingTimer.reset();
 
-      await _repo.updateReadingProgress(
+      await repo.updateReadingProgress(
         manga: _localManga!,
         chapterId: chapterId,
         pageIndex: pageIndex,
-        token: _auth.token,
+        token: auth.token,
         isRead: isRead,
         readingTimeMs: readingTimeMs,
       );
@@ -173,9 +171,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
   }
 
   String _getChapterId(dynamic chapter) {
-    return chapter is Chapter
-        ? chapter.id
-        : (chapter as LocalChapter).chapterId;
+    return chapter is Chapter ? chapter.id : (chapter as LocalChapter).chapterId;
   }
 
   String _getChapterName(dynamic chapter) {
@@ -215,10 +211,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
       return localPages;
     }
 
-    final remotePages = await repo.api.getPages(
-      widget.manga.sourceId,
-      chapterId,
-    );
+    final remotePages = await repo.api.getPages(widget.manga.sourceId, chapterId);
     return remotePages;
   }
 
@@ -318,9 +311,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
 
   void _scrollToPage(int pageIndex) {
     final chapterPages = _chapterPages[_currentChapterIndex];
-    if (chapterPages == null ||
-        chapterPages.isEmpty ||
-        !_scrollController.hasClients) {
+    if (chapterPages == null || chapterPages.isEmpty || !_scrollController.hasClients) {
       return;
     }
     final maxScroll = _scrollController.position.maxScrollExtent;
@@ -414,8 +405,7 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
             )
                 : ListView.builder(
               controller: _scrollController,
-              itemCount:
-              _items.length + (_isAppendingNextChapter ? 1 : 0),
+              itemCount: _items.length + (_isAppendingNextChapter ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index >= _items.length) {
                   return Padding(

@@ -25,7 +25,7 @@ class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final SourcesApi _sourcesApi = SourcesApi();
 
-  static const Set<String> _allowedSourceIds = {'manhuatop', 'batcave'};
+  static const Set<String> _allowedSourceIds = {'manhuatop'};
 
   List<Source> _sources = [];
   Map<String, List<Manga>> _results = {};

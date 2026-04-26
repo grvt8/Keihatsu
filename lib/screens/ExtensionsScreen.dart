@@ -23,7 +23,7 @@ class _ExtensionsScreenState extends State<ExtensionsScreen>
   String _searchQuery = '';
   late TabController _tabController;
 
-  static const Set<String> _availableSourceIds = {'manhuatop', 'batcave'};
+  static const Set<String> _availableSourceIds = {'manhuatop'};
 
   @override
   void initState() {
