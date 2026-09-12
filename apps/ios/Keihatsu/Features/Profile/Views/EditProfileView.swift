@@ -65,15 +65,12 @@ struct EditProfileView: View {
                 }
 
                 Section("Shape") {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            ForEach(Self.shapes) { option in
-                                shapeButton(option)
-                            }
+                    LazyVGrid(columns: choiceColumns, alignment: .leading, spacing: 12) {
+                        ForEach(Self.shapes) { option in
+                            shapeButton(option)
                         }
-                        .padding(.vertical, 4)
                     }
-                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 0))
+                    .padding(.vertical, 4)
                 }
 
                 Section("Color") {
@@ -89,15 +86,12 @@ struct EditProfileView: View {
                 }
 
                 Section("Expression") {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            ForEach(AvatarConfiguration.Expression.allCases) { expression in
-                                expressionButton(expression)
-                            }
+                    LazyVGrid(columns: choiceColumns, alignment: .leading, spacing: 12) {
+                        ForEach(AvatarConfiguration.Expression.allCases) { expression in
+                            expressionButton(expression)
                         }
-                        .padding(.vertical, 4)
                     }
-                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 0))
+                    .padding(.vertical, 4)
                 }
 
                 Section {
@@ -207,6 +201,10 @@ struct EditProfileView: View {
 
     private func color(for hue: Double) -> Color {
         Color(hue: hue / 360, saturation: 0.68, brightness: 0.92)
+    }
+
+    private var choiceColumns: [GridItem] {
+        [GridItem(.adaptive(minimum: 78), spacing: 12, alignment: .top)]
     }
 
     private func approximatelyEqual(_ lhs: Double?, _ rhs: Double?) -> Bool {
