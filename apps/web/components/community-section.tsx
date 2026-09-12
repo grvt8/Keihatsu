@@ -1,124 +1,85 @@
-"use client";
-
-import { motion } from "framer-motion";
-import { Github, Users, GitFork, Star } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-
-const stats = [
-  { icon: Star, label: "GitHub Stars", value: "2.4k" },
-  { icon: GitFork, label: "Forks", value: "340" },
-  { icon: Users, label: "Contributors", value: "85" },
-];
+import { ReaderAvatar } from "@/components/reader-avatar";
 
 export function CommunitySection() {
   return (
-    <section id="community" className="relative py-28">
-      <div className="absolute inset-x-0 top-24 h-80 bg-[radial-gradient(circle_at_center,rgb(159_211_86/0.24),transparent_58%)]" />
-      <div className="site-shell relative">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-16 text-center"
-        >
-          <p className="mb-4 text-sm font-medium uppercase tracking-[0.25em] text-muted-foreground">
-            Community
+    <section id="community" className="paper-community">
+      <div className="paper-shell">
+        <header className="section-heading section-heading--split section-heading--dark">
+          <div>
+            <p className="section-kicker">A social reader, on your terms</p>
+            <h2>
+              Read together.
+              <br />
+              Build together.
+            </h2>
+          </div>
+          <p className="section-intro">
+            Comments stay beside the chapter, while Discord and GitHub keep the
+            wider conversation open.
           </p>
-          <h2 className="text-balance font-serif-display text-5xl font-semibold leading-[0.95] tracking-[-0.035em] text-foreground md:text-6xl lg:text-7xl">
-            Built together,
-            <br />
-            <span className="text-foreground/45">growing together.</span>
-          </h2>
-        </motion.div>
+        </header>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-          className="grid gap-6 md:grid-cols-2"
-        >
-          <div
-            id="opensource"
-            className="glass-panel space-y-8 rounded-[2.25rem] p-8 md:p-10"
-          >
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl border border-foreground/10 bg-accent/25 p-3">
-                <Github className="w-5 h-5 text-foreground" />
-              </div>
-              <Badge
-                variant="secondary"
-                className="rounded-full border-none bg-white/70 text-muted-foreground"
-              >
-                MIT License
-              </Badge>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="font-serif-display text-4xl font-semibold leading-none tracking-tight text-foreground">
-                Open Source First
+        <div className="community-grid">
+          <article className="discord-card">
+            <div>
+              <p className="bento-label">DISCORD COMMUNITY</p>
+              <h3>
+                The after-chapter
+                <br />
+                conversation lives here.
               </h3>
-              <p className="text-pretty leading-7 text-muted-foreground">
-                Transparency is the foundation. Every
-                line of code is available for review, contribution, or learning.
-                We believe the best software is built in the open.
+            </div>
+            <a className="pill-button pill-button--community" href="https://discord.gg/8cu84svT">
+              Join the Discord ↗
+            </a>
+
+            <div className="comment-cluster" aria-label="Community comment preview">
+              <div className="comment comment--one">
+                <span className="reader-avatar reader-avatar--triangle">
+                  <ReaderAvatar variant="triangle" />
+                </span>
+                <p>When do y&apos;all think Brent will drop the next season?</p>
+              </div>
+              <div className="comment comment--two">
+                <span className="reader-avatar reader-avatar--drop">
+                  <ReaderAvatar variant="drop" />
+                </span>
+                <p>Kagurabachi is peak🔥</p>
+              </div>
+              <div className="comment comment--three">
+                <span className="reader-avatar reader-avatar--capsule">
+                  <ReaderAvatar variant="capsule" />
+                </span>
+                <p>Does anyone have recommendations?</p>
+              </div>
+            </div>
+          </article>
+
+          <article id="opensource" className="open-source-card">
+            <div className="open-source-card__top">
+              <p className="bento-label">OPEN SOURCE</p>
+              <span>MIT LICENSE</span>
+            </div>
+            <div>
+              <h3>
+                Inspect every line.
+                <br />
+                Improve the next one.
+              </h3>
+              <p>
+                Keihatsu is transparent by default—from reader polish to
+                extension behavior.
               </p>
             </div>
-
-            <div className="flex flex-wrap gap-6">
-              {stats.map((stat) => (
-                <div key={stat.label} className="flex items-center gap-3">
-                  <stat.icon className="w-4 h-4 text-muted-foreground" />
-                  <div>
-                    <p className="font-serif-display text-3xl font-semibold leading-none text-foreground">
-                      {stat.value}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="glass-panel space-y-8 rounded-[2.25rem] p-8 md:p-10">
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl border border-foreground/10 bg-accent/25 p-3">
-                <Users className="w-5 h-5 text-foreground" />
-              </div>
-              <Badge
-                variant="secondary"
-                className="rounded-full border-none bg-white/70 text-muted-foreground"
-              >
-                Active Discord
-              </Badge>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="font-serif-display text-4xl font-semibold leading-none tracking-tight text-foreground">
-                Shaped by Readers
-              </h3>
-              <p className="text-pretty leading-7 text-muted-foreground">
-                Every feature request, bug report, and suggestion shapes what
-                Keihatsu becomes. Join our Discord to discuss, contribute ideas,
-                and connect with fellow enthusiasts.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {["Feature Requests", "Bug Reports", "Translations", "Design"].map(
-                (tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-foreground/10 bg-white/70 px-3 py-1.5 text-xs text-muted-foreground"
-                  >
-                    {tag}
-                  </span>
-                )
-              )}
-            </div>
-          </div>
-        </motion.div>
+            <a
+              className="open-source-card__footer"
+              href="https://github.com/grvt8/Keihatsu"
+            >
+              <span>Issues · Pull requests · Releases</span>
+              <i>↗</i>
+            </a>
+          </article>
+        </div>
       </div>
     </section>
   );

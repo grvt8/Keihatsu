@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@blobatar/react':
+        specifier: ^2.7.0
+        version: 2.7.0(blobatar@2.7.0(react@19.2.0))(react@19.2.0)
       '@emotion/is-prop-valid':
         specifier: latest
         version: 1.4.0
@@ -17,6 +20,9 @@ importers:
       '@paper-design/shaders-react':
         specifier: ^0.0.76
         version: 0.0.76(@types/react@19.2.9)(react@19.2.0)
+      '@phosphor-icons/react':
+        specifier: ^2.1.10
+        version: 2.1.10(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-accordion':
         specifier: 1.2.2
         version: 1.2.2(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -104,6 +110,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.20
         version: 10.4.23(postcss@8.5.6)
+      blobatar:
+        specifier: ^2.7.0
+        version: 2.7.0(react@19.2.0)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -202,6 +211,12 @@ packages:
   '@babel/runtime@7.28.6':
     resolution: {integrity: sha512-05WQkdpL9COIMz4LjTxGpPNCdlpyimKppYNoJ5Di5EUObifl8t4tuLuUBBZEpoLYOmfvIWrsp9fCl0HoPRVTdA==}
     engines: {node: '>=6.9.0'}
+
+  '@blobatar/react@2.7.0':
+    resolution: {integrity: sha512-rysDM1+2qoeIwIezVw/em+ZxOMyqqjqJOGNEvtOOU1nFp0jmzyEjlXtJTDM6xPKamq59pq6wcG9+mHIUZV572A==}
+    peerDependencies:
+      blobatar: 2.x
+      react: '>=18'
 
   '@date-fns/tz@1.2.0':
     resolution: {integrity: sha512-LBrd7MiJZ9McsOgxqWX7AaxrDjcFVjWH/tIKJd7pnR7McaslGYOP1QmmiBXdJH/H/yLCT+rcQ7FaPBUxRGUtrg==}
@@ -470,6 +485,13 @@ packages:
 
   '@paper-design/shaders@0.0.76':
     resolution: {integrity: sha512-AcNDY4J66YQHUfQYFInkCP7M9VOje0od7wLpOR7LtCmc532opJy6ll+h1W9zBovz8tt9U7OADUmJ/qKEXyOX/A==}
+
+  '@phosphor-icons/react@2.1.10':
+    resolution: {integrity: sha512-vt8Tvq8GLjheAZZYa+YG/pW7HDbov8El/MANW8pOAz4eGxrwhnbfrQZq0Cp4q8zBEu8NIhHdnr+r8thnfRSNYA==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: '>= 16.8'
+      react-dom: '>= 16.8'
 
   '@radix-ui/number@1.1.0':
     resolution: {integrity: sha512-V3gRzhVNU1ldS5XhAPTom1fOIo4ccrjjJgmE+LI2h/WaFpHmx0MQApT+KZHnx8abG6Avtfcz4WoEciMnpFT3HQ==}
@@ -1237,6 +1259,17 @@ packages:
     resolution: {integrity: sha512-e23vBV1ZLfjb9apvfPk4rHVu2ry6RIr2Wfs+O324okSidrX7pTAnEJPCh/O5BtRlr7QtZI7ktOP3vsqr7Z5XoA==}
     hasBin: true
 
+  blobatar@2.7.0:
+    resolution: {integrity: sha512-tL1p2J3dXE/Z9U/ITwHqU7HBHmTH+Am+hif1J1hWAhvFT1VYC2HG+eXtN7081yuY+L2lrp9bs/VaF7dVH3S2jw==}
+    peerDependencies:
+      react: '>=18'
+      vue: '>=3'
+    peerDependenciesMeta:
+      react:
+        optional: true
+      vue:
+        optional: true
+
   browserslist@4.28.1:
     resolution: {integrity: sha512-ZC5Bd0LgJXgwGqUknZY/vkUQ04r8NXnJZ3yYi4vDmSiZmC/pdSN0NbNRPxZpbtO4uAfDUAFffO8IZoM3Gj8IkA==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
@@ -1755,6 +1788,11 @@ snapshots:
 
   '@babel/runtime@7.28.6': {}
 
+  '@blobatar/react@2.7.0(blobatar@2.7.0(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      blobatar: 2.7.0(react@19.2.0)
+      react: 19.2.0
+
   '@date-fns/tz@1.2.0': {}
 
   '@emnapi/runtime@1.8.1':
@@ -1939,6 +1977,11 @@ snapshots:
       '@types/react': 19.2.9
 
   '@paper-design/shaders@0.0.76': {}
+
+  '@phosphor-icons/react@2.1.10(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
 
   '@radix-ui/number@1.1.0': {}
 
@@ -2727,6 +2770,10 @@ snapshots:
       postcss-value-parser: 4.2.0
 
   baseline-browser-mapping@2.9.18: {}
+
+  blobatar@2.7.0(react@19.2.0):
+    optionalDependencies:
+      react: 19.2.0
 
   browserslist@4.28.1:
     dependencies:

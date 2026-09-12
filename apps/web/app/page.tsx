@@ -7,7 +7,7 @@ import { Footer } from "@/components/footer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-background">
+    <main className="paper-page">
       <Navbar />
       <Hero />
       <BentoFeatures />
