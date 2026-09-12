@@ -7,6 +7,9 @@ struct ExtensionBrowseView: View {
     @StateObject private var model: ExtensionBrowseViewModel
     @State private var searchText = ""
     @State private var layout: ExtensionBrowseLayout = .comfortable
+    @State private var showsCompactTitle = false
+    @State private var isSearchActive = false
+    @FocusState private var searchIsFocused: Bool
     @Namespace private var animation
 
     private let columns = Array(
@@ -21,9 +24,8 @@ struct ExtensionBrowseView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 18) {
                 sourceHeader
-                searchField
 
                 if model.mangas.isEmpty, model.isLoading {
                     ProgressView("Loading manga…")
@@ -82,12 +84,28 @@ struct ExtensionBrowseView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
+        .coordinateSpace(name: "extensionBrowseScroll")
+        .scrollDismissesKeyboard(.interactively)
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .principal) {
+                if showsCompactTitle {
+                    compactTitle
+                        .transition(.opacity.combined(with: .scale(scale: 0.94)))
+                }
+            }
+
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                if let website = source.baseURL {
+                    Link(destination: website) {
+                        Image(systemName: "safari")
+                    }
+                    .accessibilityLabel("Open \(source.name) in browser")
+                }
+
                 Menu {
                     Picker("Appearance", selection: $layout) {
                         ForEach(ExtensionBrowseLayout.allCases) { option in
@@ -98,6 +116,16 @@ struct ExtensionBrowseView: View {
                     Image(systemName: "line.3.horizontal.decrease")
                 }
                 .accessibilityLabel("Change appearance")
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            floatingSearch
+        }
+        .onPreferenceChange(SourceHeaderPositionKey.self) { position in
+            let shouldShow = position < -24
+            guard shouldShow != showsCompactTitle else { return }
+            withAnimation(.snappy(duration: 0.25)) {
+                showsCompactTitle = shouldShow
             }
         }
         .task(id: searchText.trimmingCharacters(in: .whitespacesAndNewlines)) {
@@ -115,7 +143,7 @@ struct ExtensionBrowseView: View {
 
     private var sourceHeader: some View {
         HStack(spacing: 12) {
-            ExtensionImageView(sourceID: source.id, url: source.iconURL, size: 46, cornerRadius: 12)
+            ExtensionImageView(sourceID: source.id, url: source.iconURL, size: 58, cornerRadius: 15)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(source.name)
@@ -127,42 +155,108 @@ struct ExtensionBrowseView: View {
             }
 
             Spacer(minLength: 8)
-
-            if let website = source.baseURL {
-                Link(destination: website) {
-                    Image(systemName: "safari")
-                        .font(.title3.weight(.semibold))
-                        .frame(width: 42, height: 42)
-                }
-                .buttonStyle(.bordered)
-                .buttonBorderShape(.circle)
-                .accessibilityLabel("Open \(source.name) in browser")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            GeometryReader { geometry in
+                Color.clear.preference(
+                    key: SourceHeaderPositionKey.self,
+                    value: geometry.frame(in: .named("extensionBrowseScroll")).minY
+                )
             }
         }
     }
 
-    private var searchField: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
-            TextField("Search \(source.name)", text: $searchText)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-            if !searchText.isEmpty {
+    private var compactTitle: some View {
+        HStack(spacing: 8) {
+            ExtensionImageView(sourceID: source.id, url: source.iconURL, size: 28, cornerRadius: 7)
+            Text(source.name)
+                .font(.headline)
+                .lineLimit(1)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var floatingSearch: some View {
+        GeometryReader { geometry in
+            floatingSearchPill
+                .frame(width: geometry.size.width * (isSearchActive ? 0.9 : 0.7))
+                .frame(maxWidth: .infinity)
+        }
+        .frame(height: 64)
+    }
+
+    @ViewBuilder private var floatingSearchPill: some View {
+        if isSearchActive {
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+
+                TextField("Search \(source.name)", text: $searchText)
+                    .focused($searchIsFocused)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .submitLabel(.search)
+
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Clear search")
+                }
+
                 Button {
-                    searchText = ""
+                    closeSearch()
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
+                    Image(systemName: "xmark")
+                        .font(.caption.weight(.bold))
                         .foregroundStyle(.secondary)
+                        .frame(width: 28, height: 28)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Clear search")
+                .accessibilityLabel("Close search")
             }
+            .padding(.horizontal, 16)
+            .frame(height: 50)
+            .glassEffect(.regular.interactive(), in: .capsule)
+            .transition(.opacity.combined(with: .scale(scale: 0.96)))
+        } else {
+            Button {
+                withAnimation(.snappy(duration: 0.3)) {
+                    isSearchActive = true
+                }
+                Task { @MainActor in
+                    await Task.yield()
+                    searchIsFocused = true
+                }
+            } label: {
+                HStack(spacing: 9) {
+                    Image(systemName: "magnifyingglass")
+                    Text("Search \(source.name)")
+                        .lineLimit(1)
+                }
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity)
+                .frame(height: 50)
+                .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .glassEffect(.regular.interactive(), in: .capsule)
+            .accessibilityHint("Opens the manga search field")
+            .transition(.opacity.combined(with: .scale(scale: 0.96)))
         }
-        .padding(.horizontal, 14)
-        .frame(height: 46)
-        .background(Color(.secondarySystemGroupedBackground), in: Capsule())
-        .overlay { Capsule().stroke(Color(.separator).opacity(0.25), lineWidth: 1) }
+    }
+
+    private func closeSearch() {
+        searchIsFocused = false
+        searchText = ""
+        withAnimation(.snappy(duration: 0.3)) {
+            isSearchActive = false
+        }
     }
 
     private func mangaLink<Content: View>(_ manga: Manga, @ViewBuilder content: () -> Content) -> some View {
@@ -180,6 +274,14 @@ struct ExtensionBrowseView: View {
     private func loadMoreIfNeeded(_ manga: Manga) {
         guard manga.id == model.mangas.last?.id, model.hasNextPage else { return }
         Task { await model.loadNextPage() }
+    }
+}
+
+private struct SourceHeaderPositionKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 
