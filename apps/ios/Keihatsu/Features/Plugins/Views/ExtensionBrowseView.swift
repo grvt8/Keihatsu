@@ -123,6 +123,10 @@ struct ExtensionBrowseView: View {
                 }
                 .accessibilityLabel("Change appearance")
             }
+            DefaultToolbarItem(
+                kind: .search,
+                placement: .bottomBar
+            )
         }
         .task(id: searchText.trimmingCharacters(in: .whitespacesAndNewlines)) {
             if !searchText.isEmpty {
@@ -276,7 +280,7 @@ private struct ExtensionMangaListCard: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                 if isInLibrary {
-                    Label("In Library", systemImage: "books.vertical.fill")
+                    Label("In Library", systemImage: "book.closed.fill")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Color.accentColor)
                 }
@@ -296,7 +300,7 @@ private struct LibraryCoverMarker: View {
     var compact = false
 
     var body: some View {
-        Image(systemName: "books.vertical.fill")
+        Image(systemName: "book.closed.fill")
             .font(.system(size: compact ? 11 : 14, weight: .bold))
             .foregroundStyle(Color.black.opacity(0.72))
             .padding(compact ? 5 : 7)
