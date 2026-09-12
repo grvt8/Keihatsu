@@ -215,42 +215,41 @@ class _ExtensionBrowseScreenState extends State<ExtensionBrowseScreen> {
           ),
         ],
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: SizedBox(
+        width: MediaQuery.sizeOf(context).width - 32,
+        child: SearchBar(
+          controller: _searchController,
+          hintText: 'Search ${widget.source.name}',
+          leading: const Icon(Icons.search_rounded),
+          trailing: [
+            if (_searchController.text.isNotEmpty)
+              IconButton(
+                onPressed: () {
+                  _searchController.clear();
+                  _reload();
+                },
+                tooltip: 'Clear search',
+                icon: const Icon(Icons.close_rounded),
+              ),
+          ],
+          onChanged: _onSearchChanged,
+          onSubmitted: (_) => _reload(),
+          textInputAction: TextInputAction.search,
+          constraints: const BoxConstraints(minHeight: 52, maxHeight: 52),
+          backgroundColor: WidgetStatePropertyAll(colorScheme.surfaceContainer),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
+          elevation: const WidgetStatePropertyAll(3),
+        ),
+      ),
       body: RefreshIndicator(
         onRefresh: _reload,
         child: CustomScrollView(
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
-              sliver: SliverToBoxAdapter(
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: _onSearchChanged,
-                  textInputAction: TextInputAction.search,
-                  onSubmitted: (_) => _reload(),
-                  decoration: InputDecoration(
-                    hintText: 'Search ${widget.source.name}',
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    suffixIcon: _searchController.text.isEmpty
-                        ? null
-                        : IconButton(
-                            onPressed: () {
-                              _searchController.clear();
-                              _reload();
-                            },
-                            icon: const Icon(Icons.close_rounded),
-                          ),
-                    filled: true,
-                    fillColor: colorScheme.surfaceContainer,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(999),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-              ),
-            ),
             if (_mangas.isEmpty && _isLoading)
               const SliverFillRemaining(
                 hasScrollBody: false,
@@ -295,6 +294,7 @@ class _ExtensionBrowseScreenState extends State<ExtensionBrowseScreen> {
                   ),
                 ),
               ),
+            const SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
         ),
       ),

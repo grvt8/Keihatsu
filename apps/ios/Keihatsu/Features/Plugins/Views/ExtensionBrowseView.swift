@@ -8,7 +8,6 @@ struct ExtensionBrowseView: View {
     @State private var searchText = ""
     @State private var layout: ExtensionBrowseLayout = .comfortable
     @State private var showsCompactTitle = false
-    @State private var isSearchActive = false
     @FocusState private var searchIsFocused: Bool
     @Namespace private var animation
 
@@ -84,8 +83,15 @@ struct ExtensionBrowseView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
-        .coordinateSpace(name: "extensionBrowseScroll")
         .scrollDismissesKeyboard(.interactively)
+        .onScrollGeometryChange(for: Bool.self) { geometry in
+            geometry.contentOffset.y + geometry.contentInsets.top > 44
+        } action: { _, shouldShow in
+            guard shouldShow != showsCompactTitle else { return }
+            withAnimation(.snappy(duration: 0.25)) {
+                showsCompactTitle = shouldShow
+            }
+        }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
@@ -121,13 +127,6 @@ struct ExtensionBrowseView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             floatingSearch
         }
-        .onPreferenceChange(SourceHeaderPositionKey.self) { position in
-            let shouldShow = position < -24
-            guard shouldShow != showsCompactTitle else { return }
-            withAnimation(.snappy(duration: 0.25)) {
-                showsCompactTitle = shouldShow
-            }
-        }
         .task(id: searchText.trimmingCharacters(in: .whitespacesAndNewlines)) {
             if !searchText.isEmpty {
                 try? await Task.sleep(for: .milliseconds(350))
@@ -157,14 +156,6 @@ struct ExtensionBrowseView: View {
             Spacer(minLength: 8)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background {
-            GeometryReader { geometry in
-                Color.clear.preference(
-                    key: SourceHeaderPositionKey.self,
-                    value: geometry.frame(in: .named("extensionBrowseScroll")).minY
-                )
-            }
-        }
     }
 
     private var compactTitle: some View {
@@ -178,85 +169,37 @@ struct ExtensionBrowseView: View {
     }
 
     private var floatingSearch: some View {
-        GeometryReader { geometry in
-            floatingSearchPill
-                .frame(width: geometry.size.width * (isSearchActive ? 0.9 : 0.7))
-                .frame(maxWidth: .infinity)
-        }
-        .frame(height: 64)
-    }
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
 
-    @ViewBuilder private var floatingSearchPill: some View {
-        if isSearchActive {
-            HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
+            TextField("Search \(source.name)", text: $searchText)
+                .focused($searchIsFocused)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(.search)
 
-                TextField("Search \(source.name)", text: $searchText)
-                    .focused($searchIsFocused)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .submitLabel(.search)
-
-                if !searchText.isEmpty {
-                    Button {
-                        searchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Clear search")
-                }
-
+            if !searchText.isEmpty {
                 Button {
-                    closeSearch()
+                    searchText = ""
                 } label: {
-                    Image(systemName: "xmark")
-                        .font(.caption.weight(.bold))
+                    Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
-                        .frame(width: 28, height: 28)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Close search")
+                .accessibilityLabel("Clear search")
             }
-            .padding(.horizontal, 16)
-            .frame(height: 50)
-            .glassEffect(.regular.interactive(), in: .capsule)
-            .transition(.opacity.combined(with: .scale(scale: 0.96)))
-        } else {
-            Button {
-                withAnimation(.snappy(duration: 0.3)) {
-                    isSearchActive = true
-                }
-                Task { @MainActor in
-                    await Task.yield()
-                    searchIsFocused = true
-                }
-            } label: {
-                HStack(spacing: 9) {
-                    Image(systemName: "magnifyingglass")
-                    Text("Search \(source.name)")
-                        .lineLimit(1)
-                }
-                .font(.subheadline.weight(.semibold))
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .contentShape(Capsule())
-            }
-            .buttonStyle(.plain)
-            .glassEffect(.regular.interactive(), in: .capsule)
-            .accessibilityHint("Opens the manga search field")
-            .transition(.opacity.combined(with: .scale(scale: 0.96)))
         }
-    }
-
-    private func closeSearch() {
-        searchIsFocused = false
-        searchText = ""
-        withAnimation(.snappy(duration: 0.3)) {
-            isSearchActive = false
+        .padding(.horizontal, 14)
+        .frame(height: 46)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color(.separator).opacity(0.32), lineWidth: 0.5)
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 9)
+        .shadow(color: .black.opacity(0.16), radius: 10, y: 4)
     }
 
     private func mangaLink<Content: View>(_ manga: Manga, @ViewBuilder content: () -> Content) -> some View {
@@ -274,14 +217,6 @@ struct ExtensionBrowseView: View {
     private func loadMoreIfNeeded(_ manga: Manga) {
         guard manga.id == model.mangas.last?.id, model.hasNextPage else { return }
         Task { await model.loadNextPage() }
-    }
-}
-
-private struct SourceHeaderPositionKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
     }
 }
 
