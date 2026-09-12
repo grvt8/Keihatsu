@@ -96,18 +96,9 @@ final class CollectionStore: ObservableObject {
     }
 
     func removeFromLibrary(_ id: UUID) {
-        removeFromLibrary([id])
-    }
-
-    func removeFromLibrary(_ ids: Set<UUID>) {
-        guard !ids.isEmpty else { return }
         var value = snapshot
-        let existingIDs = Set(value.library.lazy.map(\.id).filter(ids.contains))
-        guard !existingIDs.isEmpty else { return }
-        value.library.removeAll { existingIDs.contains($0.id) }
-        if persist(value), isAccountScoped {
-            mutationHandler?.handleCollectionMutation(.removeLibraries(existingIDs), snapshot: value)
-        }
+        value.library.removeAll { $0.id == id }
+        if persist(value), isAccountScoped { mutationHandler?.handleCollectionMutation(.removeLibrary(id), snapshot: value) }
     }
 
     func applyAccountSnapshot(_ value: CollectionSnapshot) {

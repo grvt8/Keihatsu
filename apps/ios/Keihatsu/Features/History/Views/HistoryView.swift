@@ -70,6 +70,7 @@ struct HistoryView: View {
                                     item: item,
                                     showCheckboxes: selectionMode,
                                     isSelected: selectedEntryIDs.contains(id),
+                                    isInLibrary: isInLibrary(item),
                                     onToggleSelection: {
                                         toggleSelection(for: id)
                                     },
@@ -152,13 +153,19 @@ struct HistoryView: View {
             ReadingHistoryRow(
                 entry: entry,
                 showCheckbox: true,
-                isSelected: selectedEntryIDs.contains(id)
+                isSelected: selectedEntryIDs.contains(id),
+                isInLibrary: isInLibrary(entry)
             )
             .onTapGesture { toggleSelection(for: id) }
         } else {
             HStack(spacing: 0) {
                 NavigationLink(value: MangaDetailsSeed(manga: entry.manga, fallbackChapters: [entry.chapter])) {
-                    ReadingHistoryRow(entry: entry, showCheckbox: false, isSelected: false)
+                    ReadingHistoryRow(
+                        entry: entry,
+                        showCheckbox: false,
+                        isSelected: false,
+                        isInLibrary: isInLibrary(entry)
+                    )
                 }
                 .buttonStyle(.plain)
 
@@ -181,6 +188,16 @@ struct HistoryView: View {
     private func beginSelection(with id: HistoryEntryID) {
         selectionMode = true
         selectedEntryIDs = [id]
+    }
+
+    private func isInLibrary(_ entry: ReaderProgressRecord) -> Bool {
+        collections.snapshot.library.contains { $0.item.manga?.id == entry.manga.id }
+    }
+
+    private func isInLibrary(_ item: HistoryItem) -> Bool {
+        collections.snapshot.library.contains {
+            $0.item.title.localizedCaseInsensitiveCompare(item.title) == .orderedSame
+        }
     }
 
     private func toggleSelection(for id: HistoryEntryID) {
@@ -238,6 +255,7 @@ private struct ReadingHistoryRow: View {
     let entry: ReaderProgressRecord
     let showCheckbox: Bool
     let isSelected: Bool
+    let isInLibrary: Bool
 
     var body: some View {
         HStack(spacing: 18) {
@@ -269,10 +287,10 @@ private struct ReadingHistoryRow: View {
             Spacer(minLength: 0)
 
             if !showCheckbox {
-                Image(systemName: "book.closed")
+                Image(systemName: isInLibrary ? "book.closed.fill" : "book.closed")
                     .font(.title2)
-                    .foregroundStyle(.primary)
-                    .accessibilityHidden(true)
+                    .foregroundStyle(isInLibrary ? Color.accentColor : .primary)
+                    .accessibilityLabel(isInLibrary ? "In library" : "Not in library")
             }
         }
         .padding(.horizontal, 14)
@@ -294,6 +312,7 @@ private struct HistoryRow: View {
     let item: HistoryItem
     let showCheckboxes: Bool
     let isSelected: Bool
+    let isInLibrary: Bool
     let onToggleSelection: () -> Void
     let onDelete: () -> Void
 
@@ -332,10 +351,9 @@ private struct HistoryRow: View {
 
             if !showCheckboxes {
                 HStack(spacing: 24) {
-                    Button {
-                    } label: { Image(systemName: "book.closed") }
-                    .disabled(true)
-                    .accessibilityLabel("Reading coming soon")
+                    Image(systemName: isInLibrary ? "book.closed.fill" : "book.closed")
+                        .foregroundStyle(isInLibrary ? Color.accentColor : .primary)
+                        .accessibilityLabel(isInLibrary ? "In library" : "Not in library")
 
                     Button(role: .destructive, action: onDelete) {
                         Image(systemName: "trash.fill")

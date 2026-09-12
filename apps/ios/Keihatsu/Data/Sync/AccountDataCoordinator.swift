@@ -11,7 +11,7 @@ nonisolated enum CollectionMutationIntent: Sendable {
     case deleteCategory(UUID)
     case assignCategories(UUID, Set<UUID>)
     case addLibrary(UUID, Manga, Set<UUID>)
-    case removeLibraries(Set<UUID>)
+    case removeLibrary(UUID)
 }
 
 @MainActor
@@ -156,28 +156,19 @@ final class AccountDataCoordinator: CollectionMutationHandling {
             var data = await store.collections(ownerUserID: owner) ?? AccountCollectionData(ownerUserID: owner, library: [], categories: [])
             let prior = data
             reconcileLocal(snapshot: snapshot, data: &data)
-            let mutations: [AccountMutation]
+            let mutation: AccountMutation
             switch intent {
-            case .createCategory(let id, let name): mutations = [.createCategory(localID: id, name: name)]
-            case .renameCategory(let id, let name): mutations = [.renameCategory(localID: id, name: name)]
+            case .createCategory(let id, let name): mutation = .createCategory(localID: id, name: name)
+            case .renameCategory(let id, let name): mutation = .renameCategory(localID: id, name: name)
             case .deleteCategory(let id):
-                mutations = [.deleteCategory(localID: id, serverID: prior.categories.first(where: { $0.id == id })?.serverID)]
-            case .assignCategories(let id, let categories):
-                mutations = [.setCategories(libraryLocalID: id, categoryLocalIDs: categories)]
-            case .addLibrary(let id, let manga, let categories):
-                mutations = [.addLibrary(localID: id, manga: manga, categoryIDs: categories)]
-            case .removeLibraries(let ids):
-                mutations = ids.map { id in
-                    .removeLibrary(
-                        localID: id,
-                        serverID: prior.library.first(where: { $0.id == id })?.serverID
-                    )
-                }
+                mutation = .deleteCategory(localID: id, serverID: prior.categories.first(where: { $0.id == id })?.serverID)
+            case .assignCategories(let id, let categories): mutation = .setCategories(libraryLocalID: id, categoryLocalIDs: categories)
+            case .addLibrary(let id, let manga, let categories): mutation = .addLibrary(localID: id, manga: manga, categoryIDs: categories)
+            case .removeLibrary(let id):
+                mutation = .removeLibrary(localID: id, serverID: prior.library.first(where: { $0.id == id })?.serverID)
             }
             try? await store.save(data)
-            for mutation in mutations {
-                try? await store.enqueue(ownerUserID: owner, mutation: mutation)
-            }
+            try? await store.enqueue(ownerUserID: owner, mutation: mutation)
             await refreshSyncStatus(userID: owner)
             await processOutbox()
         }

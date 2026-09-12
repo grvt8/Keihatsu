@@ -126,11 +126,6 @@ struct BrowsingTests {
         #expect(store.saveCategory(id: category.id, name: "Favorites renamed"))
         store.deleteCategory(category.id)
         #expect(store.snapshot.library.first?.categoryIDs.isEmpty == true)
-        let libraryCount = store.snapshot.library.count
-        let removedLibraryIDs = Set(store.snapshot.library.prefix(2).map(\.id))
-        store.removeFromLibrary(removedLibraryIDs)
-        #expect(store.snapshot.library.count == libraryCount - removedLibraryIDs.count)
-        #expect(store.snapshot.library.allSatisfy { !removedLibraryIDs.contains($0.id) })
         let history = try #require(store.snapshot.history.first)
         store.deleteHistory([history.id])
         #expect(store.snapshot.history.count == 11)

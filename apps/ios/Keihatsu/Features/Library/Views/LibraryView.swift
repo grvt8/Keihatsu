@@ -11,9 +11,6 @@ struct LibraryView: View {
     @State private var searchText = ""
     @State private var showingControls = false
     @State private var showingCategories = false
-    @State private var selectionMode = false
-    @State private var selectedEntryIDs: Set<UUID> = []
-    @State private var deletePrompt: LibraryDeletePrompt?
 
     private var currentEntries: [LibraryEntry] {
         options.options.filtered(collections.snapshot.library, category: selectedCategory, query: searchText)
@@ -61,10 +58,10 @@ struct LibraryView: View {
                     ContentUnavailableView("No titles found", systemImage: "books.vertical", description: Text("Try another category or adjust your filters."))
                 }
                 if options.options.layout == .list {
-                    LazyVStack(spacing: 18) { ForEach(currentEntries) { entry in entryView(entry) } }
+                    LazyVStack(spacing: 18) { ForEach(currentEntries) { entry in entryLink(entry) } }
                 } else {
                     LazyVGrid(columns: gridColumns, alignment: .center, spacing: 18) {
-                        ForEach(currentEntries) { entry in entryView(entry) }
+                        ForEach(currentEntries) { entry in entryLink(entry) }
                     }
                 }
             }
@@ -74,50 +71,24 @@ struct LibraryView: View {
         .navigationTitle("Library")
         .searchable(text: $searchText, placement: .toolbar, prompt: Text("Search library"))
         .toolbar {
-            if selectionMode {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") { endSelection() }
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    LibraryUpdatesCalendarView()
+                } label: {
+                    Image(systemName: "calendar")
                 }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(role: .destructive) {
-                        deletePrompt = .multiple(ids: selectedEntryIDs)
-                    } label: {
-                        Image(systemName: "trash.fill")
-                    }
-                    .disabled(selectedEntryIDs.isEmpty)
-                    .accessibilityLabel("Delete selected library entries")
-                }
-            } else {
-                ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink {
-                        LibraryUpdatesCalendarView()
-                    } label: {
-                        Image(systemName: "calendar")
-                    }
-                    .accessibilityLabel("Upcoming updates")
-                }
-
-                ToolbarSpacer(.fixed, placement: .topBarTrailing)
-
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button { showingControls = true } label: { Image(systemName: "line.3.horizontal.decrease") }
-                        .accessibilityLabel("Library display and filters")
-
-                    Button { showingCategories = true } label: { Image(systemName: "plus") }
-                        .accessibilityLabel("Edit categories")
-                }
+                .accessibilityLabel("Upcoming updates")
             }
-        }
-        .alert(item: $deletePrompt) { prompt in
-            Alert(
-                title: Text("Remove from Library"),
-                message: Text(prompt.message),
-                primaryButton: .destructive(Text("Remove")) {
-                    removeEntries(withIDs: prompt.ids)
-                },
-                secondaryButton: .cancel()
-            )
+
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button { showingControls = true } label: { Image(systemName: "line.3.horizontal.decrease") }
+                    .accessibilityLabel("Library display and filters")
+
+                Button { showingCategories = true } label: { Image(systemName: "plus") }
+                    .accessibilityLabel("Edit categories")
+            }
         }
         .sheet(isPresented: $showingControls) { LibraryControlsSheet().presentationDragIndicator(.visible) }
         .sheet(isPresented: $showingCategories) { LibraryCategoriesSheet().presentationDragIndicator(.visible) }
@@ -134,91 +105,38 @@ struct LibraryView: View {
             CarouselDetailView(seed: seed, animation: animation, origin: .library)
         }
     }
-    @ViewBuilder
-    private func entryView(_ entry: LibraryEntry) -> some View {
-        if selectionMode {
-            entryContent(entry, isSelected: selectedEntryIDs.contains(entry.id))
-                .onTapGesture { toggleSelection(for: entry.id) }
-        } else {
-            NavigationLink(value: MangaDetailsSeed(item: entry.item)) {
-                entryContent(entry, isSelected: false)
-            }
-            .buttonStyle(.plain)
-            .matchedTransitionSource(id: entry.id, in: animation)
-            .onLongPressGesture { beginSelection(with: entry.id) }
-        }
-    }
-
-    private func entryContent(_ entry: LibraryEntry, isSelected: Bool) -> some View {
-        Group {
-            if options.options.layout == .list {
-                HStack(spacing: 14) {
-                    if selectionMode {
-                        selectionIndicator(isSelected: isSelected)
-                    }
-                    LibraryCard(item: entry.item, layout: .cover, height: 116).frame(width: 78, height: 116)
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(entry.item.title).font(.headline).lineLimit(2)
-                        Text(entry.item.metadataLine).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
-                        if shouldShowBadges(for: entry) { badge(entry) }
-                    }
-                    Spacer(minLength: 0)
-                }
-            } else {
-                LibraryCard(item: entry.item, layout: options.options.layout)
-                    .frame(minWidth: 0, maxWidth: .infinity, alignment: .top)
-                    .overlay(alignment: .topLeading) {
-                        if shouldShowBadges(for: entry) { badge(entry).padding(6) }
-                    }
-                    .overlay(alignment: .topTrailing) {
-                        if selectionMode {
-                            selectionIndicator(isSelected: isSelected)
-                                .padding(8)
+    private func entryLink(_ entry: LibraryEntry) -> some View {
+        NavigationLink(value: MangaDetailsSeed(item: entry.item)) {
+            Group {
+                if options.options.layout == .list {
+                    HStack(spacing: 14) {
+                        LibraryCard(item: entry.item, layout: .cover, height: 116).frame(width: 78, height: 116)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(entry.item.title).font(.headline).lineLimit(2)
+                            Text(entry.item.metadataLine).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
+                            if shouldShowBadges(for: entry) { badge(entry) }
                         }
+                        Spacer(minLength: 0)
                     }
+                } else {
+                    LibraryCard(item: entry.item, layout: options.options.layout)
+                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .top)
+                        .overlay(alignment: .topLeading) {
+                            if shouldShowBadges(for: entry) { badge(entry).padding(6) }
+                        }
+                }
             }
         }
+        .buttonStyle(.plain)
         .frame(minWidth: 0, maxWidth: .infinity, alignment: .top)
-        .background {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(isSelected ? Color.accentColor.opacity(0.12) : Color.clear)
+        .matchedTransitionSource(id: entry.id, in: animation)
+        .contextMenu {
+            ForEach(collections.snapshot.categories) { category in
+                Button {
+                    collections.assign(category.id, entry: entry.id, included: !entry.categoryIDs.contains(category.id))
+                } label: { Label(category.name, systemImage: entry.categoryIDs.contains(category.id) ? "checkmark.circle.fill" : "circle") }
+            }
         }
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(isSelected ? Color.accentColor.opacity(0.35) : Color.clear, lineWidth: 1)
-        }
-        .contentShape(Rectangle())
-    }
-
-    private func selectionIndicator(isSelected: Bool) -> some View {
-        Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-            .font(.title3)
-            .foregroundStyle(isSelected ? Color.accentColor : .secondary)
-            .background(.regularMaterial, in: Circle())
-            .accessibilityHidden(true)
-    }
-
-    private func beginSelection(with id: UUID) {
-        selectionMode = true
-        selectedEntryIDs = [id]
-    }
-
-    private func toggleSelection(for id: UUID) {
-        if selectedEntryIDs.contains(id) {
-            selectedEntryIDs.remove(id)
-        } else {
-            selectedEntryIDs.insert(id)
-        }
-    }
-
-    private func endSelection() {
-        selectionMode = false
-        selectedEntryIDs.removeAll()
-    }
-
-    private func removeEntries(withIDs ids: Set<UUID>) {
-        collections.removeFromLibrary(ids)
-        endSelection()
     }
 
     private func badge(_ entry: LibraryEntry) -> some View {
@@ -245,20 +163,6 @@ struct LibraryView: View {
         options.options.displaysUnreadBadge
             || options.options.displaysDownloadedBadge
             || (options.options.displaysLanguageBadge && !(entry.item.manga?.language ?? "").isEmpty)
-    }
-}
-
-private struct LibraryDeletePrompt: Identifiable {
-    let id = UUID()
-    let ids: Set<UUID>
-    let message: String
-
-    static func multiple(ids: Set<UUID>) -> LibraryDeletePrompt {
-        let noun = ids.count == 1 ? "title" : "titles"
-        return LibraryDeletePrompt(
-            ids: ids,
-            message: "Remove \(ids.count) selected \(noun) from your library?"
-        )
     }
 }
 
