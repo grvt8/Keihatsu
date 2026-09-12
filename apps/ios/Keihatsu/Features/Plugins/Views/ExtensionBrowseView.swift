@@ -8,7 +8,6 @@ struct ExtensionBrowseView: View {
     @State private var searchText = ""
     @State private var layout: ExtensionBrowseLayout = .comfortable
     @State private var showsCompactTitle = false
-    @FocusState private var searchIsFocused: Bool
     @Namespace private var animation
 
     private let columns = Array(
@@ -95,6 +94,7 @@ struct ExtensionBrowseView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .searchable(text: $searchText, placement: .toolbar, prompt: Text("Search \(source.name)"))
         .toolbar(.hidden, for: .tabBar)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -123,9 +123,6 @@ struct ExtensionBrowseView: View {
                 }
                 .accessibilityLabel("Change appearance")
             }
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            floatingSearch
         }
         .task(id: searchText.trimmingCharacters(in: .whitespacesAndNewlines)) {
             if !searchText.isEmpty {
@@ -166,40 +163,6 @@ struct ExtensionBrowseView: View {
                 .lineLimit(1)
         }
         .accessibilityElement(children: .combine)
-    }
-
-    private var floatingSearch: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
-
-            TextField("Search \(source.name)", text: $searchText)
-                .focused($searchIsFocused)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .submitLabel(.search)
-
-            if !searchText.isEmpty {
-                Button {
-                    searchText = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Clear search")
-            }
-        }
-        .padding(.horizontal, 14)
-        .frame(height: 46)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color(.separator).opacity(0.32), lineWidth: 0.5)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 9)
-        .shadow(color: .black.opacity(0.16), radius: 10, y: 4)
     }
 
     private func mangaLink<Content: View>(_ manga: Manga, @ViewBuilder content: () -> Content) -> some View {
