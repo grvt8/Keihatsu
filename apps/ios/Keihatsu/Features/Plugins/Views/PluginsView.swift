@@ -11,6 +11,9 @@ import SwiftUI
 struct PluginsView: View {
     @State private var selectedTab: PluginsTab = .sources
     @State private var searchText = ""
+    @State private var selectedPlugin: PluginSource?
+    @State private var pendingBrowseSource: Source?
+    @State private var browseSource: Source?
 
     @EnvironmentObject private var sources: SourcePreferencesStore
     @State private var availableOnly = false
@@ -75,13 +78,13 @@ struct PluginsView: View {
                             Button("Browse Sources") { selectedTab = .plugins }
                         }
                         ForEach(filteredSourceItems) { item in
-                            PluginCard(item: item)
+                            PluginCard(item: item) { selectedPlugin = item }
                         }
                     case .plugins:
                         Text("Enable available sources below. Downloadable plugins are not available yet.")
                             .font(.subheadline).foregroundStyle(.secondary)
                         ForEach(filteredPluginItems) { item in
-                            PluginCard(item: item)
+                            PluginCard(item: item) { selectedPlugin = item }
                         }
                     case .migrate:
                         Text("Source migration is not available yet.").font(.subheadline).foregroundStyle(.secondary)
@@ -116,18 +119,35 @@ struct PluginsView: View {
                     .accessibilityLabel("Add source")
             }
         }
+        .sheet(item: $selectedPlugin, onDismiss: {
+            if let source = pendingBrowseSource {
+                pendingBrowseSource = nil
+                browseSource = source
+            }
+        }) { item in
+            ExtensionDetailsSheet(
+                source: item.source,
+                isEnabled: item.isEnabled,
+                onDisable: { sources.setEnabled(false, source: item.source) },
+                onBrowse: { pendingBrowseSource = item.source }
+            )
+        }
+        .navigationDestination(item: $browseSource) { source in
+            ExtensionBrowseView(source: source, repository: environment.services.catalogue)
+        }
     }
+
+    @EnvironmentObject private var environment: AppEnvironment
 }
 
 private struct PluginCard: View {
     let item: PluginSource
+    let showDetails: () -> Void
     @EnvironmentObject private var sources: SourcePreferencesStore
 
     var body: some View {
         HStack(spacing: 14) {
-            CatalogueCover(url: item.source.iconURL)
-                .frame(width: 60, height: 60)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            ExtensionImageView(sourceID: item.source.id, url: item.source.iconURL, size: 60, cornerRadius: 14)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.name)
@@ -169,6 +189,8 @@ private struct PluginCard: View {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .stroke(Color(.separator).opacity(0.35), lineWidth: 1)
         }
+        .contentShape(Rectangle())
+        .onTapGesture(perform: showDetails)
     }
 }
 
