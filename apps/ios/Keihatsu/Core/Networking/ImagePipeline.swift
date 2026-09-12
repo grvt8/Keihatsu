@@ -5,11 +5,23 @@ import UIKit
 /// Public artwork only. No session token is sent to provider or image URLs.
 @MainActor
 final class ImagePipeline {
+    private enum DecodeTarget: Hashable {
+        case maximumDimension(Int)
+        case readerWidth(Int)
+
+        var cacheComponent: String {
+            switch self {
+            case .maximumDimension(let value): "dimension-\(value)"
+            case .readerWidth(let value): "reader-width-\(value)"
+            }
+        }
+    }
+
     private let configuration: APIConfiguration
     private let session: URLSession
     private let archiveStore: ChapterArchiveStore?
-    private var inFlight: [NSURL: Task<UIImage, Error>] = [:]
-    private let decoded = NSCache<NSURL, UIImage>()
+    private var inFlight: [String: Task<UIImage, Error>] = [:]
+    private let decoded = NSCache<NSString, UIImage>()
 
     init(configuration: APIConfiguration, session: URLSession? = nil, archiveStore: ChapterArchiveStore? = nil) {
         self.configuration = configuration
@@ -42,19 +54,31 @@ final class ImagePipeline {
     }
 
     func image(url: URL, referer: URL?) async throws -> UIImage {
-        try await image(url: url, referer: referer, maximumPixelSize: 1_200)
+        try await image(url: url, referer: referer, target: .maximumDimension(1_200))
     }
 
     func readerImage(url: URL, referer: URL?) async throws -> UIImage {
-        try await image(url: url, referer: referer, maximumPixelSize: 2_000)
+        try await image(url: url, referer: referer, target: .readerWidth(2_000))
     }
 
-    private func image(url: URL, referer: URL?, maximumPixelSize: Int) async throws -> UIImage {
+    nonisolated static func readerMaximumPixelSize(
+        sourceWidth: Int,
+        sourceHeight: Int,
+        targetPixelWidth: Int
+    ) -> Int {
+        guard sourceWidth > 0, sourceHeight > 0, targetPixelWidth > 0 else { return max(targetPixelWidth, 1) }
+        let maximumDimension = max(sourceWidth, sourceHeight)
+        guard sourceWidth > targetPixelWidth else { return maximumDimension }
+        let scale = Double(targetPixelWidth) / Double(sourceWidth)
+        return Int(ceil(Double(maximumDimension) * scale))
+    }
+
+    private func image(url: URL, referer: URL?, target: DecodeTarget) async throws -> UIImage {
         try Task.checkCancellation()
         let isArchivePage = url.scheme == "keihatsu-cbz"
         let request = url.isFileURL || isArchivePage ? nil : try Self.request(url: url, referer: referer, configuration: configuration)
-        let key = (request?.url ?? url) as NSURL
-        if let image = decoded.object(forKey: key) { return image }
+        let key = "\((request?.url ?? url).absoluteString)|\(target.cacheComponent)"
+        if let image = decoded.object(forKey: key as NSString) { return image }
         if let pending = inFlight[key] {
             let image = try await pending.value
             try Task.checkCancellation()
@@ -75,14 +99,30 @@ final class ImagePipeline {
             }
             try Task.checkCancellation()
             guard data.count <= 20 * 1_024 * 1_024,
-                  let source = CGImageSourceCreateWithData(data as CFData, nil),
-                  let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+                  let source = CGImageSourceCreateWithData(data as CFData, nil) else { throw APIError.invalidResponse }
+            let maximumPixelSize: Int
+            switch target {
+            case .maximumDimension(let value):
+                maximumPixelSize = value
+            case .readerWidth(let targetPixelWidth):
+                guard let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+                      let sourceWidth = (properties[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue,
+                      let sourceHeight = (properties[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue else {
+                    throw APIError.invalidResponse
+                }
+                maximumPixelSize = Self.readerMaximumPixelSize(
+                    sourceWidth: sourceWidth,
+                    sourceHeight: sourceHeight,
+                    targetPixelWidth: targetPixelWidth
+                )
+            }
+            guard let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, [
                     kCGImageSourceCreateThumbnailFromImageAlways: true,
                     kCGImageSourceCreateThumbnailWithTransform: true,
                     kCGImageSourceThumbnailMaxPixelSize: maximumPixelSize
                   ] as CFDictionary) else { throw APIError.invalidResponse }
             let image = UIImage(cgImage: thumbnail)
-            decoded.setObject(image, forKey: key, cost: thumbnail.bytesPerRow * thumbnail.height)
+            decoded.setObject(image, forKey: key as NSString, cost: thumbnail.bytesPerRow * thumbnail.height)
             return image
         }
         inFlight[key] = task
