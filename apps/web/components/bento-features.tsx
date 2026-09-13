@@ -1,159 +1,177 @@
-"use client";
-
-import React from "react"
-
-import { motion } from "framer-motion";
+import Image from "next/image";
 import {
-  Code2,
-  Users,
-  BookOpen,
-  Palette,
-  WifiOff,
-  Cloud,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+  ArrowUpRightIcon,
+  MagnifyingGlassIcon,
+} from "@phosphor-icons/react/ssr";
+import { ReaderAvatar } from "@/components/reader-avatar";
 
-const features = [
+const extensionResults = [
   {
-    icon: Code2,
-    title: "Open Source",
-    description: "Built in the open. Contribute, fork, or simply learn from the codebase.",
-    className: "md:col-span-2",
+    name: "ManhuaTop",
+    count: "28 results",
+    tone: "neutral",
+    image: "/manhuatop.jpeg",
   },
   {
-    icon: Users,
-    title: "Vibrant Community",
-    description: "Join thousands of readers and creators shaping the future of manwha.",
-    className: "md:col-span-1",
+    name: "Weebcentral",
+    count: "19 results",
+    tone: "lilac",
+    image: "/weebcentral.png",
   },
   {
-    icon: BookOpen,
-    title: "Immersive Reader",
-    description: "A reading experience designed to disappear, letting the story take center stage.",
-    className: "md:col-span-1",
-  },
-  {
-    icon: Palette,
-    title: "Custom UI & Themes",
-    description: "Make it yours. Adjust colors, typography, and layout to match your preferences.",
-    className: "md:col-span-2",
-  },
-  {
-    icon: WifiOff,
-    title: "Offline Reading",
-    description: "Download chapters and read anywhere, no connection required.",
-    className: "md:col-span-2",
-  },
-  {
-    icon: Cloud,
-    title: "Cloud Sync",
-    description: "Your progress, bookmarks, and settings follow you across all devices.",
-    className: "md:col-span-1",
+    name: "MangaFire",
+    count: "13 results",
+    tone: "sky",
+    image: "/mangafire.png",
   },
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  },
-};
-
 export function BentoFeatures() {
   return (
-    <section id="features" className="relative py-28">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
-      <div className="site-shell">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-16 text-center"
-        >
-          <p className="mb-4 text-sm font-medium uppercase tracking-[0.25em] text-muted-foreground">
-            Features
+    <section id="features" className="paper-bento">
+      <div className="paper-shell">
+        <header className="section-heading section-heading--split">
+          <div>
+            <p className="section-kicker">Built for the long read</p>
+            <h2 className="font-comic tracking-tight">
+              Everything you need.
+              <br />
+              Nothing in the way.
+            </h2>
+          </div>
+          <p className="section-intro">
+            A reader that moves quickly when you want more and disappears when
+            you&apos;re already in the story.
           </p>
-          <h2 className="text-balance font-serif-display text-5xl font-semibold leading-[0.95] tracking-[-0.035em] text-foreground md:text-6xl lg:text-7xl">
-            Everything you need,
-            <br />
-            <span className="text-foreground/45">nothing you don&apos;t.</span>
-          </h2>
-        </motion.div>
+        </header>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 gap-4 md:grid-cols-3"
-        >
-          {features.map((feature) => (
-            <FeatureCard key={feature.title} {...feature} />
-          ))}
-        </motion.div>
+        <div className="bento-grid">
+          <article className="bento-card bento-card--search">
+            <div className="bento-card__copy">
+              <p className="bento-label">01 — SEARCH</p>
+              <h3 className="font-comic tracking-tight">
+                Every source,
+                <br />
+                one search bar.
+              </h3>
+              <p>
+                Search across your installed extensions without digging through
+                repos first.
+              </p>
+            </div>
+            <div className="bento-card__foot">
+              <span className="round-arrow">
+                <ArrowUpRightIcon size={18} weight="bold" aria-hidden="true" />
+              </span>
+              <strong>Fewer taps to chapter one</strong>
+            </div>
+            <div className="extension-card" aria-hidden="true">
+              <div className="extension-search">
+                <MagnifyingGlassIcon size={18} weight="bold" />
+                <span>Search all extensions</span>
+              </div>
+              {extensionResults.map((extension) => (
+                <div
+                  key={extension.name}
+                  className="extension-row"
+                  data-tone={extension.tone}
+                >
+                  <span className="extension-row__identity">
+                    <Image
+                      src={extension.image}
+                      alt=""
+                      width={42}
+                      height={42}
+                    />
+                    <strong>{extension.name}</strong>
+                  </span>
+                  <strong>{extension.count}</strong>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="bento-card bento-card--reader">
+            <div className="bento-card__copy">
+              <p className="bento-label">02 — READER</p>
+              <h3 className="font-comic tracking-tight">
+                Let the panels
+                <br />
+                take over.
+              </h3>
+              <p>Controls stay close, then fade when the reading starts.</p>
+            </div>
+            <span className="round-arrow">↘</span>
+            <div className="reader-card__phone" aria-hidden="true">
+              <Image
+                src="/mockups/readerScreen.png"
+                alt=""
+                fill
+                sizes="190px"
+              />
+            </div>
+          </article>
+
+          <article className="bento-card bento-card--offline">
+            <div className="bento-card__copy">
+              <p className="bento-label">03 — OFFLINE</p>
+              <h3 className="font-comic tracking-tight">Your library goes too.</h3>
+              <p>
+                Queue chapters once. Read on the train, in the air, or wherever
+                signal gives up.
+              </p>
+            </div>
+            <div className="download-row">
+              <span>↓</span>
+              <strong>Chapter 158</strong>
+              <strong>92%</strong>
+            </div>
+          </article>
+
+          <article className="bento-card bento-card--themes">
+            <div className="bento-card__copy">
+              <p className="bento-label">04 — THEMES</p>
+              <h3 className="font-comic tracking-tight">Tune the room.</h3>
+              <p>Font, color, spacing...make the reader feel like yours.</p>
+            </div>
+            <div className="theme-swatches" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+          </article>
+
+          <article className="bento-card bento-card--social">
+            <div className="bento-card__copy">
+              <p className="bento-label">05 — SOCIAL READING</p>
+              <h3 className="font-comic tracking-tight">
+                Talk between
+                <br />
+                the panels.
+              </h3>
+              <p>
+                Comment in the app and connect with fellow readers around the
+                manga you love.
+              </p>
+            </div>
+            <div className="mini-thread" aria-label="Reader comment preview">
+              <div className="mini-thread__row">
+                <span className="reader-avatar reader-avatar--triangle">
+                  <ReaderAvatar variant="triangle" />
+                </span>
+                <strong>That final panel... wow.</strong>
+              </div>
+              <div className="mini-thread__row mini-thread__row--reply">
+                <strong>Chapter 159 theories?</strong>
+                <span className="reader-avatar reader-avatar--drop">
+                  <ReaderAvatar variant="drop" />
+                </span>
+              </div>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
-  );
-}
-
-function FeatureCard({
-  icon: Icon,
-  title,
-  description,
-  className,
-}: {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-  className?: string;
-}) {
-  return (
-    <motion.div
-      variants={itemVariants as any}
-      className={cn(
-        "group relative overflow-hidden rounded-[2rem] border border-foreground/10 bg-white/68 p-8",
-        "shadow-[0_20px_70px_rgb(52_46_55/0.08)] backdrop-blur transition-all duration-500 ease-out",
-        "hover:-translate-y-1 hover:bg-white hover:shadow-[0_28px_90px_rgb(52_46_55/0.14)]",
-        className
-      )}
-    >
-      <div className="flex flex-col h-full relative z-10">
-        <div className="mb-10 w-fit rounded-2xl border border-foreground/10 bg-accent/20 p-3 transition-colors duration-500 group-hover:bg-accent">
-          <Icon className="h-5 w-5 text-foreground transition-colors duration-500" />
-        </div>
-
-        <h3 className="mb-3 font-serif-display text-3xl font-semibold leading-none tracking-tight text-foreground transition-transform duration-500 group-hover:translate-x-0.5">
-          {title}
-        </h3>
-        <p className="text-sm leading-6 text-muted-foreground transition-transform duration-500 group-hover:translate-x-0.5">
-          {description}
-        </p>
-      </div>
-
-      <div className="pointer-events-none absolute -bottom-8 -right-8">
-        <Icon 
-          className="h-36 w-36 text-accent/20 transition-all duration-500 group-hover:scale-110 group-hover:text-accent/35" 
-          strokeWidth={1}
-        />
-      </div>
-
-      
-    </motion.div>
   );
 }
