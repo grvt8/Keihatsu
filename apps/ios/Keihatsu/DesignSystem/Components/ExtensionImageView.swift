@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ExtensionImageView: View {
     let sourceID: String
+    var url: URL? = nil
     var size: CGFloat = 22
     var cornerRadius: CGFloat = 6
 
@@ -28,6 +29,8 @@ struct ExtensionImageView: View {
                 Image(assetName)
                     .resizable()
                     .scaledToFill()
+            } else if let url {
+                CatalogueCover(url: url)
             } else {
                 Image(systemName: "puzzlepiece.extension.fill")
                     .resizable()

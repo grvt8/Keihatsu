@@ -1,11 +1,11 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../common/coming_soon.dart';
+import '../components/ExtensionImage.dart';
 import '../components/MainNavigationBar.dart';
 import '../components/floating_nav_scroll_scope.dart';
 import '../components/gradient_fade_app_bar.dart';
@@ -13,6 +13,7 @@ import '../components/library/filter_tabs.dart';
 import '../models/local_models.dart';
 import '../services/sources_repository.dart';
 import '../theme_provider.dart';
+import 'ExtensionBrowseScreen.dart';
 
 class ExtensionsScreen extends StatefulWidget {
   const ExtensionsScreen({super.key});
@@ -116,38 +117,6 @@ class _ExtensionsScreenState extends State<ExtensionsScreen>
     return _availableSourceIds.contains(source.sourceId.toLowerCase());
   }
 
-  Widget _buildFallbackIcon(LocalSource source, Color brandColor) {
-    if (source.iconLocalPath != null) {
-      return Image.file(
-        File(source.iconLocalPath!),
-        fit: BoxFit.cover,
-        color: _isSourceAvailable(source) && source.enabled
-            ? null
-            : Colors.grey,
-        colorBlendMode: _isSourceAvailable(source) && source.enabled
-            ? null
-            : BlendMode.saturation,
-        errorBuilder: (context, error, stackTrace) =>
-            Icon(PhosphorIcons.puzzlePiece(), color: brandColor),
-      );
-    } else if (source.iconUrl != null) {
-      return Image.network(
-        source.iconUrl!,
-        fit: BoxFit.cover,
-        color: _isSourceAvailable(source) && source.enabled
-            ? null
-            : Colors.grey,
-        colorBlendMode: _isSourceAvailable(source) && source.enabled
-            ? null
-            : BlendMode.saturation,
-        errorBuilder: (context, error, stackTrace) =>
-            Icon(PhosphorIcons.puzzlePiece(), color: brandColor),
-      );
-    } else {
-      return Icon(PhosphorIcons.puzzlePiece(), color: brandColor);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -230,7 +199,14 @@ class _ExtensionsScreenState extends State<ExtensionsScreen>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildSourcesTab(brandColor, textColor, cardColor, repo, cs, tt),
+                    _buildSourcesTab(
+                      brandColor,
+                      textColor,
+                      cardColor,
+                      repo,
+                      cs,
+                      tt,
+                    ),
                     _buildPluginStoreTab(
                       brandColor,
                       textColor,
@@ -379,11 +355,7 @@ class _ExtensionsScreenState extends State<ExtensionsScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.swap_horiz_rounded,
-                  size: 32,
-                  color: cs.primary,
-                ),
+                Icon(Icons.swap_horiz_rounded, size: 32, color: cs.primary),
                 const SizedBox(height: 12),
                 Text(
                   'Migrate library',
@@ -454,9 +426,7 @@ class _ExtensionsScreenState extends State<ExtensionsScreen>
     return Center(
       child: Text(
         'No extensions found',
-        style: tt.bodyLarge?.copyWith(
-          color: textColor.withValues(alpha: 0.6),
-        ),
+        style: tt.bodyLarge?.copyWith(color: textColor.withValues(alpha: 0.6)),
       ),
     );
   }
@@ -478,13 +448,13 @@ class _ExtensionsScreenState extends State<ExtensionsScreen>
       decoration: InputDecoration(
         hintText: 'Search extensions',
         hintStyle: TextStyle(color: cs.onSurfaceVariant),
-        prefixIcon: Icon(
-          Icons.search_rounded,
-          color: cs.onSurfaceVariant,
-        ),
+        prefixIcon: Icon(Icons.search_rounded, color: cs.onSurfaceVariant),
         filled: true,
         fillColor: cardColor,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(999),
           borderSide: BorderSide.none,
@@ -513,113 +483,217 @@ class _ExtensionsScreenState extends State<ExtensionsScreen>
     final isAvailable = _isSourceAvailable(source);
     final isEnabled = isAvailable && source.enabled;
 
-    final Map<String, String> extensionImages = {
-      'atsumaru': 'images/extensions/atsumaru.png',
-      'batcave': 'images/extensions/batcave.png',
-      'manhuatop': 'images/extensions/manhuatop.jpeg',
-      'weebcentral': 'images/extensions/weebcentral.png',
-      'mangafire': 'images/extensions/mangafire.png',
-    };
-
-    final imagePath = extensionImages[source.sourceId.toLowerCase()];
-
     return Material(
       color: isEnabled ? cardColor : cardColor.withValues(alpha: 0.5),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _showSourceDetails(source, repo),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              ExtensionImage(source: source, isEnabled: isEnabled),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      source.name,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isEnabled
+                            ? textColor
+                            : textColor.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    Text(
+                      '${source.lang.toUpperCase()} • ${source.baseUrl}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isEnabled
+                            ? cs.onSurfaceVariant
+                            : textColor.withValues(alpha: 0.2),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      isAvailable ? 'Available now' : 'Coming soon',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isAvailable
+                            ? brandColor
+                            : textColor.withValues(alpha: 0.35),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (showPin)
+                IconButton(
+                  onPressed: () async {
+                    await repo.pinSource(source.sourceId, !source.pinned);
+                    _loadSources();
+                  },
+                  icon: Icon(
+                    source.pinned
+                        ? PhosphorIcons.pushPin(PhosphorIconsStyle.fill)
+                        : PhosphorIcons.pushPin(),
+                    color: source.pinned
+                        ? brandColor
+                        : textColor.withValues(alpha: 0.3),
+                    size: 20,
+                  ),
+                ),
+              Switch(
+                value: isEnabled,
+                activeThumbColor: brandColor,
+                onChanged: (val) async {
+                  await _handleSourceToggle(repo, source, val);
+                },
+              ),
+            ],
+          ),
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: cs.primaryContainer.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(10),
+    );
+  }
+
+  Future<void> _showSourceDetails(
+    LocalSource source,
+    SourcesRepository repository,
+  ) async {
+    final colorScheme = Theme.of(context).colorScheme;
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final backgroundColor =
+        themeProvider.pureBlackDarkMode && themeProvider.isDarkTheme
+        ? Colors.black
+        : colorScheme.surface;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      backgroundColor: backgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ExtensionImage(
+                source: source,
+                isEnabled: _isSourceAvailable(source) && source.enabled,
+                size: 86,
+                borderRadius: 22,
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: imagePath != null
-                    ? Image.asset(
-                        imagePath,
-                        fit: BoxFit.cover,
-                        color: isEnabled ? null : Colors.grey,
-                        colorBlendMode:
-                            isEnabled ? null : BlendMode.saturation,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildFallbackIcon(source, brandColor),
-                      )
-                    : _buildFallbackIcon(source, brandColor),
+              const SizedBox(height: 16),
+              Text(
+                source.name,
+                textAlign: TextAlign.center,
+                style: Theme.of(sheetContext).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 8),
+              InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => _launchWebsite(source.baseUrl),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          source.baseUrl,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: colorScheme.primary,
+                            decoration: TextDecoration.underline,
+                            decorationColor: colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Icon(
+                        Icons.open_in_new_rounded,
+                        size: 16,
+                        color: colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
                 children: [
-                  Text(
-                    source.name,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isEnabled
-                          ? textColor
-                          : textColor.withValues(alpha: 0.4),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: source.enabled && _isSourceAvailable(source)
+                          ? () async {
+                              await repository.toggleSource(
+                                source.sourceId,
+                                false,
+                              );
+                              if (!sheetContext.mounted) return;
+                              Navigator.pop(sheetContext);
+                              _loadSources();
+                            }
+                          : null,
+                      icon: const Icon(Icons.extension_off_rounded),
+                      label: const Text('Disable'),
                     ),
                   ),
-                  Text(
-                    '${source.lang.toUpperCase()} • ${source.baseUrl}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isEnabled
-                          ? cs.onSurfaceVariant
-                          : textColor.withValues(alpha: 0.2),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    isAvailable ? 'Available now' : 'Coming soon',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isAvailable
-                          ? brandColor
-                          : textColor.withValues(alpha: 0.35),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        Navigator.pop(sheetContext);
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (!mounted) return;
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ExtensionBrowseScreen(source: source),
+                            ),
+                          );
+                        });
+                      },
+                      icon: const Icon(Icons.explore_rounded),
+                      label: const Text('Browse'),
                     ),
                   ),
                 ],
               ),
-            ),
-            if (showPin)
-              IconButton(
-                onPressed: () async {
-                  await repo.pinSource(source.sourceId, !source.pinned);
-                  _loadSources();
-                },
-                icon: Icon(
-                  source.pinned
-                      ? PhosphorIcons.pushPin(PhosphorIconsStyle.fill)
-                      : PhosphorIcons.pushPin(),
-                  color: source.pinned
-                      ? brandColor
-                      : textColor.withValues(alpha: 0.3),
-                  size: 20,
-                ),
-              ),
-            Switch(
-              value: isEnabled,
-              activeThumbColor: brandColor,
-              onChanged: (val) async {
-                await _handleSourceToggle(repo, source, val);
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> _launchWebsite(String value) async {
+    final uri = Uri.tryParse(value);
+    if (uri == null ||
+        !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the extension website.')),
+      );
+    }
   }
 }

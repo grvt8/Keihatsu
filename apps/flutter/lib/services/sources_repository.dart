@@ -1,10 +1,10 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import '../models/local_models.dart';
-import '../models/source.dart';
+import '../models/manga.dart';
 import 'sources_api.dart';
 import 'file_service.dart';
-import 'dart:convert';
 
 class SourcesRepository {
   final Isar isar;
@@ -52,25 +52,34 @@ class SourcesRepository {
 
   Future<List<LocalSource>> getSources({bool forceRefresh = false}) async {
     final connectivity = await Connectivity().checkConnectivity();
-    final bool isOnline = connectivity != ConnectivityResult.none;
+    final bool isOnline = !connectivity.contains(ConnectivityResult.none);
 
     if (isOnline && forceRefresh) {
       await refreshSources();
     }
 
-    var localSources =
-        await isar.localSources.where().sortByPinnedDesc().thenByName().findAll();
+    var localSources = await isar.localSources
+        .where()
+        .sortByPinnedDesc()
+        .thenByName()
+        .findAll();
 
     if (localSources.isEmpty && isOnline) {
       await refreshSources();
-      localSources =
-          await isar.localSources.where().sortByPinnedDesc().thenByName().findAll();
+      localSources = await isar.localSources
+          .where()
+          .sortByPinnedDesc()
+          .thenByName()
+          .findAll();
     }
 
     if (localSources.isEmpty) {
       await _seedBundledSources();
-      localSources =
-          await isar.localSources.where().sortByPinnedDesc().thenByName().findAll();
+      localSources = await isar.localSources
+          .where()
+          .sortByPinnedDesc()
+          .thenByName()
+          .findAll();
     }
 
     return localSources;
@@ -105,7 +114,10 @@ class SourcesRepository {
 
       await isar.writeTxn(() async {
         for (var remote in remoteSources) {
-          final existing = await isar.localSources.filter().sourceIdEqualTo(remote.id).findFirst();
+          final existing = await isar.localSources
+              .filter()
+              .sourceIdEqualTo(remote.id)
+              .findFirst();
 
           final local = (existing ?? LocalSource())
             ..sourceId = remote.id
@@ -122,10 +134,12 @@ class SourcesRepository {
           await isar.localSources.put(local);
 
           // Download icon if not exists or URL changed
-          if (remote.iconUrl != null && (existing?.iconUrl != remote.iconUrl || existing?.iconLocalPath == null)) {
+          if (remote.iconUrl != null &&
+              (existing?.iconUrl != remote.iconUrl ||
+                  existing?.iconLocalPath == null)) {
             final localPath = await fileService.downloadFile(
               remote.iconUrl!,
-              'icons/${remote.id}.png'
+              'icons/${remote.id}.png',
             );
             if (localPath != null) {
               local.iconLocalPath = localPath;
@@ -135,12 +149,15 @@ class SourcesRepository {
         }
       });
     } catch (e) {
-      print('Failed to refresh sources: $e');
+      debugPrint('Failed to refresh sources: $e');
     }
   }
 
   Future<void> toggleSource(String sourceId, bool enabled) async {
-    final source = await isar.localSources.filter().sourceIdEqualTo(sourceId).findFirst();
+    final source = await isar.localSources
+        .filter()
+        .sourceIdEqualTo(sourceId)
+        .findFirst();
     if (source != null) {
       source.enabled = enabled;
       await isar.writeTxn(() => isar.localSources.put(source));
@@ -149,10 +166,22 @@ class SourcesRepository {
   }
 
   Future<void> pinSource(String sourceId, bool pinned) async {
-    final source = await isar.localSources.filter().sourceIdEqualTo(sourceId).findFirst();
+    final source = await isar.localSources
+        .filter()
+        .sourceIdEqualTo(sourceId)
+        .findFirst();
     if (source != null) {
       source.pinned = pinned;
       await isar.writeTxn(() => isar.localSources.put(source));
     }
+  }
+
+  Future<MangasPage> getMangaList(
+    String sourceId,
+    String type, {
+    int page = 1,
+    String? query,
+  }) {
+    return api.getMangaList(sourceId, type, page: page, q: query);
   }
 }
