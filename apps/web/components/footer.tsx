@@ -87,7 +87,7 @@ export function Footer() {
             className="mascot-footer__brand font-comic tracking-tight"
             href="#reader"
           >
-            <Image src="/logo1.png" alt="" width={44} height={44} />
+            <Image src="/logo.png" alt="" width={44} height={44} />
             <span>KEIHATSU</span>
           </a>
 

@@ -3,14 +3,13 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Blobatar } from "@blobatar/react";
-import { ArrowBendDownLeftIcon } from "@phosphor-icons/react/ssr";
 import useEmblaCarousel from "embla-carousel-react";
 import "blobatar/motion.css";
 
 const downloadUrl =
   "https://github.com/grvt8/Keihatsu/releases/download/v1.0.0/keihatsu-v1.0.0.apk";
 
-const carouselDelay = 3600;
+const carouselDelay = 2500;
 
 const carouselPages = [
   {
@@ -40,16 +39,45 @@ const carouselPages = [
   },
 ];
 
+function CarouselArrow() {
+  return (
+    <svg
+      viewBox="533 0 81 55"
+      width="81"
+      height="55"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ rotate: "320.49deg", transformOrigin: "70% 20%" }}
+      aria-hidden="true"
+    >
+      <path
+        d="M599.96 45.944C586.455 44.766 583.694 43.551 575.429 39.51C567.384 35.918 566.723 26.041 572.674 22.898C577.522 20.204 579.286 28.061 573.997 31.877C568.486 35.469 558.568 33.224 552.617 30.306C549.751 28.959 544.326 25.978 542.343 20.141"
+        fill="none"
+        stroke="#111111"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M548.81 15.446L535.508 11.779L538.66 26.477"
+        fill="none"
+        stroke="#F4CB00"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function Hero() {
   const [activeIndex, setActiveIndex] = useState(1);
   const autoplayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [carouselRef, carouselApi] = useEmblaCarousel({
     align: "center",
-    dragThreshold: 4,
     duration: 20,
     loop: true,
-    skipSnaps: false,
     startIndex: 1,
+    watchDrag: false,
   });
 
   const stopAutoplay = useCallback(() => {
@@ -86,14 +114,14 @@ export function Hero() {
 
     syncSelectedPage();
     scheduleAutoplay();
-    carouselApi.on("pointerDown", stopAutoplay);
+    carouselApi.on("select", syncSelectedPage);
     carouselApi.on("reInit", syncSelectedPage);
     carouselApi.on("settle", handleSettle);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       stopAutoplay();
-      carouselApi.off("pointerDown", stopAutoplay);
+      carouselApi.off("select", syncSelectedPage);
       carouselApi.off("reInit", syncSelectedPage);
       carouselApi.off("settle", handleSettle);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
@@ -108,7 +136,7 @@ export function Hero() {
             <span />
             Open-source manga reader
           </div>
-          <h1 className="font-comic tracking-tight">
+          <h1 className="tracking-tighter">
             Your next chapter,
             <br />
             without the hunt.
@@ -132,16 +160,15 @@ export function Hero() {
         </div>
 
         <div className="hero-social hero-social--search" aria-hidden="true">
-          <span className="hero-blobatar-shell hero-blobatar-shell--search">
+          <div className="hero-blobatar-shell hero-blobatar-shell--search">
             <Blobatar
               className="hero-blobatar"
               name="recovered-nub"
               size={100}
-              background="squircle"
+              background={false}
               animate="always"
               hue={140}
               tone={0.7}
-              palette={{ bg: "#E1FFD2" }}
               traits={{
                 shape: 0.75,
                 "body.r": 0.53,
@@ -165,23 +192,22 @@ export function Hero() {
                 "gaze.y": 0.9349,
               }}
             />
-          </span>
+          </div>
           <span>One search. Every source.</span>
         </div>
 
         <div className="hero-social hero-social--offline" aria-hidden="true">
           <span>Offline ready ↓</span>
-          <span className="hero-blobatar-shell hero-blobatar-shell--offline">
+          <div className="hero-blobatar-shell hero-blobatar-shell--offline">
             <Blobatar
               className="hero-blobatar"
               name="recovered-cloud"
               width={105}
               height={99}
               preserveAspectRatio="none"
-              background="squircle"
+              background={false}
               animate="always"
               palette={{
-                bg: "#F9F2EE",
                 head: "#FFDAA0",
                 eye: "#140E06",
               }}
@@ -218,12 +244,12 @@ export function Hero() {
                 "gaze.y": 0.2257,
               }}
             />
-          </span>
+          </div>
         </div>
 
         <div className="hero-carousel" aria-label="Keihatsu app screen carousel">
           <div className="hero-carousel__annotation" aria-live="polite">
-            <ArrowBendDownLeftIcon size={54} weight="bold" aria-hidden="true" />
+            <CarouselArrow />
             <span>
               <i />
               {carouselPages[activeIndex].label}
@@ -234,6 +260,9 @@ export function Hero() {
             <div className="hero-carousel__track">
               {carouselPages.map((page, index) => {
                 const isActive = index === activeIndex;
+                const distance = Math.abs(index - activeIndex);
+                const isNeighbor =
+                  distance === 1 || distance === carouselPages.length - 1;
 
                 return (
                   <div className="hero-carousel__item" key={page.label}>
@@ -241,7 +270,9 @@ export function Hero() {
                       className={`hero-carousel__slide ${
                         isActive
                           ? "hero-carousel__slide--active"
-                          : "hero-carousel__slide--inactive"
+                          : `hero-carousel__slide--inactive ${
+                              isNeighbor ? "" : "hero-carousel__slide--hidden"
+                            }`
                       }`}
                       type="button"
                       onClick={() => carouselApi?.scrollTo(index)}
