@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+
 :root {
   --paper: #ffffff;
   --ink: #111111;
@@ -24,6 +25,7 @@
 
 @theme inline {
   --font-sans: var(--font-inter), Inter, system-ui, sans-serif;
+  --font-comic: var(--font-luckiest-guy), "Luckiest Guy", cursive;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
@@ -39,8 +41,11 @@
   box-sizing: border-box;
 }
 
+
 html {
   scroll-behavior: smooth;
+  overscroll-behavior: none;
+  overflow-x: clip;
 }
 
 body {
@@ -52,6 +57,7 @@ body {
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
+  overflow-x: clip;
 }
 
 a {
@@ -316,11 +322,30 @@ button {
   transform: translateY(-3px) rotate(2.5deg);
 }
 
+.hero-blobatar-shell {
+  display: flex;
+  width: 100px;
+  height: 100px;
+  flex: 0 0 100px;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-blobatar-shell--offline {
+  width: 105px;
+  height: 99px;
+  flex-basis: 105px;
+}
+
 .hero-blobatar {
-  width: 72px;
-  height: 72px;
-  flex: 0 0 72px;
+  width: 100px;
+  height: 100px;
   filter: drop-shadow(0 18px 19px rgb(17 17 17 / 12%));
+}
+
+.hero-blobatar-shell--offline .hero-blobatar {
+  width: 105px;
+  height: 99px;
 }
 
 .hero-social > span {
@@ -352,10 +377,43 @@ button {
   flex: 0 0 790px;
 }
 
-.hero-carousel__slide {
+.hero-carousel__viewport {
   position: absolute;
+  top: 62px;
+  right: 0;
+  left: 0;
+  height: 640px;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+}
+
+.hero-carousel__viewport:active {
+  cursor: grabbing;
+}
+
+.hero-carousel__track {
+  display: flex;
+  height: 640px;
+  align-items: center;
+  touch-action: pan-y pinch-zoom;
+}
+
+.hero-carousel__item {
+  display: flex;
+  min-width: 0;
+  height: 640px;
+  flex: 0 0 352px;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-carousel__slide {
+  position: relative;
   display: block;
   width: 291px;
+  height: 404px;
+  flex: 0 0 291px;
   padding: 0;
   overflow: hidden;
   border: 0;
@@ -363,7 +421,9 @@ button {
   background: transparent;
   box-shadow: 0 28px 70px rgb(17 17 17 / 16%);
   cursor: pointer;
-  transition: filter 260ms ease, opacity 260ms ease, transform 260ms ease;
+  transition: filter 260ms ease, height 260ms ease, opacity 260ms ease,
+    transform 260ms ease;
+  will-change: filter, height, opacity, transform;
 }
 
 .hero-carousel__slide img,
@@ -371,39 +431,27 @@ button {
 .platform-phone img {
   object-fit: cover;
   object-position: top;
+  pointer-events: none;
 }
 
-.hero-carousel__slide:hover {
+.hero-carousel__slide--inactive:hover {
   filter: brightness(0.72) saturate(0.9);
 }
 
-.hero-carousel__slide--previous,
-.hero-carousel__slide--next {
-  top: 194px;
-  height: 404px;
+.hero-carousel__slide--inactive {
   opacity: 0.7;
   filter: brightness(0.42) saturate(0.72);
 }
 
-.hero-carousel__slide--previous {
-  left: 110px;
-}
-
-.hero-carousel__slide--next {
-  right: 110px;
-}
-
 .hero-carousel__slide--active {
-  z-index: 2;
-  top: 62px;
-  left: 50%;
   height: 640px;
-  transform: translateX(-50%);
+  opacity: 1;
+  filter: none;
   box-shadow: 0 32px 80px rgb(17 17 17 / 19%);
 }
 
 .hero-carousel__slide--active:hover {
-  transform: translateX(-50%) translateY(-3px);
+  transform: translateY(-3px);
   filter: none;
 }
 
@@ -1191,7 +1239,7 @@ button {
 .comment--one p {
   top: 0;
   right: 0;
-  border-radius: 18px 18px 4px 18px;
+  border-radius: 18px 18px 18px 4px !important;
   background: var(--paper);
 }
 
@@ -1200,7 +1248,7 @@ button {
 }
 
 .comment--two p {
-  top: 77px;
+  top: 65px;
   left: 0;
   width: 177px;
   height: 54px;
@@ -1218,7 +1266,7 @@ button {
   left: 88px;
   border-radius: 18px 18px 4px 18px;
   background: var(--sky);
-  transform: rotate(4.91deg);
+  transform: rotate(3.26deg);
   transform-origin: left top;
 }
 
@@ -1244,7 +1292,7 @@ button {
 }
 
 .comment--one .reader-avatar {
-  top: 10px;
+  top: 20px;
   left: -10px;
 }
 
@@ -1254,7 +1302,7 @@ button {
 }
 
 .comment--three .reader-avatar {
-  top: 170px;
+  top: 165px;
   left: 370px;
 }
 
@@ -1343,7 +1391,7 @@ button {
 
 .mascot-footer__mascot {
   position: absolute;
-  bottom: -150px;
+  bottom: -100px;
   left: 50%;
   width: 820px;
   height: 820px;
@@ -1444,6 +1492,21 @@ button {
   white-space: nowrap;
 }
 
+.font-comic,
+.brand-lockup,
+.mascot-footer__brand,
+.section-heading h2,
+.bento-card h3,
+.story-step h3 {
+  font-family: var(--font-luckiest-guy), "Luckiest Guy", cursive;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+
+.tracking-tight {
+  letter-spacing: -0.025em;
+}
+
 @media (max-width: 1240px) {
   .paper-hero__content {
     min-height: 1232px;
@@ -1470,14 +1533,6 @@ button {
 
   .hero-social--offline {
     right: 0;
-  }
-
-  .hero-carousel__slide--previous {
-    left: 5%;
-  }
-
-  .hero-carousel__slide--next {
-    right: 5%;
   }
 
   .bento-grid {
@@ -1629,28 +1684,33 @@ button {
     flex-basis: 650px;
   }
 
-  .hero-carousel__slide {
-    width: 260px;
-  }
-
-  .hero-carousel__slide--active {
-    top: 0;
+  .hero-carousel__viewport,
+  .hero-carousel__track,
+  .hero-carousel__item {
     height: 566px;
   }
 
-  .hero-carousel__slide--previous,
-  .hero-carousel__slide--next {
-    top: 126px;
+  .hero-carousel__viewport {
+    top: 0;
+  }
+
+  .hero-carousel__item {
+    flex-basis: 280px;
+  }
+
+  .hero-carousel__slide {
+    width: 260px;
+    flex-basis: 260px;
+  }
+
+  .hero-carousel__slide--active {
+    height: 566px;
+  }
+
+  .hero-carousel__slide--inactive {
     width: 220px;
     height: 340px;
-  }
-
-  .hero-carousel__slide--previous {
-    left: -34px;
-  }
-
-  .hero-carousel__slide--next {
-    right: -34px;
+    flex-basis: 220px;
   }
 
   .hero-carousel__annotation {
@@ -1807,10 +1867,17 @@ button {
     gap: 8px;
   }
 
-  .hero-blobatar {
-    width: 54px;
-    height: 54px;
-    flex-basis: 54px;
+  .hero-blobatar-shell,
+  .hero-blobatar-shell--offline {
+    width: 64px;
+    height: 64px;
+    flex-basis: 64px;
+  }
+
+  .hero-blobatar,
+  .hero-blobatar-shell--offline .hero-blobatar {
+    width: 64px;
+    height: 64px;
   }
 
   .hero-social > span {
@@ -1837,30 +1904,35 @@ button {
     flex-basis: 580px;
   }
 
+  .hero-carousel__viewport {
+    top: 8px;
+  }
+
+  .hero-carousel__viewport,
+  .hero-carousel__track,
+  .hero-carousel__item {
+    height: 522px;
+  }
+
+  .hero-carousel__item {
+    flex-basis: 205px;
+  }
+
   .hero-carousel__slide {
     width: 240px;
+    flex-basis: 240px;
     border-radius: 30px;
   }
 
   .hero-carousel__slide--active {
-    top: 8px;
     height: 522px;
   }
 
-  .hero-carousel__slide--previous,
-  .hero-carousel__slide--next {
-    top: 132px;
+  .hero-carousel__slide--inactive {
     width: 164px;
     height: 286px;
+    flex-basis: 164px;
     opacity: 0.55;
-  }
-
-  .hero-carousel__slide--previous {
-    left: -108px;
-  }
-
-  .hero-carousel__slide--next {
-    right: -108px;
   }
 
   .hero-carousel__annotation {

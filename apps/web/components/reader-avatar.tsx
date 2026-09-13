@@ -1,6 +1,6 @@
 type ReaderAvatarProps = {
   className?: string;
-  variant: "triangle" | "drop" | "capsule" | "cloud";
+  variant: "triangle" | "drop" | "capsule" | "cloud" | "nub";
 };
 
 export function ReaderAvatar({ className, variant }: ReaderAvatarProps) {
@@ -29,6 +29,17 @@ export function ReaderAvatar({ className, variant }: ReaderAvatarProps) {
   }
 
   if (variant === "cloud") {
+    return (
+      <svg className={className} viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M27.67 40.32L47.45 15.34C49.597 12.633 51.743 12.633 53.89 15.34L73.67 40.32H27.67Z" fill="#00F3EA" />
+        <path d="M79.67 57.43C79.67 72.95 66.68 85.53 50.67 85.53C34.66 85.53 21.68 72.95 21.68 57.43C21.68 41.91 34.66 29.33 50.67 29.33C66.68 29.33 79.67 41.91 79.67 57.43Z" fill="#00F3EA" />
+        <path d="M46.48 58.16C45.74 63.48 45.74 63.48 43.57 63.18C41.4 62.87 41.4 62.87 42.14 57.55C42.88 52.23 42.88 52.23 45.06 52.53C47.23 52.84 47.23 52.84 46.48 58.16Z" fill="#051211" />
+        <path d="M62.45 58.43C61.73 64.89 61.73 64.89 59.07 64.59C56.41 64.29 56.41 64.29 57.13 57.83C57.86 51.37 57.86 51.37 60.52 51.67C63.18 51.97 63.18 51.97 62.45 58.43Z" fill="#051211" />
+      </svg>
+    );
+  }
+
+  if (variant === "nub") {
     return (
       <svg className={className} viewBox="0 0 100 100" aria-hidden="true">
         <path d="M27.67 40.32L47.45 15.34C49.597 12.633 51.743 12.633 53.89 15.34L73.67 40.32H27.67Z" fill="#00F3EA" />

@@ -78,13 +78,16 @@ export function Footer() {
             src="/keihatsu-footer-mascot.png"
             alt="Keihatsu rabbit mascot"
             width={820}
-            height={820}
+            height={888}
             sizes="820px"
           />
           <span className="mascot-footer__wash" aria-hidden="true" />
 
-          <a className="mascot-footer__brand" href="#reader">
-            <Image src="/logo.png" alt="" width={44} height={44} />
+          <a
+            className="mascot-footer__brand font-comic tracking-tight"
+            href="#reader"
+          >
+            <Image src="/logo1.png" alt="" width={44} height={44} />
             <span>KEIHATSU</span>
           </a>
 

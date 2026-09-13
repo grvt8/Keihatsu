@@ -19,8 +19,12 @@ export function Navbar() {
   return (
     <header className="paper-navbar">
       <nav className="paper-navbar__inner" aria-label="Main navigation">
-        <a className="brand-lockup" href="#reader" aria-label="Keihatsu home">
-          <Image src="/logo.png" alt="" width={44} height={44} priority />
+        <a
+          className="brand-lockup font-comic tracking-tight"
+          href="#reader"
+          aria-label="Keihatsu home"
+        >
+          <Image src="/logo1.png" alt="" width={44} height={44} priority />
           <span>KEIHATSU</span>
         </a>
 

@@ -6,7 +6,7 @@ export function EditorialSections() {
       <div className="paper-shell">
         <header className="section-heading section-heading--centered">
           <p className="section-kicker">From urge to offline shelf</p>
-          <h2>
+          <h2 className="font-comic tracking-tight">
             Three small steps.
             <br />
             One uninterrupted story.
@@ -23,7 +23,9 @@ export function EditorialSections() {
               <span className="story-step__bar" />
               <div>
                 <small>01</small>
-                <h3>Search before the urge fades</h3>
+                <h3 className="font-comic tracking-tight">
+                  Search before the urge fades
+                </h3>
                 <p>
                   Ask every installed extension at once and jump straight into
                   the version you want.
@@ -34,14 +36,18 @@ export function EditorialSections() {
               <span className="story-step__bar" />
               <div>
                 <small>02</small>
-                <h3>Read in a quieter room</h3>
+                <h3 className="font-comic tracking-tight">
+                  Read in a quieter room
+                </h3>
               </div>
             </article>
             <article className="story-step">
               <span className="story-step__bar" />
               <div>
                 <small>03</small>
-                <h3>Keep the chapter close</h3>
+                <h3 className="font-comic tracking-tight">
+                  Keep the chapter close
+                </h3>
               </div>
             </article>
           </div>

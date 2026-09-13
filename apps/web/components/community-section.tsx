@@ -7,7 +7,7 @@ export function CommunitySection() {
         <header className="section-heading section-heading--split section-heading--dark">
           <div>
             <p className="section-kicker">A social reader, on your terms</p>
-            <h2>
+            <h2 className="font-comic tracking-tight">
               Read together.
               <br />
               Build together.
@@ -23,7 +23,7 @@ export function CommunitySection() {
           <article className="discord-card">
             <div>
               <p className="bento-label">DISCORD COMMUNITY</p>
-              <h3>
+              <h3 className="font-comic tracking-tight">
                 The after-chapter
                 <br />
                 conversation lives here.
@@ -61,7 +61,7 @@ export function CommunitySection() {
               <span>MIT LICENSE</span>
             </div>
             <div>
-              <h3>
+              <h3 className="font-comic tracking-tight">
                 Inspect every line.
                 <br />
                 Improve the next one.

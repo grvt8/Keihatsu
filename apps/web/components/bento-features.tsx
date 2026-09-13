@@ -33,7 +33,7 @@ export function BentoFeatures() {
         <header className="section-heading section-heading--split">
           <div>
             <p className="section-kicker">Built for the long read</p>
-            <h2>
+            <h2 className="font-comic tracking-tight">
               Everything you need.
               <br />
               Nothing in the way.
@@ -49,7 +49,7 @@ export function BentoFeatures() {
           <article className="bento-card bento-card--search">
             <div className="bento-card__copy">
               <p className="bento-label">01 — SEARCH</p>
-              <h3>
+              <h3 className="font-comic tracking-tight">
                 Every source,
                 <br />
                 one search bar.
@@ -94,7 +94,7 @@ export function BentoFeatures() {
           <article className="bento-card bento-card--reader">
             <div className="bento-card__copy">
               <p className="bento-label">02 — READER</p>
-              <h3>
+              <h3 className="font-comic tracking-tight">
                 Let the panels
                 <br />
                 take over.
@@ -115,7 +115,7 @@ export function BentoFeatures() {
           <article className="bento-card bento-card--offline">
             <div className="bento-card__copy">
               <p className="bento-label">03 — OFFLINE</p>
-              <h3>Your library goes too.</h3>
+              <h3 className="font-comic tracking-tight">Your library goes too.</h3>
               <p>
                 Queue chapters once. Read on the train, in the air, or wherever
                 signal gives up.
@@ -131,7 +131,7 @@ export function BentoFeatures() {
           <article className="bento-card bento-card--themes">
             <div className="bento-card__copy">
               <p className="bento-label">04 — THEMES</p>
-              <h3>Tune the room.</h3>
+              <h3 className="font-comic tracking-tight">Tune the room.</h3>
               <p>Font, color, spacing...make the reader feel like yours.</p>
             </div>
             <div className="theme-swatches" aria-hidden="true">
@@ -145,7 +145,7 @@ export function BentoFeatures() {
           <article className="bento-card bento-card--social">
             <div className="bento-card__copy">
               <p className="bento-label">05 — SOCIAL READING</p>
-              <h3>
+              <h3 className="font-comic tracking-tight">
                 Talk between
                 <br />
                 the panels.
