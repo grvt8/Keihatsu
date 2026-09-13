@@ -24,7 +24,7 @@ export function Navbar() {
           href="#reader"
           aria-label="Keihatsu home"
         >
-          <Image src="/logo1.png" alt="" width={44} height={44} priority />
+          <Image src="/logo.png" alt="" width={44} height={44} priority />
           <span>KEIHATSU</span>
         </a>
 

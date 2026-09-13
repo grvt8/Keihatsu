@@ -23,7 +23,7 @@ export function CommunitySection() {
           <article className="discord-card">
             <div>
               <p className="bento-label">DISCORD COMMUNITY</p>
-              <h3 className="font-comic tracking-tight">
+              <h3 className="tracking-tight">
                 The after-chapter
                 <br />
                 conversation lives here.
@@ -61,7 +61,7 @@ export function CommunitySection() {
               <span>MIT LICENSE</span>
             </div>
             <div>
-              <h3 className="font-comic tracking-tight">
+              <h3 className="tracking-tight">
                 Inspect every line.
                 <br />
                 Improve the next one.

@@ -264,7 +264,7 @@ button {
   width: 900px;
   margin: 0;
   padding-top: 24px;
-  font-size: 88px;
+  font-size: 78px;
   font-weight: 800;
   letter-spacing: -0.06em;
   line-height: 84px;
@@ -303,7 +303,7 @@ button {
 }
 
 .hero-social--search {
-  top: 6px;
+  top: -5px;
   left: 8px;
   transform: rotate(-2deg);
 }
@@ -324,28 +324,35 @@ button {
 
 .hero-blobatar-shell {
   display: flex;
-  width: 100px;
-  height: 100px;
-  flex: 0 0 100px;
+  width: 84px;
+  height: 84px;
+  flex: 0 0 84px;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  border-radius: 30%;
+  background: #e1ffd2;
 }
 
 .hero-blobatar-shell--offline {
-  width: 105px;
-  height: 99px;
-  flex-basis: 105px;
+  width: 88px;
+  height: 83px;
+  flex-basis: 88px;
+  background: #f9f2ee;
 }
 
 .hero-blobatar {
-  width: 100px;
-  height: 100px;
+  width: 120%;
+  height: 120%;
+  flex: none;
+  transform: translate(20%, 18%);
   filter: drop-shadow(0 18px 19px rgb(17 17 17 / 12%));
 }
 
 .hero-blobatar-shell--offline .hero-blobatar {
-  width: 105px;
-  height: 99px;
+  width: 115%;
+  height: 122%;
+  transform: translate(20%, 18%);
 }
 
 .hero-social > span {
@@ -380,23 +387,18 @@ button {
 .hero-carousel__viewport {
   position: absolute;
   top: 62px;
-  right: 0;
-  left: 0;
+  left: 50%;
+  width: min(944px, 100%);
   height: 640px;
   overflow: hidden;
-  cursor: grab;
+  transform: translateX(-50%);
   user-select: none;
-}
-
-.hero-carousel__viewport:active {
-  cursor: grabbing;
 }
 
 .hero-carousel__track {
   display: flex;
   height: 640px;
   align-items: center;
-  touch-action: pan-y pinch-zoom;
 }
 
 .hero-carousel__item {
@@ -419,11 +421,10 @@ button {
   border: 0;
   border-radius: 38px;
   background: transparent;
-  box-shadow: 0 28px 70px rgb(17 17 17 / 16%);
+  /*box-shadow: 0 28px 70px rgb(17 17 17 / 16%);*/
   cursor: pointer;
-  transition: filter 260ms ease, height 260ms ease, opacity 260ms ease,
-    transform 260ms ease;
-  will-change: filter, height, opacity, transform;
+  transition: filter 260ms ease, opacity 260ms ease, transform 260ms ease;
+  will-change: filter, opacity, transform;
 }
 
 .hero-carousel__slide img,
@@ -439,15 +440,21 @@ button {
 }
 
 .hero-carousel__slide--inactive {
+  width: 240px;
+  flex-basis: 240px;
   opacity: 0.7;
   filter: brightness(0.42) saturate(0.72);
+}
+
+.hero-carousel__slide--hidden {
+  visibility: hidden;
 }
 
 .hero-carousel__slide--active {
   height: 640px;
   opacity: 1;
   filter: none;
-  box-shadow: 0 32px 80px rgb(17 17 17 / 19%);
+  /*box-shadow: 0 32px 80px rgb(17 17 17 / 19%);*/
 }
 
 .hero-carousel__slide--active:hover {
@@ -913,10 +920,13 @@ button {
 
 .mini-thread__row--reply {
   justify-content: flex-end;
+  
 }
 
 .mini-thread__row--reply > strong {
   background: var(--lilac);
+  border-radius: 12px 12px 3px 12px;
+  
 }
 
 .reader-avatar {
@@ -1869,15 +1879,19 @@ button {
 
   .hero-blobatar-shell,
   .hero-blobatar-shell--offline {
-    width: 64px;
-    height: 64px;
-    flex-basis: 64px;
+    width: 54px;
+    height: 54px;
+    flex-basis: 54px;
   }
 
-  .hero-blobatar,
+  .hero-blobatar {
+    width: 120%;
+    height: 120%;
+  }
+
   .hero-blobatar-shell--offline .hero-blobatar {
-    width: 64px;
-    height: 64px;
+    width: 115%;
+    height: 122%;
   }
 
   .hero-social > span {
@@ -1906,6 +1920,7 @@ button {
 
   .hero-carousel__viewport {
     top: 8px;
+    width: 100%;
   }
 
   .hero-carousel__viewport,
