@@ -35,7 +35,18 @@ final class ReadingHistoryModel: ObservableObject {
 
 
     func delete(_ manga: MangaIdentity) async {
-        if let syncCoordinator { await syncCoordinator.deleteHistory(manga) }
-        else { try? await repository.deleteProgress(for: manga); await refresh() }
+        await delete([manga])
+    }
+
+    func delete(_ mangas: Set<MangaIdentity>) async {
+        guard !mangas.isEmpty else { return }
+        if let syncCoordinator {
+            await syncCoordinator.deleteHistory(mangas)
+        } else {
+            for manga in mangas {
+                try? await repository.deleteProgress(for: manga)
+            }
+            await refresh()
+        }
     }
 }

@@ -5,7 +5,7 @@ struct HistoryView: View {
     @EnvironmentObject private var readingHistory: ReadingHistoryModel
     @Namespace private var animation
     @State private var selectionMode: Bool = false
-    @State private var selectedItemIDs: Set<UUID> = []
+    @State private var selectedEntryIDs: Set<HistoryEntryID> = []
     @State private var deletePrompt: DeletePrompt?
     @State private var searchText = ""
 
@@ -46,15 +46,7 @@ struct HistoryView: View {
 
                         VStack(spacing: 18) {
                             ForEach(section.entries) { entry in
-                                NavigationLink(value: MangaDetailsSeed(manga: entry.manga, fallbackChapters: [entry.chapter])) {
-                                    ReadingHistoryRow(entry: entry)
-                                }
-                                .buttonStyle(.plain)
-                                .swipeActions {
-                                    Button("Delete", role: .destructive) {
-                                        Task { await readingHistory.delete(entry.manga.id) }
-                                    }
-                                }
+                                readingHistoryRow(entry)
                             }
                         }
                     }
@@ -73,24 +65,25 @@ struct HistoryView: View {
 
                         VStack(spacing: 18) {
                             ForEach(section.items) { item in
+                                let id = HistoryEntryID.sample(item.id)
                                 HistoryRow(
                                     item: item,
                                     showCheckboxes: selectionMode,
-                                    isSelected: selectedItemIDs.contains(item.id),
+                                    isSelected: selectedEntryIDs.contains(id),
+                                    isInLibrary: isInLibrary(item),
                                     onToggleSelection: {
-                                        toggleSelection(for: item.id)
+                                        toggleSelection(for: id)
                                     },
                                     onDelete: {
-                                        deletePrompt = DeletePrompt.single(item: item)
+                                        deletePrompt = .single(id: id, title: item.title)
                                     }
                                 )
                                 .onTapGesture {
                                     guard selectionMode else { return }
-                                    toggleSelection(for: item.id)
+                                    toggleSelection(for: id)
                                 }
                                 .onLongPressGesture {
-                                    selectionMode = true
-                                    selectedItemIDs = [item.id]
+                                    beginSelection(with: id)
                                 }
                             }
                         }
@@ -120,7 +113,7 @@ struct HistoryView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Done") {
                         selectionMode = false
-                        selectedItemIDs.removeAll()
+                        selectedEntryIDs.removeAll()
                     }
                 }
             }
@@ -129,8 +122,8 @@ struct HistoryView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     if selectionMode {
-                        if !selectedItemIDs.isEmpty {
-                            deletePrompt = DeletePrompt.multiple(ids: selectedItemIDs)
+                        if !selectedEntryIDs.isEmpty {
+                            deletePrompt = .multiple(ids: selectedEntryIDs)
                         }
                     } else {
                         selectionMode = true
@@ -138,6 +131,7 @@ struct HistoryView: View {
                 } label: {
                     Image(systemName: "trash.fill")
                 }
+                .disabled(selectionMode && selectedEntryIDs.isEmpty)
             }
         }
         .alert(item: $deletePrompt) { prompt in
@@ -152,29 +146,88 @@ struct HistoryView: View {
         }
     }
 
-    private func toggleSelection(for id: UUID) {
-        if selectedItemIDs.contains(id) {
-            selectedItemIDs.remove(id)
+    @ViewBuilder
+    private func readingHistoryRow(_ entry: ReaderProgressRecord) -> some View {
+        let id = HistoryEntryID.reading(entry.manga.id)
+        if selectionMode {
+            ReadingHistoryRow(
+                entry: entry,
+                showCheckbox: true,
+                isSelected: selectedEntryIDs.contains(id),
+                isInLibrary: isInLibrary(entry)
+            )
+            .onTapGesture { toggleSelection(for: id) }
         } else {
-            selectedItemIDs.insert(id)
+            HStack(spacing: 0) {
+                NavigationLink(value: MangaDetailsSeed(manga: entry.manga, fallbackChapters: [entry.chapter])) {
+                    ReadingHistoryRow(
+                        entry: entry,
+                        showCheckbox: false,
+                        isSelected: false,
+                        isInLibrary: isInLibrary(entry)
+                    )
+                }
+                .buttonStyle(.plain)
+
+                Button(role: .destructive) {
+                    deletePrompt = .single(id: id, title: entry.manga.title)
+                } label: {
+                    Image(systemName: "trash.fill")
+                        .font(.title2)
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Delete \(entry.manga.title) from history")
+                .padding(.trailing, 14)
+            }
+            .contentShape(Rectangle())
+            .onLongPressGesture { beginSelection(with: id) }
+        }
+    }
+
+    private func beginSelection(with id: HistoryEntryID) {
+        selectionMode = true
+        selectedEntryIDs = [id]
+    }
+
+    private func isInLibrary(_ entry: ReaderProgressRecord) -> Bool {
+        collections.snapshot.library.contains { $0.item.manga?.id == entry.manga.id }
+    }
+
+    private func isInLibrary(_ item: HistoryItem) -> Bool {
+        collections.snapshot.library.contains {
+            $0.item.title.localizedCaseInsensitiveCompare(item.title) == .orderedSame
+        }
+    }
+
+    private func toggleSelection(for id: HistoryEntryID) {
+        if selectedEntryIDs.contains(id) {
+            selectedEntryIDs.remove(id)
+        } else {
+            selectedEntryIDs.insert(id)
         }
     }
 
     private func performDelete(for prompt: DeletePrompt) {
-        switch prompt.kind {
-        case .single(let id):
-            deleteItems(withIDs: [id])
-        case .multiple(let ids):
-            deleteItems(withIDs: ids)
-        }
+        Task { await deleteItems(withIDs: prompt.ids) }
     }
 
-    private func deleteItems(withIDs ids: Set<UUID>) {
-        collections.deleteHistory(ids)
+    private func deleteItems(withIDs ids: Set<HistoryEntryID>) async {
+        let readingIDs = Set(ids.compactMap { id -> MangaIdentity? in
+            guard case .reading(let manga) = id else { return nil }
+            return manga
+        })
+        let sampleIDs = Set(ids.compactMap { id -> UUID? in
+            guard case .sample(let item) = id else { return nil }
+            return item
+        })
 
-        selectedItemIDs.subtract(ids)
+        if !sampleIDs.isEmpty { collections.deleteHistory(sampleIDs) }
+        if !readingIDs.isEmpty { await readingHistory.delete(readingIDs) }
 
-        if selectedItemIDs.isEmpty {
+        selectedEntryIDs.subtract(ids)
+
+        if selectedEntryIDs.isEmpty {
             selectionMode = false
         }
     }
@@ -200,9 +253,18 @@ private struct ReadingHistorySection: Identifiable {
 
 private struct ReadingHistoryRow: View {
     let entry: ReaderProgressRecord
+    let showCheckbox: Bool
+    let isSelected: Bool
+    let isInLibrary: Bool
 
     var body: some View {
         HStack(spacing: 18) {
+            if showCheckbox {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(isSelected ? .blue : .secondary)
+            }
+
             CatalogueCover(url: entry.manga.thumbnailURL, referer: entry.manga.url)
                 .frame(width: 78, height: 116)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -224,13 +286,24 @@ private struct ReadingHistoryRow: View {
 
             Spacer(minLength: 0)
 
-            Image(systemName: "book.closed")
-                .font(.title2)
-                .foregroundStyle(.primary)
-                .accessibilityHidden(true)
+            if !showCheckbox {
+                Image(systemName: isInLibrary ? "book.closed.fill" : "book.closed")
+                    .font(.title2)
+                    .foregroundStyle(isInLibrary ? Color.accentColor : .primary)
+                    .accessibilityLabel(isInLibrary ? "In library" : "Not in library")
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(isSelected ? Color.blue.opacity(0.12) : Color.clear)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(isSelected ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 1)
+        }
         .contentShape(Rectangle())
     }
 }
@@ -239,6 +312,7 @@ private struct HistoryRow: View {
     let item: HistoryItem
     let showCheckboxes: Bool
     let isSelected: Bool
+    let isInLibrary: Bool
     let onToggleSelection: () -> Void
     let onDelete: () -> Void
 
@@ -277,10 +351,9 @@ private struct HistoryRow: View {
 
             if !showCheckboxes {
                 HStack(spacing: 24) {
-                    Button {
-                    } label: { Image(systemName: "book.closed") }
-                    .disabled(true)
-                    .accessibilityLabel("Reading coming soon")
+                    Image(systemName: isInLibrary ? "book.closed.fill" : "book.closed")
+                        .foregroundStyle(isInLibrary ? Color.accentColor : .primary)
+                        .accessibilityLabel(isInLibrary ? "In library" : "Not in library")
 
                     Button(role: .destructive, action: onDelete) {
                         Image(systemName: "trash.fill")
@@ -303,26 +376,26 @@ private struct HistoryRow: View {
     }
 }
 
-private struct DeletePrompt: Identifiable {
-    enum Kind {
-        case single(UUID)
-        case multiple(Set<UUID>)
-    }
+private enum HistoryEntryID: Hashable {
+    case reading(MangaIdentity)
+    case sample(UUID)
+}
 
+private struct DeletePrompt: Identifiable {
     let id = UUID()
-    let kind: Kind
+    let ids: Set<HistoryEntryID>
     let message: String
 
-    static func single(item: HistoryItem) -> DeletePrompt {
+    static func single(id: HistoryEntryID, title: String) -> DeletePrompt {
         DeletePrompt(
-            kind: .single(item.id),
-            message: "Are you sure you want to delete \(item.title) from your history?"
+            ids: [id],
+            message: "Are you sure you want to delete \(title) from your history?"
         )
     }
 
-    static func multiple(ids: Set<UUID>) -> DeletePrompt {
+    static func multiple(ids: Set<HistoryEntryID>) -> DeletePrompt {
         DeletePrompt(
-            kind: .multiple(ids),
+            ids: ids,
             message: "Are you sure you want to delete \(ids.count) selected history entries?"
         )
     }

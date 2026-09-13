@@ -89,6 +89,19 @@ struct ReaderPersistenceTests {
 
 @Suite @MainActor
 struct ReaderViewModelTests {
+    @Test func deletingMultipleHistoryEntriesDeletesEveryManga() async {
+        let repository = ReaderHistoryRepositorySpy()
+        let history = ReadingHistoryModel(repository: repository)
+        let ids: Set<MangaIdentity> = [
+            MangaIdentity(sourceID: "source", mangaID: "one"),
+            MangaIdentity(sourceID: "source", mangaID: "two")
+        ]
+
+        await history.delete(ids)
+
+        #expect(await repository.deletedMangaIDs == ids)
+    }
+
     @Test func singlePageChapterPersistsAsReadWithZeroBasedPosition() async throws {
         let mangaID = MangaIdentity(sourceID: "source", mangaID: "manga")
         let manga = Manga(id: mangaID, title: "Title", url: nil, thumbnailURL: nil, description: nil, author: nil, artist: nil, status: nil, genres: [], language: nil)
@@ -156,6 +169,7 @@ private actor ReaderHistoryRepositorySpy: HistoryRepository {
     private(set) var savedCount = 0
     private(set) var bookmarkCount = 0
     private(set) var lastProgress: ReaderProgressRecord?
+    private(set) var deletedMangaIDs: Set<MangaIdentity> = []
     func progress(for chapter: ChapterIdentity) -> ReaderProgressRecord? { nil }
     func recentProgress() -> [ReaderProgressRecord] { [] }
     func saveProgress(_ progress: ReaderProgressRecord) {
@@ -166,5 +180,5 @@ private actor ReaderHistoryRepositorySpy: HistoryRepository {
         bookmarkCount += 1
         return true
     }
-    func deleteProgress(for manga: MangaIdentity) {}
+    func deleteProgress(for manga: MangaIdentity) { deletedMangaIDs.insert(manga) }
 }

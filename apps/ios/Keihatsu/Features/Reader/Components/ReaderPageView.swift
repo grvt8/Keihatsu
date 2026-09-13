@@ -13,6 +13,7 @@ struct ReaderPageView: View {
             if let image {
                 Image(uiImage: image)
                     .resizable()
+                    .interpolation(.high)
                     .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity)
             } else if error != nil {

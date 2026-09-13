@@ -155,6 +155,12 @@ struct BrowsingTests {
         #expect(direct.url?.host == "cdn.example.test")
         #expect(throws: APIError.invalidBaseURL) { try ImagePipeline.request(url: URL(string: "http://cdn.example.test/x")!, referer: nil, configuration: configuration) }
     }
+
+    @Test func readerImageDecodePreservesTheWidthOfTallPages() {
+        #expect(ImagePipeline.readerMaximumPixelSize(sourceWidth: 800, sourceHeight: 8_000, targetPixelWidth: 2_000) == 8_000)
+        #expect(ImagePipeline.readerMaximumPixelSize(sourceWidth: 4_000, sourceHeight: 8_000, targetPixelWidth: 2_000) == 4_000)
+        #expect(ImagePipeline.readerMaximumPixelSize(sourceWidth: 3_000, sourceHeight: 1_500, targetPixelWidth: 2_000) == 2_000)
+    }
 }
 
 private actor BrowsingRepositoryStub: CatalogueRepository {

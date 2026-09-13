@@ -121,11 +121,24 @@ final class AccountDataCoordinator: CollectionMutationHandling {
     }
 
     func deleteHistory(_ manga: MangaIdentity) async {
-        guard let owner = currentUserID else { return }
-        let operationID = UUID(), date = Date()
-        try? await store.enqueue(ownerUserID: owner, mutation: .deleteHistory(operationID: operationID, manga: manga, deletedAt: date))
-        try? await historyRepository.deleteProgress(for: manga)
+        await deleteHistory([manga])
+    }
+
+    func deleteHistory(_ mangas: Set<MangaIdentity>) async {
+        guard !mangas.isEmpty else { return }
+        for manga in mangas {
+            try? await historyRepository.deleteProgress(for: manga)
+        }
         await readingHistory.refresh()
+
+        guard let owner = currentUserID else { return }
+        let date = Date()
+        for manga in mangas {
+            try? await store.enqueue(
+                ownerUserID: owner,
+                mutation: .deleteHistory(operationID: UUID(), manga: manga, deletedAt: date)
+            )
+        }
         await processOutbox()
     }
 
